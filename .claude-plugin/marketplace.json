@@ -1,0 +1,17 @@
+{
+  "name": "pedrotypes",
+  "owner": {
+    "name": "Pedro Carvalho",
+    "email": "pedro.carvalho@thermondo.de"
+  },
+  "description": "Pedro's skills for engineering, management and productivity.",
+  "plugins": [
+    {
+      "name": "pedrotypes-skills",
+      "source": "./",
+      "description": "Feature planning, program design, review and wrap-up skills for coding agents.",
+      "category": "engineering",
+      "keywords": ["engineering", "skills", "planning", "code-review"]
+    }
+  ]
+}

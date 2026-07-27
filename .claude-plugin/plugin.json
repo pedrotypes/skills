@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "pedrotypes-skills",
+  "displayName": "pedrotypes skills",
+  "description": "A distributable set of LLM skills for engineering, management and productivity.",
+  "author": {
+    "name": "Pedro Carvalho",
+    "email": "pedro.carvalho@thermondo.de"
+  },
+  "repository": "https://github.com/pedrotypes/skills",
+  "license": "MIT",
+  "keywords": ["engineering", "skills", "planning", "code-review", "worktrees"],
+  "skills": ["./skills/engineering"]
+}
