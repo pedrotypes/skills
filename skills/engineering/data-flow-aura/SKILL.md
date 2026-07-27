@@ -1,17 +1,6 @@
 ---
 name: data-flow-aura
-version: 1.0.0
-description: Maintains docs/data-flows/ Mermaid diagrams when data flows change or new ones are needed.
-triggers:
-  - update data flow diagram
-  - add a data flow diagram
-  - document this flow
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - AskUserQuestion
-  - Bash
+description: Maintains docs/data-flows/ Mermaid diagrams when data flows change or new ones are needed. Use when the user asks to add, update, or document a data flow or flow diagram, or when a change has altered how data moves through the system.
 ---
 
 # data-flow-aura

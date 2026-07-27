@@ -1,15 +1,6 @@
 ---
 name: codex-review
-version: 1.0.0
-description: Second-opinion code review — runs the Codex CLI's non-interactive review of the current branch vs main in a subagent and feeds the findings back as actionable feedback.
-triggers:
-  - codex review
-  - run codex review
-  - second opinion on this branch
-allowed-tools:
-  - Agent
-  - Bash
-  - Read
+description: Second-opinion code review — runs the Codex CLI's non-interactive review of the current branch vs main in a subagent and feeds the findings back as actionable feedback. Use when the user asks for a codex review, or wants a second opinion or an independent review of the current branch.
 ---
 
 # codex-review

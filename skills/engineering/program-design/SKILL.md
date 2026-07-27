@@ -1,21 +1,6 @@
 ---
 name: program-design
-version: 1.0.0
-description: Draw the shape of the code — call-stack trees, a file-tree diff, and the key signatures — for a change that is planned, already coded, or merely described, then argue it out before the shape gets expensive to change.
-triggers:
-  - /program-design
-  - program design
-  - show me the call graph
-  - draw the shape of the code
-  - what is this change actually going to do
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Glob
-  - Grep
-  - Bash
-  - AskUserQuestion
+description: Draw the shape of the code — call-stack trees, a file-tree diff, and the key signatures — for a change that is planned, already coded, or merely described, then argue it out before the shape gets expensive to change. Use when the user asks for the program design, the shape of the code, a call graph or call-stack tree, which files a change will touch, or what a change is actually going to do.
 ---
 
 # program-design

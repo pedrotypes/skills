@@ -1,22 +1,6 @@
 ---
 name: feature
-version: 1.1.0
-description: Start a new feature — understand the intent, allocate its plan number across all branches, stub the plan file, spin up an isolated worktree, research the codebase into a neutral R-doc, then hand off to back-and-forth.
-triggers:
-  - /feature
-  - start a new feature
-  - kick off a feature
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Glob
-  - Grep
-  - Bash
-  - Task
-  - Agent
-  - AskUserQuestion
-  - Skill
+description: Start a new feature — understand the intent, allocate its plan number across all branches, stub the plan file, spin up an isolated worktree, research the codebase into a neutral R-doc, then hand off to back-and-forth. Use when the user wants to start, kick off, or begin work on a new feature and no plan or worktree exists for it yet.
 ---
 
 # feature

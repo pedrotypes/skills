@@ -1,22 +1,6 @@
 ---
 name: wrap-up
-version: 1.0.0
-description: Close out a feature — capture the high-value logic/design/architecture/workflow changes and a short retrospective into the proper docs and flowcharts, confirm everything in one review gate, then merge the PR, delete the branch, fast-forward main, and remove the worktree.
-triggers:
-  - /wrap-up
-  - wrap up this feature
-  - wrap up the feature
-  - close out this feature
-  - let's wrap up
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Glob
-  - Grep
-  - Bash
-  - AskUserQuestion
-  - Skill
+description: Close out a feature — capture the high-value logic/design/architecture/workflow changes and a short retrospective into the proper docs and flowcharts, confirm everything in one review gate, then merge the PR, delete the branch, fast-forward main, and remove the worktree. Use when the user wants to wrap up, close out, or finish a feature whose work is done.
 ---
 
 # wrap-up

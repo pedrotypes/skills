@@ -1,20 +1,6 @@
 ---
 name: back-and-forth
-version: 1.2.0
-description: Pressure-test a feature idea through dialogue until 92% confident, design the program shape, then write an implementation plan a coding agent can execute from cold.
-triggers:
-  - I want to go back and forth
-  - let's go back and forth
-  - back and forth on this
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Glob
-  - Grep
-  - Bash
-  - AskUserQuestion
-  - Skill
+description: Pressure-test a feature idea through dialogue until 92% confident, design the program shape, then write an implementation plan a coding agent can execute from cold. Use when the user says "let's go back and forth", wants to go back and forth on an idea, or asks to pressure-test or think through a feature before it gets planned or built.
 ---
 
 # back-and-forth
