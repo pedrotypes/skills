@@ -7,7 +7,7 @@
   "description": "Pedro's skills for engineering, management and productivity.",
   "plugins": [
     {
-      "name": "pedrotypes-skills",
+      "name": "skills",
       "source": "./",
       "description": "Feature planning, program design, review and wrap-up skills for coding agents.",
       "category": "engineering",

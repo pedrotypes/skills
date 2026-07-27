@@ -1,23 +1,23 @@
 # Skills
 
-A distributable set of LLM skills for engineering, management and productivity.
+A distributable set of agent skills for engineering, management and productivity.
 
 ## Install (Claude Code)
 
 ```bash
 claude plugin marketplace add pedrotypes/skills
-claude plugin install pedrotypes-skills@pedrotypes
+claude plugin install skills@pedrotypes
 ```
 
 Update on any machine:
 
 ```bash
-claude plugin marketplace update pedrotypes && claude plugin update pedrotypes-skills
+claude plugin marketplace update pedrotypes && claude plugin update skills@pedrotypes
 ```
 
 No `version` is set in the manifest, so the plugin is versioned by git commit SHA — every push to `main` is picked up by `plugin update`. Pin releases later by adding `version` to `.claude-plugin/plugin.json`.
 
-Skills appear namespaced, e.g. `/pedrotypes-skills:feature`.
+Skills appear namespaced, e.g. `/pedrotypes-skills:feature` — the prefix comes from `name` in `plugin.json`, while the install id (`skills@pedrotypes`) comes from the marketplace entry, so the two intentionally differ.
 
 ## Install (opencode and other harnesses)
 
@@ -36,11 +36,12 @@ Codex CLI has no skills mechanism (it has its own separate plugin marketplace), 
 
 ```
 .claude-plugin/
-  plugin.json        # plugin manifest — `skills` points at each category dir
+  plugin.json        # plugin manifest — `name` sets the skill namespace prefix
   marketplace.json   # makes this repo its own single-plugin marketplace
 skills/
   engineering/<skill>/SKILL.md
-scripts/link.sh
+scripts/link.sh      # symlink skills for opencode and other harnesses
+scripts/dev-link.sh  # load the working tree as a live Claude Code plugin
 ```
 
 Adding a new category directory under `skills/` means adding it to `skills` in `plugin.json`. Skills inside an already-listed category are picked up automatically.
@@ -48,8 +49,18 @@ Adding a new category directory under `skills/` means adding it to `skills` in `
 ## Development
 
 ```bash
+scripts/dev-link.sh               # load the working tree as a live plugin
 claude plugin validate .          # checks both manifests and skill frontmatter
-claude plugin marketplace add "$PWD" && claude plugin install pedrotypes-skills@pedrotypes
 ```
 
-Installing from a local path lets you test edits without pushing. Switch back to the GitHub source with `claude plugin marketplace remove pedrotypes` and re-adding `pedrotypes/skills`.
+`dev-link.sh` symlinks the repo to `~/.claude/skills/pedrotypes-skills`. Claude Code loads any directory there containing `.claude-plugin/plugin.json` as a plugin (`pedrotypes-skills@skills-dir`), read straight off disk — so edits are live and skills resolve under the same `/pedrotypes-skills:<skill>` namespace they will have once published. Start a new session to pick up changes to a skill's name or description; `scripts/dev-link.sh --unlink` undoes it.
+
+Uninstall the marketplace copy while developing — an installed plugin claims the name and the linked copy then silently does not load:
+
+```bash
+claude plugin uninstall skills@pedrotypes
+```
+
+Don't develop against an install. It copies the repo into `~/.claude/plugins/cache/` keyed by HEAD's commit SHA, and `plugin update` is a no-op until that SHA changes, so uncommitted edits never reach it. To sanity-check the real install path before publishing, install from the local marketplace (`claude plugin marketplace add "$PWD" && claude plugin install skills@pedrotypes`) after committing, then switch back to the GitHub source with `claude plugin marketplace remove pedrotypes` and re-adding `pedrotypes/skills`.
+
+For a one-off check without touching global state: `claude --plugin-dir "$PWD"`.
