@@ -11,6 +11,8 @@ The knowledge base only earns its keep if it is true. This skill is what keeps i
 
 Two hard rules. **Nothing is written before the user confirms.** And **only what you can evidence** — if you cannot point at the diff hunk, the file, or the conversation turn a claim comes from, it does not go in. Three true load-bearing facts beat ten plausible ones.
 
+Evidence is what qualifies a claim and what makes the gate reviewable. **It is not content.** Cite it in the gate, not in the document — a reader consulting the rule does not need the commit that produced it.
+
 ## 1. Read the registry
 
 The `## Knowledge base` table in `AGENTS.md` lists this project's document types, their directories, their indexes, and their filename patterns. **No table means invoke `kb-init` and stop.** Never guess a path, never invent a type that is not in the table, and never write outside the declared directories.
@@ -40,9 +42,24 @@ Before drafting, know what a document of this type looks like *here*. In order:
 3. **The index's own note.** A type's `index.md` may carry a short conventions note. Honor it.
 4. **Ask, once, then write it down.** If the directory is empty and no reference covers the type, ask the user what a document of this type should contain — then record the answer as a conventions note in that type's `index.md`, so the next run inherits it instead of asking again. This is how a project teaches the skill its own types.
 
+**With no sibling to copy, default to the shortest thing that works** — and take the ask in step 4 seriously rather than filling the gap with your own taste. Inventing conventions and recording them in the index is worse than asking, because the next run inherits them as though the project had chosen them.
+
 Whatever the shape, OKF is not negotiable: frontmatter with `type` set to the document type from the table, plus `title` and a one-sentence `description`. See [references/okf.md in kb-init](../kb-init/references/okf.md) for the format.
 
-## 4. Draft precisely
+## 4. Write for the moment of use
+
+These documents are **consulted mid-task, not read through**. Someone lands here to find out what the rule is, or what talks to what, and then leaves. Write for that moment: the fact, the rule, the diagram. Not the story of how it was learned.
+
+So **rationale is not the default**. Include a reason only where a reader who does not know it would undo the decision — and then one sentence, not a paragraph. Everything else that pulls toward prose belongs elsewhere: the argument lives in the plan, the history in `log.md`, the incident in the conversation that found it. Duplicating it here makes the document slower to use and gives it a second place to go stale.
+
+Two limits, both of which mean stop and ask rather than write:
+
+- **A new document longer than a screen**, or an edit adding more than a few lines of prose. Propose the short version and say what you left out.
+- **Any narrative** — an incident write-up, a migration journal, a "how we got here". These can be worth keeping, but they are a separate document the user opts into, never a section that quietly accretes onto a reference.
+
+The test: read the draft as someone who came for one fact. Everything they had to skip past was overhead.
+
+## 5. Draft precisely
 
 Work out the exact edit — the specific lines to add or change, in the voice and structure of the target. Prefer a tight `Edit` over a rewrite; rewrite only when the structure itself changed. Do not restructure a document as a side effect of updating one fact in it.
 
@@ -50,7 +67,7 @@ For a **new** document: the filename follows the type's pattern from the table, 
 
 Apply nothing yet.
 
-## 5. Confirm in one pass
+## 6. Confirm in one pass
 
 Present everything together in a single `AskUserQuestion` — every document, old → new, so the user validates the permanent record once rather than being interrupted per file.
 
@@ -63,7 +80,7 @@ Capture only what the user approves. A skip is a skip; do not re-argue it.
 
 **When another skill invoked you**, draft and hand back instead of running your own gate, so your confirmations fold into that skill's single gate. `back-and-forth`'s landing phase works this way.
 
-## 6. Apply
+## 7. Apply
 
 For each approved item:
 

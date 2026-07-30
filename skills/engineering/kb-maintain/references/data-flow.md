@@ -26,13 +26,15 @@ Then work out precisely what moves, by diagram type:
 - **State** — which state or transition changes, and whether an existing transition's guard or cap moved.
 - **Flowchart** — which node, edge, or note changes.
 
-Update the prose notes below the diagram too. A diagram whose notes describe the old behavior is a document that lies in half of itself, and the notes are usually where the *why* lives.
+Update the prose notes below the diagram too. A diagram whose notes describe the old behavior is a document that lies in half of itself.
+
+**The notes are for what the diagram cannot show** — an ordering constraint, a cap, a failure path, a non-obvious reason a step sits where it does. A few short ones, not an essay: the diagram is the document, and notes that restate it in prose are the commonest way one of these doubles in size without gaining anything.
 
 Be surgical. Do not rewrite a whole diagram unless the structure itself changed — a rewritten diagram is unreviewable, and the reader cannot tell what actually moved.
 
 ## New diagrams
 
-When a flow appears that no existing diagram covers: confirm the filename and the scope with the user before creating anything, then follow the structure of the diagrams already there. Typically a title, a one-sentence scope line, the diagram, then prose notes.
+When a flow appears that no existing diagram covers: confirm the filename and the scope with the user before creating anything, then follow the structure of the diagrams already there. Typically a title, a one-sentence scope line, the diagram, then a handful of short notes.
 
 The new file needs its entry in the type's `index.md`, with its scope, or nothing will ever find it.
 
