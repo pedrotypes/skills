@@ -1,6 +1,6 @@
 ---
 name: land
-description: Land a finished feature — identify which one, rebase it onto the base branch and work any conflicts through with the user, capture what changed into the knowledge base, write the retrospective, confirm everything in one gate, then merge, delete the branch and remove the worktree. Use when the user says the work is done, ready to land, ready to merge, or asks to finish, ship or wrap up a feature.
+description: Land a finished feature — identify which one, rebase it onto the base branch and work any conflicts through with the user, capture what changed into the knowledge base, confirm everything in one gate, then merge, delete the branch and remove the worktree. Use when the user says the work is done, ready to land, ready to merge, or asks to finish, ship or wrap up a feature.
 ---
 
 # land
@@ -65,45 +65,34 @@ git diff origin/main...HEAD          # read the hunks that matter
 
 **Invoke `kb-maintain`** with the diff and what the conversation established. It reads the `## Knowledge base` table, works out which document types this change actually affects — which varies by project — learns each type's local conventions, and drafts the edits. Tell it to **draft and hand back rather than run its own gate**, so its confirmations fold into the single gate below.
 
-What it does not cover: the plan itself, and durable process learnings, which are auto-memory `feedback` entries rather than knowledge-base documents. Handle those yourself.
+It does not cover the plan itself. Handle that yourself.
 
 Keep the evidence — hunk, commit, or conversation turn — attached to every candidate, so the gate is not guesswork.
 
-## 5. Write the retrospective
+## 5. The single review gate
 
-Two to five bullets grounded in *this* feature's actual history: where we backtracked, a check that was skipped and cost us, a wrong assumption, a step that worked and should become the default. Specific and honest — "skipped the design gate, then folded eleven findings late" beats "could improve process."
-
-Split them:
-
-- **Feature-specific** → a `## Retrospective` section in the plan.
-- **What happened, dated** → an entry in the knowledge base's `log.md`, which is the reserved OKF file for chronological history.
-- **Durable process learnings** that should change how future work is done → propose as an auto-memory `feedback` entry, with the why.
-
-## 6. The single review gate
-
-Present **everything** — every doc edit, every diagram change, every retro bullet, and the merge go-ahead — in **one** `AskUserQuestion`. This is the point: the user validates the permanent record in one pass.
+Present **everything** — every doc edit, every diagram change, and the merge go-ahead — in **one** `AskUserQuestion`. This is the point: the user validates the permanent record in one pass.
 
 The tool allows at most 4 questions with 4 options each, so map buckets onto questions and pre-filter each to the strongest ≤4 items, saying in prose what you dropped and why:
 
 - **Q1 (multiSelect) — Knowledge-base captures.** The edits `kb-maintain` drafted; use `preview` to show the actual old→new lines. Split across two questions by type when there are many.
-- **Q2 (multiSelect) — Retrospective.** The bullets and any proposed memory entry, so the user curates what is kept.
-- **Q3 (single) — Land it?** "Apply the confirmed captures, then merge PR #<n> and clean up?" → **Yes, apply + merge + clean up** / **Apply docs only, hold the merge** / **Cancel**.
+- **Q2 (single) — Land it?** "Apply the confirmed captures, then merge PR #<n> and clean up?" → **Yes, apply + merge + clean up** / **Apply docs only, hold the merge** / **Cancel**.
 
 One sentence per question; detail lives in the option descriptions and previews. Capture only what the user checks — dropped items are dropped, no negotiation.
 
-## 7. Apply the captures
+## 6. Apply the captures
 
-Hand the approvals back to `kb-maintain` to apply — it also updates each type's `index.md` and the bundle's `log.md`, which are the easiest things to forget by hand. Write the plan's retrospective and any confirmed memory entry yourself. Then commit on the feature branch and push, so the landing includes them:
+Hand the approvals back to `kb-maintain` to apply — it also updates each type's `index.md` and the bundle's `log.md`, which are the easiest things to forget by hand. Then commit on the feature branch and push, so the landing includes them:
 
 ```bash
 git add <the doc files>
-git commit -m "docs: capture <feature> changes and retrospective"
+git commit -m "docs: capture <feature> changes"
 git push
 ```
 
 If CI must re-run, wait for green. If the user chose **Apply docs only**, stop here and report what is committed — touch no git plumbing.
 
-## 8. Merge and clean up
+## 7. Merge and clean up
 
 Only after an explicit merge go-ahead. **Order matters**: a naive `--delete-branch` fails while a worktree holds the branch, so do the plumbing from the root checkout, worktree first.
 
@@ -125,6 +114,6 @@ Only after an explicit merge go-ahead. **Order matters**: a naive `--delete-bran
 
 Developed on a plain branch with no worktree? Skip step 3 and the worktree parts; everything else holds.
 
-## 9. Report
+## 8. Report
 
-The merge commit, what was captured where, the retrospective, and anything deliberately dropped. If a live deployment consumes this code, remind the user it is **not** deployed — landing is not deploying.
+The merge commit, what was captured where, and anything deliberately dropped. If a live deployment consumes this code, remind the user it is **not** deployed — landing is not deploying.

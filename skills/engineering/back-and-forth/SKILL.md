@@ -10,7 +10,7 @@ One conversation from "I want to build X" to landed code. Be a sharp, skeptical 
 Two artifacts hold all state, always current enough that a cold session can resume from them alone:
 
 - **Research doc** — what the codebase is today. Descriptive, never prescriptive.
-- **Plan** — PRD, then program design, then work, then retrospective. Every decision, including ones made mid-implementation, lands here as it happens.
+- **Plan** — PRD, then program design, then the work. Every decision, including ones made mid-implementation, lands here as it happens.
 
 Paths come from the `## Knowledge base` table in `AGENTS.md` (and `## Workflow` for PR/merge preferences). No table → invoke `kb-init`. Never guess a path.
 
@@ -68,4 +68,4 @@ Finally, honor the workflow that is stated in the agents file. If none exists, a
 
 ## Phase 6 — Land
 
-Invoke `land`, naming the feature. It rebases, captures knowledge, writes the retrospective, gates once, merges, removes the worktree.
+Invoke `land`, naming the feature. It rebases, captures knowledge, gates once, merges, removes the worktree.

@@ -38,7 +38,7 @@ Codex CLI has no skills mechanism (it has its own separate plugin marketplace), 
 | --- | --- |
 | `feature` | Bootstrap a new feature: name it, allocate its number, cut an isolated worktree, stub its research and plan files, hand over to `back-and-forth`. |
 | `back-and-forth` | The conversational spine — rough idea to landed code: research, pressure-test into a PRD, design, implement, land. Resumes work in progress at whatever stage it reached. |
-| `land` | Finish the work: identify the feature, rebase onto the base branch and work conflicts through with the user, capture the change into the knowledge base, retrospective, one confirmation gate, then merge and remove the worktree. |
+| `land` | Finish the work: identify the feature, rebase onto the base branch and work conflicts through with the user, capture the change into the knowledge base, one confirmation gate, then merge and remove the worktree. |
 | `code-research` | Map what the codebase is today in the areas a change touches, via parallel read-only subagents. Reports findings; the caller decides where they land. |
 | `program-design` | Draw the shape of the code — file-tree diff, call map, interfaces and key signatures, libraries, tests. Reports the design; the caller decides what to do with it. |
 | `adversarial-review` | Independent second opinion on a PRD, design, plan or branch diff, run context-free in a Codex (or Opus) subagent and fed back as findings. |

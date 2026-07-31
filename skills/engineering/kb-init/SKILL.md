@@ -137,7 +137,7 @@ Defaults are fine when the repository makes the answer obvious; ask only where i
 
 The list grows over time. A new type is a new row and a new `type` string — OKF does not centrally register type values, so nothing else has to change.
 
-`log.md` is the other reserved OKF filename: a chronological change history, and where a retrospective belongs rather than in a document of its own.
+`log.md` is the other reserved OKF filename: a chronological change history.
 
 ## Resolution, for every later skill
 
