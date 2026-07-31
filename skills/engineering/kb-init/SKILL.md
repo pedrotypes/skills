@@ -42,7 +42,7 @@ The probe lands in one of four cases. Say plainly which one, and what you found.
 
 **Documentation exists, not OKF** — `docs/adr/`, `architecture/`, `docs/flows/`, a `doc/` tree, anything. Map each of our document types onto the closest existing directory, and carry that directory's own filename convention into the table: a project that numbers decisions `0007-thing.md` gets `<NNNN>-<slug>.md`, not our pattern. Where no directory fits a type, mark it as needing a new one.
 
-**Nothing** — a greenfield knowledge base. The user picks the root folder name; do not assume `docs/`.
+**Nothing** — a greenfield knowledge base. Default to `.agents/`, which says agent-maintained rather than human handbook and stays out of the way of whatever the project does with `docs/`. The user can override.
 
 ## 3. Decide, with the user
 
@@ -50,7 +50,7 @@ Use `AskUserQuestion`. This is a hard stop — the point of the skill is that th
 
 Present the proposed table: for each type, the directory, its `index.md`, and the filename pattern. Ask about exactly what is genuinely open:
 
-- **The root folder name**, when nothing exists. Offer what the repo hints at (`docs/` if that is the local idiom, `.agents/`, `knowledge/`) and let them type their own.
+- **The root folder name**, when nothing exists. Recommend `.agents/`; offer `docs/` where that is already the local idiom, and let them type their own.
 - **Which document types to set up now.** Default to all three in [Document types](#document-types). A project with no plans workflow may not want `Plan`.
 - **Any mapping you are unsure of**, one question each, with the existing directory as the recommended option.
 
@@ -81,9 +81,9 @@ Agent-maintained documentation, in Open Knowledge Format. These are the paths th
 
 | Type | Directory | Index | Files |
 | --- | --- | --- | --- |
-| Reference | `docs/reference/` | `docs/reference/index.md` | `<slug>.md` |
-| Data Flow | `docs/data-flows/` | `docs/data-flows/index.md` | `<slug>.md` |
-| Plan | `docs/plans/` | `docs/plans/index.md` | `P<n>-<slug>.md`, research `R<n>-<slug>.md` |
+| Reference | `.agents/reference/` | `.agents/reference/index.md` | `<slug>.md` |
+| Data Flow | `.agents/data-flows/` | `.agents/data-flows/index.md` | `<slug>.md` |
+| Plan | `.agents/plans/` | `.agents/plans/index.md` | `P<n>-<slug>.md`, research `R<n>-<slug>.md` |
 ```
 
 The columns: **Type** is the OKF `type` written into each document's frontmatter. **Directory** is repo-relative. **Index** is that type's OKF listing file. **Files** is the filename pattern — `<slug>` is kebab-case, `<n>` is an integer allocated one above the highest already in use *counted across all branches*, `<NNNN>` is the same zero-padded to four digits. A type may list more than one pattern when its documents come in pairs.

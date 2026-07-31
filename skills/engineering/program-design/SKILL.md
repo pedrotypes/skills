@@ -1,70 +1,35 @@
 ---
 name: program-design
-description: Draw the shape of the code — call maps, interfaces and key signatures, the file-tree diff, and the libraries and tools in play — for a change that is planned, already coded, or merely described, then argue it out before the shape gets expensive to change. Use when the user asks for the program design, the shape of the code, a call graph or call map, which files a change will touch, or what a change is actually going to do.
+description: Draw the shape of the code — call maps, interfaces and key signatures, the file-tree diff, and the libraries and tools in play — for a change that is planned, already coded, or merely described. Use when the user asks for the program design, the shape of the code, a call graph or call map, which files a change will touch, or what a change is actually going to do.
 ---
 
 # program-design
 
-Architecture says how the big pieces talk to each other. Program design is one level down: **the shape of the code** — the types, the signatures, the file layout, the call stacks, the dependencies. It is the level where agents quietly go wrong, and where a human can catch it by reading half a page instead of a thousand-line diff.
+This is where the design gets decided: the types, signatures, file layout, call stacks, and dependencies. Spend the tokens here — the shape is cheap now and expensive later. Light pseudocode, never Mermaid.
 
-Every artifact below is a decision that would otherwise be made implicitly and discovered at code review — the most expensive moment to change your mind. None of it takes long: **you draft it, the user argues with it.**
+Output the artifacts and the findings, then stop. Invoked by another skill, that skill decides what to do with them.
 
-Light pseudocode, not Mermaid. Mermaid is for runtime data flows; it is overkill for code shape and lures everyone into a false sense of alignment.
+## 1. Get the change request
 
-## 1. Pick the mode
+Nothing to design without one. Take a PRD and research doc if handed them, a plan or a description otherwise, and **if given nothing, ask what is being built** before drawing anything. State in one line which you are working from and whether you are *proposing* a shape (not yet coded) or *deriving* one from code that exists — in the latter case draw what the code does, not what it was meant to do.
 
-Take the subject from the argument; infer it from the conversation if there is none; ask only when genuinely ambiguous. Say which mode you are in, in one line, before drawing anything.
+## 2. Ground truth
 
-- **planned** — a plan, a PRD, or a design agreed in conversation but not yet coded. You are *proposing* the shape.
-- **coded** — a branch, a diff, a worktree, or "what did you just do". You are *deriving* the shape from code that exists, so the user can see what was actually built without reading every line.
-- **described** — loose prose, no plan and no code. You are *drafting* a shape to argue about; it may go nowhere, and that is fine.
+Never draw from imagination, never re-derive what exists. Handed a research doc, it is ground truth — read it, then the code only at the sites it names; the survey already happened.
 
-## 2. Get ground truth — without redoing work
+**Without one, invoke `code-research`** and design from what it reports. It writes nothing; its findings are yours to use here and are not a document. From a diff, trace outward from each entrypoint as well; from a bare description, anchor to the nearest existing code.
 
-Never draw from imagination. But do not re-derive context that already exists:
+Every node must be a name that exists today or one you are explicitly proposing. Mark an edge you could not verify `?` and say what you would need to read.
 
-**Invoked from `back-and-forth`** — the PRD and the research doc are the ground truth, and they were written for exactly this. Read them, then read the actual code only at the specific sites they name. Do not re-survey the codebase; that pass already happened.
-
-**Invoked standalone** — read the plan and its matched research doc if they exist (paths come from the `## Knowledge base` table in `AGENTS.md`), then the code at the change sites. In **coded** mode, read the diff (`git diff main...HEAD`, or the working tree) and trace outward from each entrypoint it creates or moves. In **described** mode, locate the nearest existing code the description would attach to and anchor there.
-
-A call map invented on top of prose is worthless — every node must be a name that exists today, or a name you are explicitly proposing. Where you cannot verify an edge by reading, mark it `?` and say what you would need to read.
-
-Also read the project's own invariants — `AGENTS.md` and the standards in the knowledge base — because step 4 checks the shape against them, and they differ per project.
+Read the project's standards — `AGENTS.md`, the knowledge base, and the surrounding code itself. **The shape must look like it was always there:** its naming, layering, error handling, test style, and file placement follow local convention, and it reuses what exists instead of adding a parallel way to do the same thing. A design a reviewer can date by its style is wrong. Where local convention is genuinely bad for this change, say so and justify the departure — do not silently diverge.
 
 ## 3. Draft the artifacts
 
-Produce these. Skip one only when the change genuinely has nothing to say there, and say so rather than silently omitting it. The examples are illustrative — use the language and layout conventions of the project in front of you.
+In this order. Examples are illustrative; follow the project's own conventions.
 
-### Call map — production
+### 1. File-tree diff
 
-For any orchestration or control-flow change. Diff syntax when the interesting part is what is *changing*: `+` added, `-` removed, unmarked lines are existing code that stays. Annotate boundary hops, since that is where substitution happens.
-
-```diff
- daemon.Run
-   queue.Worker.tick
-     agent.Task.Advance
-+      agent.buildRequest
-+        ports.Directory.List           # boundary hop → localdir adapter
-       ports.LLM.CompleteWithTools
--      agent.legacyPromptAssembly
-```
-
-### Call map — tests
-
-Not decoration: this is where you see whether the seams are real. If the test map cannot substitute at the boundary, the seam does not exist.
-
-```
-agent_test.TestAdvance_IncludesPeers
-  agent.Task.Advance
-    ports.Directory.List        → fakedirectory.Fake    # substituted at the boundary
-    ports.LLM.CompleteWithTools → fakellm.Scripted
-```
-
-Where the project is test-first, this map is also the work order: the test named here is the failing test that comes first.
-
-### File-tree diff
-
-So the user stays in touch with where things live. `+` new, `~` modified, `-` deleted. One trailing comment per line, no essays.
+Where everything lives, first, so the reader is oriented before anything else. `+` new, `~` modified, `-` deleted. One trailing comment per line.
 
 ```diff
  internal
@@ -77,43 +42,51 @@ So the user stays in touch with where things live. `+` new, `~` modified, `-` de
 ~ cmd/daemon/main.go                   # MODIFIED — constructs and injects the port
 ```
 
-### Interfaces and key signatures
+### 2. Call map
 
-The stuff too internal for an architecture doc that an agent still gets wrong. Real code, elided bodies, only the *key* new or changed declarations — not a header dump. Call out signature changes to *existing* functions separately; those are where callers break.
+Diff syntax when the interesting part is what changes. Annotate boundary hops.
 
-### Libraries and tools
+```diff
+ daemon.Run
+   queue.Worker.tick
+     agent.Task.Advance
++      agent.buildRequest
++        ports.Directory.List           # boundary hop → localdir adapter
+       ports.LLM.CompleteWithTools
+-      agent.legacyPromptAssembly
+```
 
-Anything new the change drags in, and anything existing it leans on harder. Per entry: what it is for, why it beats the alternative already in the project, and what it costs — a new dependency, a build-step change, a version floor, a license, a platform constraint. **"None"** is a valid and welcome answer; say it explicitly rather than omitting the section, because silence reads as "not considered".
+### 3. Interfaces and key signatures
+
+Real code, elided bodies, only the *key* new or changed declarations — not a header dump. Call out signature changes to *existing* functions separately; that is where callers break.
+
+### 4. Libraries and tools
+
+Only if the change brings something new in or leans harder on something existing. Per entry: purpose, why it beats what the project already has, and its cost — dependency, build step, version floor, license, platform. Nothing new, no section.
+
+### 5. Tests
+
+Prose, one line each: the name, and what it is for — the behavior it pins down, not the mechanics of it. Cover every `+` node in the call map; a production node no test covers is a gap, so name it as one. Say which boundary each test substitutes at, since a seam nothing can substitute at is not a seam. Where the project is test-first, this list is the work order and its order is the order they get written.
+
+> `TestAdvance_IncludesPeers` — a task advancing mid-run picks up peers that appeared since it started, rather than the snapshot it booted with. Substitutes `ports.Directory` and `ports.LLM`.
 
 ## 4. Read the shape back for violations
 
-The maps make invariants visible as structure, so check them before the user does. Report a hit as a finding, not a footnote. Which invariants apply comes from the project's own docs, but these generalize:
+Report a hit as a finding, not a footnote. Project docs decide which invariants apply; these generalize:
 
-- **A boundary crossed the wrong way** — an edge between two things the project's architecture says must not know about each other. It is a line in the map; find it.
-- **A leaky interface** — a boundary signature naming a concrete implementation type, a config type, or anything the boundary is supposed to hide.
-- **Construction out of place** — wiring and construction appearing outside wherever the project puts its composition root.
-- **Untested production node** — a `+` node in the production map that no test map reaches is either missing a test or is the next test to write. Name which.
-- **Secrets** — no secret value in a signature, a return, a `String()`, or a log line on any path drawn here.
-- **Depth and fan-out** — a map suddenly several levels deeper than the flow it replaces, or one function calling nine others, is worth raising even when nothing formal is violated.
+- **Boundary crossed the wrong way** — an edge between two things that must not know about each other.
+- **Leaky interface** — a boundary signature naming a concrete type, a config type, or anything the boundary hides.
+- **Construction out of place** — wiring outside the composition root.
+- **Untested production node** — a `+` node in the call map that no test in the list covers.
+- **Secrets** — none in a signature, return, `String()`, or log line on any path drawn.
+- **Depth and fan-out** — a map much deeper than the flow it replaces, or one function calling nine others.
+- **Off-convention** — a name, layer, error path, or file placement that no existing code in the project would have chosen.
+- **Stale documentation** — the shape contradicts a diagram or reference doc in the knowledge base.
 
-In **coded** mode add: does the derived shape match what the plan said? A deviation is the headline of your report, ahead of everything else.
+In **coded** mode, a deviation from what the plan said is the headline, ahead of everything else.
 
-## 5. Argue
+## 5. Report
 
-Present the artifacts, then your own read: the two or three shape decisions you are least sure about, and the alternative for each. Ask with `AskUserQuestion` — accept as-is, or reshape.
+The artifacts, the findings, and the two or three shape decisions you are least sure about with their alternatives. Nothing written to a file unless the caller asked for it.
 
-Then loop: revise against the objection and show only the changed lines, not the whole set again. Keep poking holes rather than waiting to be asked — the user's approval at the end should be earned, not assumed. Stop when they are satisfied or when what remains are reversible details a code review can settle. Do not pad the loop; a change whose shape is obvious deserves one pass.
-
-## 6. Land it
-
-Confirm before writing to a file. Where it goes depends on the mode:
-
-- **planned** — into the plan as `## Program design`, between the PRD and the numbered work sections, so the implementing agent inherits the shape instead of inventing one. Invoked from `back-and-forth`, hand the artifacts back and let it write.
-- **coded** — usually an understanding aid. Report in conversation; write nothing unless asked, or unless a step-4 violation warrants a note in the plan or a standards doc.
-- **described** — keep it in conversation. If the user wants it kept, the home is a plan, which means `feature` or `back-and-forth`, not a stray file.
-
-If the shape contradicts anything the knowledge base claims — a diagram, a reference doc — say so and invoke `kb-maintain` to fix it. Do not quietly leave a document wrong.
-
-## Tone
-
-Terse. The artifacts carry the content; prose around them is overhead. Do not restate a map in sentences underneath it. Do not draw an edge you have not verified. In **coded** mode especially, draw what the code *does*, not what it was supposed to do — the gap between those two is the entire reason this skill exists.
+Terse throughout. Do not restate a map in sentences underneath it.

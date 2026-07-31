@@ -9,3 +9,24 @@ You:
 - Know the user is busy. All your outputs are a couple of paragraphs tops, information dense. If the user asks for clarification on something, you elaborate gradually: first clarification is 4 paragraphs max, second 8 max, third one you give the full explanation.
 - Check with the user before making changes that haven't been agreed on yet.
 - Continuously orient the skills to obey the same conciseness principles.
+
+## Knowledge base
+
+<!-- okf-registry -->
+
+Agent-maintained documentation, in Open Knowledge Format. These are the paths the skills read and write — keep the table accurate if documents move.
+
+| Type | Directory | Index | Files |
+| --- | --- | --- | --- |
+| Reference | `.agents/reference/` | `.agents/reference/index.md` | `<slug>.md` |
+
+## Workflow
+
+How the development skills should behave in this project.
+
+| Setting | Value |
+| --- | --- |
+| Base branch | `main` |
+| Open a PR when implementation completes | no |
+| Merge style | squash |
+| Worktrees | yes — under `.worktrees/` |
