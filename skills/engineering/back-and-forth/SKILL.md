@@ -22,7 +22,7 @@ If `feature` handed off, start at Phase 1. Otherwise search `git worktree list`,
 
 Move into the worktree and say so; never switch the root checkout's branch.
 
-Resume at the first missing thing: no research → Phase 2; no PRD → Phase 3; PRD unapproved → Phase 3 gate; no `## Program design` → Phase 4; design unapproved → Phase 4 gate; work unfinished → Phase 5; done → Phase 6. Artifacts beat the plan's `stage` hint. Never redo a finished phase.
+Resume at the first missing thing: no research → Phase 2; no PRD → Phase 3; no `## Program design` → Phase 4; both present but no recorded joint approval → back into the 3–4 loop; work unfinished → Phase 5; done → Phase 6. Artifacts beat the plan's `stage` hint. Never redo a finished phase.
 
 ## Phase 1 — Frame
 
@@ -38,24 +38,34 @@ Write those findings into the research doc (OKF frontmatter, `type: Research`) w
 
 Poke holes at the idea, one or two sharpest objections at a time. Aim at: unexamined assumptions, whether it needs to exist, what success means, then the technical holes — security gaps, performance problems, find the errors that the user forgot to think about. Close every open question the research raised. Help the user arrive at something better, not just shoot theirs down. Drop objections you lose.
 
-Write the PRD as the plan's first section: summary, problem, audience, success criteria, agreed solution. **Then stop** — the user approves before designing. Fold every round of feedback into the PRD itself.
+Write the PRD as the plan's first section: summary, problem, audience, success criteria, agreed solution. Fold every round of feedback into the PRD itself.
 
 The PRD only contains facts, not discussion leftovers. We don't pollute the context with discarded alternatives, only what's real.
 
 ## Phase 4 — Program design
 
-Invoke `program-design`; it reads the PRD and research and reports back without writing. Keep poking holes as the shape returns, then write the agreed shape into the plan as `## Program design`. **Stop again** for approval before any code.
+Invoke `program-design`; it reads the PRD and research and reports back without writing. Keep poking holes as the shape returns, then write the agreed shape into the plan as `## Program design`.
+
+A shape that will not come out clean usually means the PRD asked for the wrong thing. Say so and go back to Phase 3 rather than designing around it.
+
+## Phases 3 and 4 are one loop
+
+They run until **both you and the user are about 92% confident this is ready to build**, and only then does any code get written.
+
+Each lap, state your own confidence as a number and name the one or two things holding it down; ask the user for theirs. Below the bar on either side, take another lap — whoever is less sure sets its agenda. The number is a real measure, not a ritual: 92% means the doubt that remains is the kind only writing the code will settle, and anything a further exchange could answer means you are not there yet. It is deliberately not 100 — chasing certainty in conversation costs more than discovering the last few percent in the editor.
+
+When the bar is met, record in the plan that it is — that record is what a cold session reads to know code may be written.
+
+Offer `adversarial-review` in one line, easy to decline; never nag. When one runs, work findings to green, record a verdict per finding in the plan, then commit everything as one commit. Do not leave the tree dirty and do not ask whether to commit.
 
 ## Phase 5 — Implement
 
-Build it per `AGENTS.md` and the project's standards and test discipline. Fold every correction and deviation into the plan as it happens. Work in sections; report each as it finishes.
+Follow the plan as closely as possible. Small corrections that are necessary to fix problems that pop up can be folded into the plan in a later "implementation notes" section. Any correction that changes functionality needs to be checked with the user first. Be very brief in your output, report only which section you are in when it changes, and only point out corrections, no need to narrate successes.
 
-When done, honor `open PR` from `## Workflow`; if it says `ask` or is absent, ask once, then either push and `gh pr create` with the PRD problem statement as body, or stop with the work committed locally.
+When done, honor the `Adversarial review` setting in the workflow table without asking: `auto` runs `adversarial-review` on the diff, `ask` puts the one-line offer, `no` skips it. Only an absent table earns a question. Fix any findings that don't affect functionality. For the findings that do, make a recommendation to the user but ask them what to do.
+
+Finally, honor the workflow that is stated in the agents file. If none exists, ask the user what they want to do and offer "merge" or "open pr"
 
 ## Phase 6 — Land
 
 Invoke `land`, naming the feature. It rebases, captures knowledge, writes the retrospective, gates once, merges, removes the worktree.
-
-## At every gate
-
-Offer `adversarial-review` in one line, easy to decline; never nag. When one runs, work findings to green, record a verdict per finding in the plan, then commit everything as one commit. Do not leave the tree dirty and do not ask whether to commit.

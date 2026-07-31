@@ -20,7 +20,9 @@ The target determines the tool. Take it from the argument or the conversation; a
 
 ## 2. Pick the reviewer
 
-Prefer Codex; fall back to Opus. Check once, cheaply:
+The `Reviewer` row in the `## Workflow` table of `AGENTS.md` decides it — use that command and do not deliberate. `subagent`, or no table at all, means the fallback below.
+
+Without a table, prefer Codex and check once, cheaply:
 
 ```bash
 command -v codex >/dev/null 2>&1 && echo codex || echo fallback
