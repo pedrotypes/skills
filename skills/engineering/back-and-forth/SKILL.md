@@ -128,15 +128,7 @@ Work in sections the plan can reference, and say what changed as you finish each
 
 ## Phase 6 — Land
 
-Turn a finished feature into landed, documented history. Read `references/landing.md` for the full procedure; the shape is:
-
-1. **Rebase onto the base branch** and confirm it is actually mergeable — this is where a conflict surfaces, not after the merge is attempted.
-2. **Capture what changed** into the knowledge base via `kb-maintain`, which works out which document types this project actually keeps and which of them this change touched — each capture traceable to a real diff hunk.
-3. **Write the retrospective** into the plan and the knowledge base's `log.md`.
-4. **One review gate** covering every capture and the merge go-ahead together, so the permanent record is validated in a single pass.
-5. **Merge and clean up** — merge the PR (or merge locally when there is none), delete the branch, fast-forward the base, remove the worktree.
-
-Two hard rules carry through: **nothing is written or merged until the user confirms**, and **only high-value, verified captures** — if you cannot point to the hunk, commit, or conversation turn a claim comes from, drop it. Landing is not deploying; never deploy as part of it.
+When the user says the work is done, **invoke `land`**. It rebases onto the base branch and works any conflict through with the user, captures what changed into the knowledge base, writes the retrospective, confirms all of it plus the merge in one gate, then merges and removes the worktree. Tell it which feature this is so it does not have to ask.
 
 ## Offer the adversarial review at every gate
 

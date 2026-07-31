@@ -81,6 +81,8 @@ Make the worktree the working directory, then invoke `back-and-forth`, telling i
 
 Tell the user the worktree path and that the root checkout was left alone.
 
+The far end of the flow is `land` — it rebases, captures the change into the knowledge base, merges and removes this worktree. Nothing here needs to do anything about that now; `back-and-forth` reaches it when the user says the work is done, and `land` can also be invoked directly at any later point.
+
 ## Notes
 
 - Never switch the root checkout's branch. If the root is dirty in a way that blocks `git worktree add`, surface it rather than working around it.

@@ -32,6 +32,18 @@ That symlinks each skill into `~/.agents/skills/<name>`, which opencode reads al
 
 Codex CLI has no skills mechanism (it has its own separate plugin marketplace), so these are not wired into it yet.
 
+## Skills list
+
+| Skill | Purpose |
+| --- | --- |
+| `feature` | Bootstrap a new feature: name it, allocate its number, cut an isolated worktree, stub its research and plan files, hand over to `back-and-forth`. |
+| `back-and-forth` | The conversational spine — rough idea to landed code: research, pressure-test into a PRD, design, implement, land. Resumes work in progress at whatever stage it reached. |
+| `land` | Finish the work: identify the feature, rebase onto the base branch and work conflicts through with the user, capture the change into the knowledge base, retrospective, one confirmation gate, then merge and remove the worktree. |
+| `program-design` | Draw the shape of the code — call maps, interfaces and key signatures, file-tree diff, libraries in play — then argue it out before the shape gets expensive to change. |
+| `adversarial-review` | Independent second opinion on a PRD, design, plan or branch diff, run context-free in a Codex (or Opus) subagent and fed back as findings. |
+| `kb-init` | Make sure the project has an agent-maintained knowledge base in Open Knowledge Format, and record its paths in `AGENTS.md` for every later skill to read. |
+| `kb-maintain` | Keep that knowledge base true: work out which document types a change affects, learn each type's local conventions, then draft, confirm and apply the updates. |
+
 ## Layout
 
 ```
