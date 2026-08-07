@@ -47,7 +47,7 @@ The probe lands in one of four cases. Say plainly which one, and what you found.
 
 **Documentation exists, not OKF** — `docs/adr/`, `architecture/`, `docs/flows/`, a `doc/` tree, anything. Map each of our document types onto the closest existing directory, and carry that directory's own filename convention into the table: a project that numbers decisions `0007-thing.md` gets `<NNNN>-<slug>.md`, not our pattern. Where no directory fits a type, mark it as needing a new one.
 
-**Nothing** — a greenfield knowledge base. Default to `.agents/`, which says agent-maintained rather than human handbook and stays out of the way of whatever the project does with `docs/`. The user can override.
+**Nothing** — a greenfield knowledge base. Default to `AGENTS.kb/`, which sits next to the `AGENTS.md` holding its registry so the pair reads as one thing, says agent-maintained rather than human handbook, and stays out of the way of whatever the project does with `docs/`. Unlike a dotted directory it is visible in a file listing, which matters for documentation a human is also expected to read. The user can override.
 
 ## 3. Decide, with the user
 
@@ -57,7 +57,7 @@ Present the proposed table: for each type, the directory, its `index.md`, and th
 
 **A settled answer is not open.** Anything the existing tables already state is kept, and anything the declined marker lists stays declined — state both in one line as being kept, and do not put either to a vote. Ask only where a path has drifted, or this skill has learned to ask something the tables were written before. Where an answer exists but a related question is new, carry the existing value in as the recommended option so the cheapest response is to keep it.
 
-- **The root folder name**, when nothing exists. Recommend `.agents/`; offer `docs/` where that is already the local idiom, and let them type their own.
+- **The root folder name**, when nothing exists. Recommend `AGENTS.kb/`; offer `docs/` where that is already the local idiom, and let them type their own.
 - **Which document types to set up now.** Default to all three in [Document types](#document-types). A project with no plans workflow may not want `Plan`. Whatever is turned down goes in the declined marker and is never offered again — offer it only if the user brings it up.
 - **Any mapping you are unsure of**, one question each, with the existing directory as the recommended option.
 - **Whether an adversarial review runs automatically once implementation completes**, and if so **which reviewer** — one option per agent the probe found, plus a subagent of the current harness. An outside agent is the stronger review because it shares no context with the session that wrote the code; a subagent is the fallback when nothing else is installed. Ask both even when the first answer is no — the reviewer still decides who runs a review the user invokes by hand.
@@ -89,9 +89,9 @@ Agent-maintained documentation, in Open Knowledge Format. These are the paths th
 
 | Type | Directory | Index | Files |
 | --- | --- | --- | --- |
-| Reference | `.agents/reference/` | `.agents/reference/index.md` | `<slug>.md` |
-| Data Flow | `.agents/data-flows/` | `.agents/data-flows/index.md` | `<slug>.md` |
-| Plan | `.agents/plans/` | `.agents/plans/index.md` | `P<n>-<slug>.md`, research `R<n>-<slug>.md` |
+| Reference | `AGENTS.kb/reference/` | `AGENTS.kb/reference/index.md` | `<slug>.md` |
+| Data Flow | `AGENTS.kb/data-flows/` | `AGENTS.kb/data-flows/index.md` | `<slug>.md` |
+| Plan | `AGENTS.kb/plans/` | `AGENTS.kb/plans/index.md` | `P<n>-<slug>.md`, research `R<n>-<slug>.md` |
 
 <!-- okf-declined: Data Flow -->
 ```
