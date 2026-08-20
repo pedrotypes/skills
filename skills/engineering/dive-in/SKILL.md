@@ -17,7 +17,7 @@ The `Feature` row in the `## Knowledge base` table of `AGENTS.md`, and `## Workf
 
 | Path | Holds |
 | --- | --- |
-| `FEAT<n>-<slug>.md` | The PRD, not a plan: goals, the high-level design choices we mean to stay true to, acceptance criteria. OKF frontmatter with `status: todo\|doing\|done`. Evolves as we learn. |
+| `FEAT<n>-<slug>.md` | The PRD, not a plan: problem, success, design commitments, numbered acceptance criteria. Shape and rules in [references/prd.md](references/prd.md). OKF frontmatter with `status: todo\|doing\|done`. Evolves as we learn. |
 | `iterations/ITER<n>-<step>-<slug>.md` | One file per slice, `<step>` counting from 1. The newest is the slice in hand; the rest are the history of what was built. |
 | `TODO.md` | Work this feature still owes, waiting for a later slice. Nothing else. |
 
@@ -40,6 +40,31 @@ git fetch --all --quiet
 
 Nothing printed means `1`, otherwise that `+ 1`. Confirm number and slug, cut `git worktree add -b feat/<n>-<slug> .worktrees/<n>-<slug> origin/main`, work from inside it, and leave the root checkout alone. Write the PRD from the opening interview and add the feature to the type's `index.md`.
 
+## The opening interview
+
+Four things, extracted once at the feature's start and written into the PRD, then revisited cheaply at each close. Skeptical but constructive throughout: the aim is that the user can describe their own feature by the end, not that you win an argument.
+
+1. **The problem.** What is broken today and who is hurt by it. Keep asking until it is a problem rather than a solution wearing one as a hat. A user who cannot say who this is for does not yet have a feature.
+2. **Success.** How we would know afterwards that this was worth building. Do not invent telemetry to fill the box — `Not measured` is a real answer, and often the honest one.
+3. **Design commitments.** Technology, framework, approach, code design, architecture. What we mean to stay true to, and why. Anything the codebase already decides, read rather than ask.
+4. **Acceptance criteria.** The long one. See below.
+
+Anything important that surfaces here and is not this feature goes to `BACKLOG.md` as it comes up.
+
+The PRD is done when a session with no context could read it and start building. Test that by reading it as that session: the first thing you cannot act on is the gap.
+
+## Acceptance criteria are the interview
+
+Exhaustive in the sense of covering every way we would know the feature is done — the failure paths, the empty case, whatever the user would poke at first — not exhaustive in design detail, which belongs to the slice.
+
+Walk them one at a time with the user, and the walk is the work: what makes each fail, what happens at the edges, what it implies about the criteria either side of it. Name every hole, inconsistency and gap rather than quietly patching it — the user wants to see the problem, not a corrected list. Each one becomes a dialog with your fix as the recommended option.
+
+A simple feature earns this pass too. Simple is where the unexamined assumption hides, and a criterion nobody argued with is usually one nobody read.
+
+Every criterion is checkable by you, mechanically: a command and the output that proves it. A manual procedure only where no test can reach, and you run those yourself before saying the feature is done. [references/prd.md](references/prd.md) has the rules.
+
+Exhaustive up front does not mean fixed. Slices teach us things, and the PRD absorbs them — with permission, as below.
+
 ## How the dialogue runs
 
 `AskUserQuestion` carries almost all of it. Typing costs the user more than clicking, and the point of this skill is that they never have to look away.
@@ -55,7 +80,7 @@ Prose is for what cannot be optioned: hearing out a new feature, showing finding
 1. **Interview.** Sharpest question first, as a dialog. Read the code as you go, documentarian only — where the change lands, which patterns already exist to follow. Cheap greps by default; invoke `code-research` only where the area is genuinely unmapped.
 2. **Propose one slice**, in one message, as the four blocks below and nothing else.
 3. **Gate.** `AskUserQuestion`: accept, or refine. Refine goes back to 1. Accept flips the iteration file to `Status: accepted` and drains from `TODO.md` whatever this slice carries, leaving the rest.
-4. **Build.** Turn the accepted criteria into real tests, then code until they pass. Implementation choices are yours. Anything that changes agreed behavior stops and asks.
+4. **Build.** Red/green, one criterion at a time: the check first, watch it fail for the reason it names, then make it pass. Never weaken a check to get green. Implementation choices are yours; anything that changes agreed behavior stops and asks.
 5. **Review**, as below.
 6. **Close.** Iteration file to `Status: done`, triage `TODO.md` as below, update the PRD's `status`. One line to the user, then loop or land.
 
@@ -63,16 +88,10 @@ A slice is what you can build and show green in one pass. If you are unsure it f
 
 Propose only when you are about 92% sure the slice is covered — the doubt left is the kind only writing the code settles. Below that, say the number and the one thing holding it down, and take another interview lap instead of proposing.
 
-## Walk the criteria before committing to them
-
-The interview's real work is the acceptance criteria, one at a time, out loud with the user. For each: what makes it fail, what happens at the edges, what it says about the criteria either side of it. Name every hole, inconsistency and gap you find rather than quietly patching it — the user wants to see the problem, not a corrected list. Each one you find becomes a dialog with your fix as the recommended option.
-
-A simple feature earns this pass too. Simple is where the unexamined assumption hides, and a criterion nobody argued with is usually one nobody read.
-
 ## The four blocks
 
-1. **Goals** — the feature's, in your words, two or three lines. It confirms we are still aimed at the same thing.
-2. **Acceptance criteria** — English tests for this slice only, each one implementable as a single check. Mark any that costs money or minutes to run and keep those to the few that earn it.
+1. **Goals** — the feature's, in your words, two or three lines, and the PRD criteria this slice covers by number. It confirms we are still aimed at the same thing and makes what is left a fact.
+2. **Acceptance criteria** — this slice's, drawn from the PRD's and sharpened to what a single check can prove. Mark any that costs money or minutes to run and keep those to the few that earn it.
 3. **File tree diff** — added, changed, deleted.
 4. **Pseudocode** — the actual changes, in enough detail to argue with.
 
@@ -128,4 +147,6 @@ A slice teaching us the PRD's goals or acceptance criteria are wrong is normal a
 
 ## Done
 
-`status: done` → invoke `land`, naming the feature.
+Before the PRD goes to `status: done`: run the full suite, then execute every manual criterion yourself and report each one passing. A criterion you cannot execute is not a pass — say so and let the user decide.
+
+Then invoke `land`, naming the feature.
