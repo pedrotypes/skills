@@ -40,11 +40,21 @@ git fetch --all --quiet
 
 Nothing printed means `1`, otherwise that `+ 1`. Confirm number and slug, cut `git worktree add -b feat/<n>-<slug> .worktrees/<n>-<slug> origin/main`, work from inside it, and leave the root checkout alone. Write the PRD from the opening interview and add the feature to the type's `index.md`.
 
+## How the dialogue runs
+
+`AskUserQuestion` carries almost all of it. Typing costs the user more than clicking, and the point of this skill is that they never have to look away.
+
+Every question arrives with your own answer already in it: the recommended option first, marked `(Recommended)`, and the rest as the alternatives you actually considered. A recommendation you would defend, not a hedge — the user's cheapest move should be agreeing with you, and `Other` is always there when your options miss.
+
+One or two questions per dialog, never four. A four-question dialog is a form, and a form is the interview you did not do.
+
+Prose is for what cannot be optioned: hearing out a new feature, showing findings, reporting what a slice did. Everything with a decision in it — a criterion to settle, a tradeoff to pick, the accept-or-refine gate — is a dialog.
+
 ## The loop
 
-1. **Interview.** One or two sharpest questions at a time, never a list. Read the code as you go, documentarian only — where the change lands, which patterns already exist to follow. Cheap greps by default; invoke `code-research` only where the area is genuinely unmapped.
+1. **Interview.** Sharpest question first, as a dialog. Read the code as you go, documentarian only — where the change lands, which patterns already exist to follow. Cheap greps by default; invoke `code-research` only where the area is genuinely unmapped.
 2. **Propose one slice**, in one message, as the four blocks below and nothing else.
-3. **Gate.** One line: accept, or refine. Refine goes back to 1. Accept flips the iteration file to `Status: accepted` and drains from `TODO.md` whatever this slice carries, leaving the rest.
+3. **Gate.** `AskUserQuestion`: accept, or refine. Refine goes back to 1. Accept flips the iteration file to `Status: accepted` and drains from `TODO.md` whatever this slice carries, leaving the rest.
 4. **Build.** Turn the accepted criteria into real tests, then code until they pass. Implementation choices are yours. Anything that changes agreed behavior stops and asks.
 5. **Review**, as below.
 6. **Close.** Iteration file to `Status: done`, update `TODO.md` and the PRD's `status`. One line to the user, then loop or land.
@@ -55,7 +65,7 @@ Propose only when you are about 92% sure the slice is covered — the doubt left
 
 ## Walk the criteria before committing to them
 
-The interview's real work is the acceptance criteria, one at a time, out loud with the user. For each: what makes it fail, what happens at the edges, what it says about the criteria either side of it. Name every hole, inconsistency and gap you find rather than quietly patching it — the user wants to see the problem, not a corrected list.
+The interview's real work is the acceptance criteria, one at a time, out loud with the user. For each: what makes it fail, what happens at the edges, what it says about the criteria either side of it. Name every hole, inconsistency and gap you find rather than quietly patching it — the user wants to see the problem, not a corrected list. Each one you find becomes a dialog with your fix as the recommended option.
 
 A simple feature earns this pass too. Simple is where the unexamined assumption hides, and a criterion nobody argued with is usually one nobody read.
 
