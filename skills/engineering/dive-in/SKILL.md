@@ -143,7 +143,11 @@ When the work says a principle should change, or that one is missing, surface it
 
 ## Changing the feature itself
 
-A slice teaching us the PRD's goals or acceptance criteria are wrong is normal and expected. Say so, propose the edit, and wait for an explicit yes. Slice-level changes are yours to propose freely; feature-level ones are never silent.
+A slice teaching us the problem, the success measure, a design commitment or an acceptance criterion is wrong is normal and expected — that is what building tells you and conversation cannot. Bring it up the moment you see it rather than at the close.
+
+Amending the PRD needs the user's yes, always as a dialog naming what the criterion says now, what it would say instead, and what the slice taught. Added criteria take the next free number; a criterion that no longer holds is struck through with a line on why, never renumbered and never deleted, so an old iteration file still means what it meant.
+
+Slice-level changes are yours to propose freely; feature-level ones are never silent.
 
 ## Done
 
