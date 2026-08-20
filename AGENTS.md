@@ -41,10 +41,12 @@ How the development skills should behave in this project.
 
 Semver, bare — `0.1.0`, no `v` prefix, for both tags and branch names.
 
-| Bump  | Earned by                                                                         |
-| ----- | --------------------------------------------------------------------------------- |
-| Major | A skill is removed or renamed, or its invocation contract or output shape changes |
-| Minor | A skill is added, or an existing one gains behavior                               |
-| Patch | Wording, fixes, and edits that leave behavior intact                              |
+Below `1.0.0` every bump is one step smaller than it eventually will be: a contract change takes the minor, and everything else takes the patch.
+
+| Change                                                                            | Pre-1.0 | 1.0.0 on |
+| --------------------------------------------------------------------------------- | ------- | -------- |
+| A skill is removed or renamed, or its invocation contract or output shape changes | minor   | major    |
+| A skill is added, or an existing one gains behavior                               | patch   | minor    |
+| Wording, fixes, and edits that leave behavior intact                              | patch   | patch    |
 
 Work happens on a branch named for the release it is heading for. Landing that branch on `main` gets the tag, and the next branch is cut straight after. The largest bump any single change in a release earns is the bump the whole release takes.
