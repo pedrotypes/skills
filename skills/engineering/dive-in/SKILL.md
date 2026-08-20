@@ -19,7 +19,7 @@ The `Feature` row in the `## Knowledge base` table of `AGENTS.md`, and `## Workf
 | --- | --- |
 | `FEAT<n>-<slug>.md` | The PRD, not a plan: goals, the high-level design choices we mean to stay true to, acceptance criteria. OKF frontmatter with `status: todo\|doing\|done`. Evolves as we learn. |
 | `iterations/ITER<n>-<step>-<slug>.md` | One file per slice, `<step>` counting from 1. The newest is the slice in hand; the rest are the history of what was built. |
-| `TODO.md` | Everything the conversation surfaced that the slice in hand will not carry. |
+| `TODO.md` | Work this feature still owes, waiting for a later slice. Nothing else. |
 
 Only the PRD is an OKF document; the iteration files and `TODO.md` carry no frontmatter.
 
@@ -57,7 +57,7 @@ Prose is for what cannot be optioned: hearing out a new feature, showing finding
 3. **Gate.** `AskUserQuestion`: accept, or refine. Refine goes back to 1. Accept flips the iteration file to `Status: accepted` and drains from `TODO.md` whatever this slice carries, leaving the rest.
 4. **Build.** Turn the accepted criteria into real tests, then code until they pass. Implementation choices are yours. Anything that changes agreed behavior stops and asks.
 5. **Review**, as below.
-6. **Close.** Iteration file to `Status: done`, update `TODO.md` and the PRD's `status`. One line to the user, then loop or land.
+6. **Close.** Iteration file to `Status: done`, triage `TODO.md` as below, update the PRD's `status`. One line to the user, then loop or land.
 
 A slice is what you can build and show green in one pass. If you are unsure it fits, cut it smaller.
 
@@ -92,9 +92,17 @@ Honor the `Adversarial review` setting in the `## Workflow` table without asking
 
 Re-run the review after fixing and keep going until a round comes back with no P1. Say each round's tally in one line.
 
+## TODO is triaged at every close, never just appended to
+
+One test decides where a surfaced item lives: **does it serve an acceptance criterion in the PRD?** Yes, and it is this feature's work — `TODO.md`. No, and it is a future feature — `BACKLOG.md`, whatever it feels adjacent to. An item nobody can place under either is dead, and saying so is better than parking it.
+
+Run that test over every `TODO.md` item at each close, not only over the new ones. A slice changes what the feature is for, so an item that was feature work two slices ago may not be any more. Report the outcome in the close line — `TODO: 3 kept, 1 to backlog, 1 dropped` — and put anything you are unsure about in a dialog with your call as the recommended option.
+
+Each item records the step it arrived at — `- (from 3) refresh tokens rotate on reuse` — so its age is a fact rather than a memory. An item that survives two closes without being picked up is telling you something. Raise it: usually it belongs in the backlog, sometimes it is the next slice, never is it a third close.
+
 ## The backlog
 
-An idea that is out of scope for the feature in hand goes in `BACKLOG.md`, appended at the end — not in `TODO.md`, which is only ever this feature's remaining work.
+`BACKLOG.md` holds future features, appended at the end. Anything out of scope for the feature in hand lands here, whether it surfaced in conversation or was triaged out of `TODO.md`.
 
 Name it back to the user when you spot one, and ask whether they want to say a few words so the project remembers. A few words are worth more than a heading; take a no and write the heading anyway.
 
