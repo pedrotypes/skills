@@ -18,7 +18,7 @@ Match the description against plan titles, not filenames. **If it exists, this s
 
 ## 2. Resolve where documents live
 
-Read the `## Knowledge base` table in `AGENTS.md` for the `Plan` and `Research` directories and filename patterns. **No table → invoke `kb-init` and stop.**
+Read the `## Knowledge base` table in `AGENTS.md` for the `Plan` directory. **No table → invoke `kb-init` and stop.**
 
 ## 3. Name it once
 

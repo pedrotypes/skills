@@ -7,7 +7,7 @@ description: Make sure this project has an agent-maintained knowledge base in Op
 
 Ensures a project has a knowledge base the agent can maintain: a set of directories in [Open Knowledge Format](references/okf.md), and a table in `AGENTS.md` that tells every later skill where they are. Run it in any repository — yours or someone else's.
 
-Two rules govern everything below. **Adapt to what exists**: if the project already has a place for a type of document, that place wins over any convention of ours. **OKF is not negotiable**: documents this or any later skill authors carry OKF frontmatter, and reserved filenames mean what the spec says they mean. Everything else — directory names, filename patterns, which document types exist — is the user's call.
+Two rules govern everything below. **Adapt to what exists**: if the project already has a place for a type of document, that place wins over any convention of ours. **OKF is not negotiable**: documents this or any later skill authors carry OKF frontmatter, and reserved filenames mean what the spec says they mean. Everything else — directory names, which document types exist — is the user's call.
 
 Never write anything before step 4.
 
@@ -45,7 +45,7 @@ The probe lands in one of four cases. Say plainly which one, and what you found.
 
 **An OKF bundle exists, unregistered** — something declares `okf_version`. Adopt its directories as they are. Infer one document type per distinct `type` value already in use. Propose the table; do not invent new directories alongside it.
 
-**Documentation exists, not OKF** — `docs/adr/`, `architecture/`, `docs/flows/`, a `doc/` tree, anything. Map each of our document types onto the closest existing directory, and carry that directory's own filename convention into the table: a project that numbers decisions `0007-thing.md` gets `<NNNN>-<slug>.md`, not our pattern. Where no directory fits a type, mark it as needing a new one.
+**Documentation exists, not OKF** — `docs/adr/`, `architecture/`, `docs/flows/`, a `doc/` tree, anything. Map each of our document types onto the closest existing directory. Where no directory fits a type, mark it as needing a new one.
 
 **Nothing** — a greenfield knowledge base. Default to `AGENTS.kb/`, which sits next to the `AGENTS.md` holding its registry so the pair reads as one thing, says agent-maintained rather than human handbook, and stays out of the way of whatever the project does with `docs/`. Unlike a dotted directory it is visible in a file listing, which matters for documentation a human is also expected to read. The user can override.
 
@@ -53,7 +53,7 @@ The probe lands in one of four cases. Say plainly which one, and what you found.
 
 Use `AskUserQuestion`. This is a hard stop — the point of the skill is that the user sees the mapping before anything is written into their repository.
 
-Present the proposed table: for each type, the directory, its `index.md`, and the filename pattern. Ask about exactly what is genuinely open:
+Present the proposed table: for each type, the `When to use` description and directory. Ask about exactly what is genuinely open:
 
 **A settled answer is not open.** Anything the existing tables already state is kept, and anything the declined marker lists stays declined — state both in one line as being kept, and do not put either to a vote. Ask only where a path has drifted, or this skill has learned to ask something the tables were written before. Where an answer exists but a related question is new, carry the existing value in as the recommended option so the cheapest response is to keep it.
 
@@ -87,16 +87,16 @@ State the paths written, the `CLAUDE.md` decision, and that later skills will no
 
 Agent-maintained documentation, in Open Knowledge Format. These are the paths the skills read and write — keep the table accurate if documents move.
 
-| Type | Directory | Index | Files |
-| --- | --- | --- | --- |
-| Reference | `AGENTS.kb/reference/` | `AGENTS.kb/reference/index.md` | `<slug>.md` |
-| Data Flow | `AGENTS.kb/data-flows/` | `AGENTS.kb/data-flows/index.md` | `<slug>.md` |
-| Plan | `AGENTS.kb/plans/` | `AGENTS.kb/plans/index.md` | `P<n>-<slug>.md`, research `R<n>-<slug>.md` |
+| Type | When to use | Directory |
+| --- | --- | --- |
+| Reference | Design and architecture reference — the durable shape of the system | `AGENTS.kb/reference/` |
+| Data Flow | Runtime data movement, sequence diagrams, and state transitions | `AGENTS.kb/data-flows/` |
+| Plan | Implementation plans and paired research notes | `AGENTS.kb/plans/` |
 
 <!-- okf-declined: Data Flow -->
 ```
 
-The columns: **Type** is the OKF `type` written into each document's frontmatter. **Directory** is repo-relative. **Index** is that type's OKF listing file. **Files** is the filename pattern — `<slug>` is kebab-case, `<n>` is an integer allocated one above the highest already in use *counted across all branches*, `<NNNN>` is the same zero-padded to four digits. A type may list more than one pattern when its documents come in pairs.
+The columns: **Type** is the OKF `type` written into each document's frontmatter. **When to use** is what the agent needs to know in order to decide whether to explore that directory. **Directory** is repo-relative. Every folder in the KB contains an `index.md` which explains in more detail what it's for and what's inside.
 
 Paths are plain backticked text, never `@` imports — an import loads the whole file into context at session start, which defeats the purpose. The table is the only part always in context; a type's `index.md` is read when an agent needs to know what exists, and a document only when it needs the content. That is the progressive disclosure, and it works in any harness that can read a file.
 

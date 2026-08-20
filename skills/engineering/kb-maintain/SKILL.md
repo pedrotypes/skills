@@ -15,13 +15,13 @@ Evidence is what qualifies a claim and what makes the gate reviewable. **It is n
 
 ## 1. Read the registry
 
-The `## Knowledge base` table in `AGENTS.md` lists this project's document types, their directories, their indexes, and their filename patterns. **No table means invoke `kb-init` and stop.** Never guess a path, never invent a type that is not in the table, and never write outside the declared directories.
+The `## Knowledge base` table in `AGENTS.md` lists this project's document types, when to use each, and their directories. **No table means invoke `kb-init` and stop.** Never guess a path, never invent a type that is not in the table, and never write outside the declared directories. Every folder in the KB contains an `index.md` that explains in more detail what it is for and lists what is inside.
 
 ## 2. Work out what is affected
 
 Start from evidence, not from a feeling that documentation is owed. The trigger is usually one of: a change just landed and the conversation shows what moved; the user asked for something to be documented or updated; or something read in the code contradicts what a document claims.
 
-Map the change onto types by asking what *sort* of truth moved, then matching that against the types in the table:
+Map the change onto types by matching the kind of change against each type's `When to use` description in the table:
 
 - Behavior, an invariant, a failure path, a rule a future reader must know.
 - Structure — a new component, a moved responsibility, a boundary that shifted.
@@ -63,7 +63,7 @@ The test: read the draft as someone who came for one fact. Everything they had t
 
 Work out the exact edit — the specific lines to add or change, in the voice and structure of the target. Prefer a tight `Edit` over a rewrite; rewrite only when the structure itself changed. Do not restructure a document as a side effect of updating one fact in it.
 
-For a **new** document: the filename follows the type's pattern from the table, and content follows the conventions from step 3.
+For a **new** document: the filename uses a short kebab-case `<slug>.md` (or the numbering scheme seen in existing siblings), and content follows the conventions from step 3.
 
 Apply nothing yet.
 
