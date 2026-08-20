@@ -15,7 +15,7 @@ Update on any machine:
 claude plugin marketplace update pedrotypes && claude plugin update skills@pedrotypes
 ```
 
-No `version` is set in the manifest, so the plugin is versioned by git commit SHA — every push to `main` is picked up by `plugin update`. Pin releases later by adding `version` to `.claude-plugin/plugin.json`.
+No `version` is set in the manifest, so the plugin is versioned by git commit SHA — every push to `main` is picked up by `plugin update`. Releases are marked by bare semver tags (`0.1.0`) for humans reading the history; the tag does not change what `plugin update` fetches. Pin releases properly by adding `version` to `.claude-plugin/plugin.json`.
 
 Skills appear namespaced, e.g. `/pedrotypes-skills:feature` — the prefix comes from `name` in `plugin.json`, while the install id (`skills@pedrotypes`) comes from the marketplace entry, so the two intentionally differ.
 

@@ -36,3 +36,15 @@ How the development skills should behave in this project.
 | Worktrees                               | yes — under `.worktrees/` |
 | Adversarial review after implementation | no                        |
 | Reviewer                                | `codex`                   |
+
+## Versioning
+
+Semver, bare — `0.1.0`, no `v` prefix, for both tags and branch names.
+
+| Bump  | Earned by                                                                         |
+| ----- | --------------------------------------------------------------------------------- |
+| Major | A skill is removed or renamed, or its invocation contract or output shape changes |
+| Minor | A skill is added, or an existing one gains behavior                               |
+| Patch | Wording, fixes, and edits that leave behavior intact                              |
+
+Work happens on a branch named for the release it is heading for. Landing that branch on `main` gets the tag, and the next branch is cut straight after. The largest bump any single change in a release earns is the bump the whole release takes.
