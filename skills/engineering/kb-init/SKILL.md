@@ -23,7 +23,7 @@ grep -rl "okf_version" --include="*.md" . 2>/dev/null | head
 grep -n "okf-registry\|## Knowledge base" AGENTS.md CLAUDE.md 2>/dev/null
 
 # What documentation directories exist at all.
-ls -d docs doc documentation architecture adr rfcs .agents 2>/dev/null
+ls -d AGENTS.kb docs doc documentation architecture adr rfcs .agents 2>/dev/null
 find docs doc documentation -maxdepth 2 -type d 2>/dev/null | head -30
 
 # Instruction-file state — this decides the symlink question in step 4.

@@ -18,9 +18,9 @@ You:
 
 Agent-maintained documentation, in Open Knowledge Format. These are the paths the skills read and write — keep the table accurate if documents move.
 
-| Type      | When to use                                                         | Directory            |
-| --------- | ------------------------------------------------------------------- | -------------------- |
-| Reference | Design and architecture reference — the durable shape of the system | `.agents/reference/` |
+| Type      | When to use                                                         | Directory              |
+| --------- | ------------------------------------------------------------------- | ---------------------- |
+| Reference | Design and architecture reference — the durable shape of the system | `AGENTS.kb/reference/` |
 
 <!-- okf-declined: Plan, Data Flow -->
 
