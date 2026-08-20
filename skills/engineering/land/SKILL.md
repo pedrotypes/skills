@@ -9,7 +9,7 @@ Turns a finished feature into landed, documented history. Two hard rules govern 
 
 Landing **lands**. It does not deploy. Never restart or redeploy anything as part of this unless the user separately asks.
 
-Read the `## Knowledge base` table in `AGENTS.md` for the `Plan` and `Research` directories, and the `## Workflow` block for this project's base branch and merge preferences. Never guess a path.
+Read the `## Knowledge base` table in `AGENTS.md` for the `Plan`, `Research` and `Feature` directories, and the `## Workflow` block for this project's base branch and merge preferences. Never guess a path.
 
 ## 1. Identify the feature
 
@@ -20,7 +20,7 @@ git worktree list                                                    # worktrees
 git for-each-ref --sort=-committerdate --format='%(refname:short) %(committerdate:relative)' refs/heads/feat
 ```
 
-`AskUserQuestion` with the candidates **most recently updated first**, each option naming the branch, its worktree if it has one, and how long since its last commit. Read the matching plan's title for the description rather than restating the slug. Include a **Cancel** option. If exactly one candidate exists and the user just said the work is done, confirm it in one line instead of opening a dialog.
+`AskUserQuestion` with the candidates **most recently updated first**, each option naming the branch, its worktree if it has one, and how long since its last commit. Read the matching plan or feature PRD title for the description rather than restating the slug. Include a **Cancel** option. If exactly one candidate exists and the user just said the work is done, confirm it in one line instead of opening a dialog.
 
 **Move into the worktree** and say which checkout you are operating on. Never switch the root checkout's branch.
 
@@ -65,7 +65,7 @@ git diff origin/main...HEAD          # read the hunks that matter
 
 **Invoke `kb-maintain`** with the diff and what the conversation established. It reads the `## Knowledge base` table, works out which document types this change actually affects — which varies by project — learns each type's local conventions, and drafts the edits. Tell it to **draft and hand back rather than run its own gate**, so its confirmations fold into the single gate below.
 
-It does not cover the plan itself. Handle that yourself.
+It does not cover the plan or the feature's own documents. Handle those yourself.
 
 Keep the evidence — hunk, commit, or conversation turn — attached to every candidate, so the gate is not guesswork.
 

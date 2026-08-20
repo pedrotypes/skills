@@ -58,7 +58,7 @@ Present the proposed table: for each type, the `When to use` description and dir
 **A settled answer is not open.** Anything the existing tables already state is kept, and anything the declined marker lists stays declined — state both in one line as being kept, and do not put either to a vote. Ask only where a path has drifted, or this skill has learned to ask something the tables were written before. Where an answer exists but a related question is new, carry the existing value in as the recommended option so the cheapest response is to keep it.
 
 - **The root folder name**, when nothing exists. Recommend `AGENTS.kb/`; offer `docs/` where that is already the local idiom, and let them type their own.
-- **Which document types to set up now.** Default to all three in [Document types](#document-types). A project with no plans workflow may not want `Plan`. Whatever is turned down goes in the declined marker and is never offered again — offer it only if the user brings it up.
+- **Which document types to set up now.** Default to all of [Document types](#document-types). A project with no plans workflow may not want `Plan`. Whatever is turned down goes in the declined marker and is never offered again — offer it only if the user brings it up.
 - **Any mapping you are unsure of**, one question each, with the existing directory as the recommended option.
 - **Whether an adversarial review runs automatically once implementation completes**, and if so **which reviewer** — one option per agent the probe found, plus a subagent of the current harness. An outside agent is the stronger review because it shares no context with the session that wrote the code; a subagent is the fallback when nothing else is installed. Ask both even when the first answer is no — the reviewer still decides who runs a review the user invokes by hand.
 
@@ -92,6 +92,7 @@ Agent-maintained documentation, in Open Knowledge Format. These are the paths th
 | Reference | Design and architecture reference — the durable shape of the system | `AGENTS.kb/reference/` |
 | Data Flow | Runtime data movement, sequence diagrams, and state transitions | `AGENTS.kb/data-flows/` |
 | Plan | Implementation plans and paired research notes | `AGENTS.kb/plans/` |
+| Feature | One folder per feature — its PRD, its iterations, what waits — plus `BACKLOG.md` for features not started | `AGENTS.kb/features/` |
 
 <!-- okf-declined: Data Flow -->
 ```
@@ -134,6 +135,7 @@ Defaults are fine when the repository makes the answer obvious; ask only where i
 | `Reference` | Design and architecture reference — the durable shape of the system. |
 | `Data Flow` | Mermaid diagrams of how data moves at runtime. |
 | `Plan` | Implementation plans and their paired research notes. |
+| `Feature` | A folder per feature holding its PRD, one file per build iteration, and its remaining work, alongside a `BACKLOG.md` of features not started. |
 
 The list grows over time. A new type is a new row and a new `type` string — OKF does not centrally register type values, so nothing else has to change.
 

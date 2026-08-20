@@ -60,7 +60,7 @@ Keep the reviewer's own severities when it gives them; otherwise P1 = wrong or u
 
 ## 4. Answer the findings
 
-Relay the list, then work it — verifying before acting.
+Relay the list to the user in full, before any edit, then work it — verifying before acting. The reader gets to see what was weighed even where every verdict is a fix.
 
 An independent reviewer has no session context, so it will sometimes flag a deliberate choice. Read the flagged code or section first. **A finding that contradicts a decision already recorded in the plan is answered, not applied** — and if the plan failed to record the reason, that is a finding against the plan, so fix the plan.
 
