@@ -10,5 +10,5 @@
   "repository": "https://github.com/pedrotypes/skills",
   "license": "MIT",
   "keywords": ["engineering", "skills", "planning", "code-review", "worktrees"],
-  "skills": ["./skills/engineering"]
+  "skills": ["./skills/engineering", "./skills/general"]
 }
