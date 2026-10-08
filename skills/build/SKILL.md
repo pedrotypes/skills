@@ -54,7 +54,7 @@ The short path:
 3. Update the reference or data-flow doc if the behaviour it describes changed.
 4. Run *Verify*, plus each of the *Extra checks* whose condition the change meets.
 5. Run the cuts pass and one Codex review round (§6, same brief), and handle their findings as in §6. If a blocker needs a design decision, it wasn't a short-path change, so switch to the full workflow.
-6. Ship as in §7, without the proof media unless something visible changed. Put a short what-and-why in the PR body (or the merge commit message), plus the review result and anything not done.
+6. Ship as in §7, without the proof media unless something visible changed. Put a short what-and-why in the PR body (or the merge commit message). The review result and anything not done go in your hand-off to the user, not the body.
 
 ## 1. Understand
 
@@ -159,7 +159,7 @@ Cuts come first, so the review reads only the code that stays and checks what cu
 "$S/cuts.sh" "$WT" "$WT/.build/review/brief-cuts.md" "$WT/.build/review"
 ```
 
-It prints the cuts; each one's scenario and fix are in `cuts.json`. Take every cut and cleanup. The code should be as small as the plan allows. Skip one only when it would remove behaviour the plan asks for or make the design worse, and give the reason in the PR. Run the tests and commit the cuts before round 1.
+It prints the cuts; each one's scenario and fix are in `cuts.json`. Take every cut and cleanup. The code should be as small as the plan allows. Skip one only when it would remove behaviour the plan asks for or make the design worse, and give the reason in your hand-off to the user. Run the tests and commit the cuts before round 1.
 
 **The review.** Codex is the reviewer: `gpt-6.1-sol` at `medium` effort, read-only, looking only for what's wrong. There are two rounds, and `codex.sh` refuses a third. Each is a fresh session over the whole diff. Commit everything before each round. `codex.sh` refuses a dirty tree, and it records the reviewed commit in `round-<n>.sha` and the merge base its diff started from in `round-<n>.base`.
 
@@ -179,10 +179,10 @@ Run it in the background and wait. It prints the blocker count. The detail is in
 **Handle every finding of round 1:**
 
 - **Blockers (P1, P2)**: a confirmed one gets a regression test, then the fix, then a commit naming the finding id. A misread one: cite the line that disproves it. One that's by design: cite the plan or standard that decided it.
-- **P3 bugs**: fix them when the fix is small and in a file you're already changing. List the rest in the PR.
+- **P3 bugs**: fix them when the fix is small and in a file you're already changing. List the rest in your hand-off to the user.
 - If a fix would change agreed behaviour (not restore it), stop and ask the user.
 
-**Round 2** reviews the whole diff again in a fresh session. If it has no blockers, the review is done. If it has blockers, handle them the same way, then stop reviewing: say in the PR which fixes came after the final round. The same goes for code that changes after round 2 (CI fixes, conflicts from merging the base branch).
+**Round 2** reviews the whole diff again in a fresh session. If it has no blockers, the review is done. If it has blockers, handle them the same way, then stop reviewing: say in your hand-off to the user which fixes came after the final round. The same goes for code that changes after round 2 (CI fixes, conflicts from merging the base branch).
 
 ## 7. Ship
 
@@ -198,13 +198,11 @@ Every PR check must be green too. A failure is a bug (§4), not a retry. If the 
 "$S/publish-media.sh" p<n>-<slug> <each captured file>
 ```
 
-**The PR.** Push and open it with `gh`. The title follows the repository's commit style, with the ticket ID when there is one: `feat(PROJ-12): export answers as Markdown`. Write the body for someone who didn't watch:
+**The PR.** Push and open it with `gh`. The title follows the repository's commit style, with the ticket ID when there is one: `feat(PROJ-12): export answers as Markdown`. Write the body for the reviewer, who didn't watch. It carries the context they need to review the change, and nothing about how it was built or reviewed: no cuts, review rounds, findings or dismissals, and no "not done" list. Anything the reviewer must know, such as a deliberate limitation, a risk, or a step they must take, goes in **What and why**.
 
 - **What and why**, from the plan's summary, with the ticket link and a link to the committed picture when there are any.
 - **See it working**: each GIF or screenshot under the scenario it proves, with one line on what it shows and the commit it was captured at.
 - **Plan vs. built**: each scenario ✅ or ❌, plus every `Changed during implementation` line.
-- **Review**: rounds run, cuts taken and skipped (with why), blockers fixed (with commits), fixes made after the final round, findings dismissed and why, open P3s.
-- **Not done**, stated plainly.
 - The last line: the *PR footer*, when the manifest has one.
 
 Open the PR and check that the images render. If they don't, switch to the relative form `../blob/<Proof media branch>/<path>?raw=true`.
@@ -225,9 +223,9 @@ Run the watches in the background and act on each notification. Don't poll in a 
   - Resolve a bot's thread only once it's settled: the fix is committed and the checks are green on it, or your dismissal cites the evidence. A thread you've only acknowledged, or one waiting on the user's decision, stays open. Leave a person's thread for them to resolve.
 - **An automatic bot review hasn't arrived.** If the repo requests one (Copilot, say), give it about 30 minutes, handling whatever else comes in meanwhile. Then carry on without it, and say so in your report. Silence is neither approval nor a reason to wait longer.
 - **The base branch moves on, or the branch conflicts.** Merge it in (don't rebase a pushed branch) and rerun the checks from "Nothing ships red".
-- **After any code change**, recapture the proof it affects (§5) and update the PR body so it describes the final commit. If the review rounds are over (§6), say in the PR what changed after the last one.
+- **After any code change**, recapture the proof it affects (§5) and update the PR body so it describes the final commit. If the review rounds are over (§6), note what changed after the last one for your hand-off to the user.
 
-**Hand it to the user** once it's merge-ready: send them the link and a short summary (what it does, what the proof showed, the review result and anything not done). Then stop watching. If the build was harder than it should have been (a long search, a mistake a check could have caught, a step of this skill that didn't fit), suggest `/retro` in one line.
+**Hand it to the user** once it's merge-ready: send them the link and a short summary (what it does, what the proof showed, the review result: cuts skipped and why, fixes made after the final round, findings dismissed, open P3s, and anything not done). Then stop watching. If the build was harder than it should have been (a long search, a mistake a check could have caught, a step of this skill that didn't fit), suggest `/retro` in one line.
 
 Babysitting ends at merge-ready, not at the merge. Pick the PR up again when the user reviews it, comments or asks, and babysit it back to merge-ready. The base branch moving on while it waits doesn't count, unless the user asks you to bring it up to date.
 
