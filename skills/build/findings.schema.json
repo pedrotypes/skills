@@ -1,0 +1,100 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "round",
+    "summary",
+    "findings",
+    "previous"
+  ],
+  "properties": {
+    "round": {
+      "type": "integer"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "category",
+          "severity",
+          "file",
+          "line",
+          "title",
+          "scenario",
+          "fix"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "P1",
+              "P2",
+              "P3",
+              "P4"
+            ]
+          },
+          "file": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "scenario": {
+            "type": "string"
+          },
+          "fix": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "bug",
+              "security",
+              "cut",
+              "cleanup",
+              "test",
+              "docs"
+            ]
+          }
+        }
+      }
+    },
+    "previous": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "fixed",
+              "accepted",
+              "partly",
+              "not fixed"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
