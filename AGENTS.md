@@ -16,5 +16,6 @@ You:
 
 - `skills/<name>/SKILL.md`, plus the files each skill bundles. Skills reference them through `${CLAUDE_SKILL_DIR}`.
 - `skills/setup/manifest.md` is the contract between the skills and the repos that use them. A skill reads a repo's paths and commands from `.agents/project.md` and never hardcodes one.
+- `skills/build/merge-base.sh` finds the base the review diffs from, with or without a remote.
 - `hooks/` holds the plugin's update check.
 - Tests: `node --test 'skills/**/*.test.mts' 'hooks/*.test.mts'`. A script change starts with a failing test.

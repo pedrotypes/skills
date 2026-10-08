@@ -47,6 +47,7 @@ Read by the pedrotypes skills. See the setup skill's manifest.md for what each l
 
 - Base branch: main
 - Worktrees: .worktrees/
+- Landing: pull request
 - PR footer: <last line of every PR body>
 - Proof media branch: pr-media
 
@@ -76,10 +77,13 @@ Read by the pedrotypes skills. See the setup skill's manifest.md for what each l
 **Isolated stack**: how `build` runs the change for proof without touching the user's own processes, data or queues. `$N` is the plan number and `$PORT` a free port, both set by the skill. The skill kills everything in `.build/pids` when it's done, then runs the cleanup after the PR merges.
 
 **Workflow**
-- **Base branch**: what features branch from and PRs target.
+- **Base branch**: what features branch from and land on.
 - **Worktrees**: where each feature's worktree goes.
-- **PR footer**: added as the last line of the PR body, above the tool's attribution.
-- **Proof media branch**: the orphan branch that `build` publishes screenshots and GIFs to.
+- **Landing**: `pull request` (the default) or `local merge`, for a repo with no remote, where `build` merges into the base branch itself under strict rules. With `local merge`, two more lines apply:
+  - **Always waits for the user**: paths and areas whose changes the agent never merges on its own, however green. Name the ones that change the rules (agent instructions, standards, dependencies, migrations) or a security boundary.
+  - **Proof archive**: where proof media goes when the user asks to keep it. It's never committed.
+- **PR footer**: the last line of every PR body, above the tool's attribution, or of every merge commit message with `local merge`.
+- **Proof media branch**: the orphan branch that `build` publishes screenshots and GIFs to. Pull requests only.
 
 **Design**
 - **Tokens**: the plan picture takes its colours from this file, so it looks like the product. Without it, the picture uses its own neutral palette.
