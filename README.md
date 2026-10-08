@@ -1,6 +1,15 @@
 # Skills
 
-A distributable set of agent skills for engineering, management and productivity.
+Pedro's skills for coding agents. They take a feature from idea to a merge-ready PR, and keep the codebase and the agent's environment from rotting along the way.
+
+## Skills
+
+| Skill | Purpose |
+| --- | --- |
+| `build` | Idea to merge-ready PR. Size the change, agree on a plan the user can read at a glance (the picture), build it test-first, prove it running, cut it down, run Codex review, then babysit the PR until it's ready to merge. |
+| `improve-architecture` | Periodic survey of the most-changed code for deepening opportunities: shallow modules whose complexity could sit behind a smaller interface. Writes a visual report and never changes code. User-invoked. |
+| `retro` | After a hard session, propose changes to the environment (a check, a reviewer rule, a pointer, a deletion) so the next session doesn't repeat it. User-invoked. |
+| `setup` | Write the repo's project manifest, which the other skills read. |
 
 ## Install (Claude Code)
 
@@ -9,71 +18,50 @@ claude plugin marketplace add pedrotypes/skills
 claude plugin install skills@pedrotypes
 ```
 
-Update on any machine:
+Skills appear as `/pedrotypes-skills:<name>`.
+
+**Updates.** Every push to `main` is a new version. At most once a day, a SessionStart hook checks GitHub. When there's a newer commit than the one installed, Claude offers to update and links to what changed. To update by hand:
 
 ```bash
 claude plugin marketplace update pedrotypes && claude plugin update skills@pedrotypes
 ```
 
-No `version` is set in the manifest, so the plugin is versioned by git commit SHA — every push to `main` is picked up by `plugin update`. Pin releases later by adding `version` to `.claude-plugin/plugin.json`.
+Then run `/reload-plugins`.
 
-Skills appear namespaced, e.g. `/pedrotypes-skills:feature` — the prefix comes from `name` in `plugin.json`, while the install id (`skills@pedrotypes`) comes from the marketplace entry, so the two intentionally differ.
+**For a team repo**, register the plugin in its `.claude/settings.json`. Teammates get the marketplace once they trust the folder, then install with `claude plugin install skills@pedrotypes --scope project`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "pedrotypes": { "source": { "source": "github", "repo": "pedrotypes/skills" } }
+  },
+  "enabledPlugins": { "skills@pedrotypes": true }
+}
+```
+
+## Each repo describes itself
+
+The skills work across repos because each repo keeps a **project manifest** at `.agents/project.md`. It lists where plans, standards, reference docs and data flows live, the ticket tracker, the commands that install, verify and run an isolated copy of the app, the workflow (base branch, worktrees, PR footer) and the design tokens. Run `/setup` in a repo to write it. The contract is [skills/setup/manifest.md](skills/setup/manifest.md).
 
 ## Install (opencode and other harnesses)
-
-opencode has no plugin equivalent, so link the skills into a directory it scans:
 
 ```bash
 git clone https://github.com/pedrotypes/skills ~/src/skills
 ~/src/skills/scripts/link.sh
 ```
 
-That symlinks each skill into `~/.agents/skills/<name>`, which opencode reads alongside `~/.claude/skills`. Afterwards `git pull` is enough to update; re-run `link.sh` only when a skill is added or renamed.
+That symlinks each skill into `~/.agents/skills/<name>`. Afterwards, `git pull` updates them. Re-run `link.sh` when a skill is added or renamed. The update hook is Claude Code only.
 
-Codex CLI has no skills mechanism (it has its own separate plugin marketplace), so these are not wired into it yet.
+## Develop
 
-## Skills list
-
-| Skill | Purpose |
-| --- | --- |
-| `feature` | Bootstrap a new feature: name it, allocate its number, cut an isolated worktree, stub its research and plan files, hand over to `back-and-forth`. |
-| `back-and-forth` | The conversational spine — rough idea to landed code: research, pressure-test into a PRD, design, implement, land. Resumes work in progress at whatever stage it reached. |
-| `land` | Finish the work: identify the feature, rebase onto the base branch and work conflicts through with the user, capture the change into the knowledge base, one confirmation gate, then merge and remove the worktree. |
-| `code-research` | Map what the codebase is today in the areas a change touches, via parallel read-only subagents. Reports findings; the caller decides where they land. |
-| `program-design` | Draw the shape of the code — file-tree diff, call map, interfaces and key signatures, libraries, tests. Reports the design; the caller decides what to do with it. |
-| `adversarial-review` | Independent second opinion on a PRD, design, plan or branch diff, run context-free in a Codex (or Opus) subagent and fed back as findings. |
-| `kb-init` | Make sure the project has an agent-maintained knowledge base in Open Knowledge Format, and record its paths in `AGENTS.md` for every later skill to read. |
-| `kb-maintain` | Keep that knowledge base true: work out which document types a change affects, learn each type's local conventions, then draft, confirm and apply the updates. |
-
-## Layout
-
-```
-.claude-plugin/
-  plugin.json        # plugin manifest — `name` sets the skill namespace prefix
-  marketplace.json   # makes this repo its own single-plugin marketplace
-skills/
-  engineering/<skill>/SKILL.md
-scripts/link.sh      # symlink skills for opencode and other harnesses
-scripts/dev-link.sh  # load the working tree as a live Claude Code plugin
-```
-
-Adding a new category directory under `skills/` means adding it to `skills` in `plugin.json`. Skills inside an already-listed category are picked up automatically.
-
-## Development
+`scripts/dev-link.sh` loads the working tree as a live plugin under the same name, so edits are picked up in new sessions. Uninstall the marketplace copy first. Run the tests with:
 
 ```bash
-scripts/dev-link.sh               # load the working tree as a live plugin
-claude plugin validate .          # checks both manifests and skill frontmatter
+node --test 'skills/**/*.test.mts' 'hooks/*.test.mts'
 ```
 
-`dev-link.sh` symlinks the repo to `~/.claude/skills/pedrotypes-skills`. Claude Code loads any directory there containing `.claude-plugin/plugin.json` as a plugin (`pedrotypes-skills@skills-dir`), read straight off disk — so edits are live and skills resolve under the same `/pedrotypes-skills:<skill>` namespace they will have once published. Start a new session to pick up changes to a skill's name or description; `scripts/dev-link.sh --unlink` undoes it.
+v1 (`feature`, `back-and-forth`, `land` and the rest) is tagged `v1`.
 
-Uninstall the marketplace copy while developing — an installed plugin claims the name and the linked copy then silently does not load:
+## Credits
 
-```bash
-claude plugin uninstall skills@pedrotypes
-```
-
-Don't develop against an install. It copies the repo into `~/.claude/plugins/cache/` keyed by HEAD's commit SHA, and `plugin update` is a no-op until that SHA changes, so uncommitted edits never reach it. To sanity-check the real install path before publishing, install from the local marketplace (`claude plugin marketplace add "$PWD" && claude plugin install skills@pedrotypes`) after committing, then switch back to the GitHub source with `claude plugin marketplace remove pedrotypes` and re-adding `pedrotypes/skills`.
-
-For a one-off check without touching global state: `claude --plugin-dir "$PWD"`.
+`improve-architecture` is built on [Matt Pocock's skills](https://github.com/mattpocock/skills): his `improve-codebase-architecture` survey, and the vocabulary and deletion test from his `codebase-design`. `retro` is adapted from his `retro`. Both are used under the MIT License, Copyright (c) 2026 Matt Pocock.

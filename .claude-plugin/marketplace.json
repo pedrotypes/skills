@@ -9,9 +9,15 @@
     {
       "name": "skills",
       "source": "./",
-      "description": "Feature planning, program design, review and wrap-up skills for coding agents.",
+      "description": "Build features from idea to merge-ready PR, survey architecture, run retros.",
       "category": "engineering",
-      "keywords": ["engineering", "skills", "planning", "code-review"]
+      "keywords": [
+        "engineering",
+        "skills",
+        "planning",
+        "code-review",
+        "architecture"
+      ]
     }
   ]
 }
