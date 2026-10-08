@@ -140,7 +140,7 @@ Tests prove the code does what the tests say. Running it proves it does what the
 **QA.** A QA agent, Claude Opus 5.5 at `medium` effort, tests the running stack like a professional QA. It knows the plan, checks that each scenario works, then tries to break it, reading the logs and the database as it goes. Its prompt is [`review-qa.md`](review-qa.md). It may write only under `.build/`, and a round that changes anything git tracks is thrown away. Commit everything, then write `.build/qa/brief-<n>.md` with:
 
 - What the change does, in a few lines, and the plan's path.
-- How to reach the stack: its URL, the database it uses and how to query it, where the logs are, `.build/pids`, and how to sign in. Name any credential by where it lives, never by its value.
+- How to reach the stack: its URL, the database it uses and how to query it, where the logs are, `.build/pids`, and the manifest's *QA notes*. Name any credential by where it lives, never by its value.
 - The plan's **Your directives**, and any other choice the user made on purpose.
 - From round 2: every earlier blocker, what changed for it and in which commit, and your reason for each one you dismissed.
 
@@ -148,9 +148,9 @@ Tests prove the code does what the tests say. Running it proves it does what the
 "$S/qa.sh" "$WT" "$WT/.build/qa/brief-<n>.md" "$WT/.build/qa" <n>
 ```
 
-Run it in the background and wait. It prints the blocker count and the findings; the detail is in `round-<n>.json`. Handle the blockers as in §6. Restart whatever the fixes need, then run the next round. A round with no blockers passes QA. Nothing goes to the cuts pass or review until QA passes. QA stops at six rounds: if blockers are still open, bring them to the user.
+Run it in the background and wait. It prints the blocker count and the findings; the detail is in `round-<n>.json`. Handle the blockers as in §6, and handle each suspicion its summary names but couldn't confirm as a P3. Restart whatever the fixes need, then run the next round. A round with no blockers passes QA. Nothing goes to the cuts pass or review until QA passes. QA stops at six rounds: if blockers are still open, bring them to the user.
 
-**Capture.** Write a throwaway Playwright script in `.build/proof/` against `http://localhost:$PORT` that drives each `Done when` scenario the way a user would. Screenshot every state that matters. For interactions, record video with `browser.newContext({ recordVideo: { dir } })`, and close the context before using the file. Then convert each clip:
+**Capture.** Write a throwaway Playwright script in `.build/proof/` against `http://localhost:$PORT` that drives each `Done when` scenario the way a user would. Screenshot every state that matters. For interactions, record video with `browser.newContext({ recordVideo: { dir } })`, and close the context before using the file. Then convert each clip, with the manifest's *ffmpeg* in place of `ffmpeg` when it has one:
 
 ```bash
 ffmpeg -y -i in.webm -vf "fps=10,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse" out.gif
