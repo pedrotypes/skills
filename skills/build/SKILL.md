@@ -1,6 +1,6 @@
 ---
 name: build
-description: Take something new from idea to an open pull request, and babysit it until it's ready to merge. Size it first — a small, clear change takes a short path (test, fix, one review, PR) instead of the full workflow, and when in doubt, ask. For real work, understand the problem until you and the user picture the same thing, get a second opinion from Codex, plan it in its own worktree, build it test-first, run it and capture screenshots and GIFs as proof, cut it down with a Claude pass, run two Codex review rounds that find what's wrong, open a PR with a green suite, babysit it to merge-ready, and hand it to the user to review and merge. Use whenever the user starts talking about building something new, a feature, a change in behaviour, or a problem to solve — "let's build…", "I want…", "we need…", "solve…", "figure out how to…", "can we make it so…" — and when they ask to resume, review or land work in a `.worktrees/` feature.
+description: Take something new from idea to an open pull request, and babysit it until it's ready to merge (or, in a repo without a remote, to a guarded local merge). Size it first — a small, clear change takes a short path (test, fix, one review, PR) instead of the full workflow, and when in doubt, ask. For real work, understand the problem until you and the user picture the same thing, get a second opinion from Codex, plan it in its own worktree, build it test-first, run it and capture screenshots and GIFs as proof, cut it down with a Claude pass, run two Codex review rounds that find what's wrong, open a PR with a green suite, babysit it to merge-ready, and hand it to the user to review and merge. Use whenever the user starts talking about building something new, a feature, a change in behaviour, or a problem to solve — "let's build…", "I want…", "we need…", "solve…", "figure out how to…", "can we make it so…" — and when they ask to resume, review or land work in a `.worktrees/` feature.
 ---
 
 # Build
@@ -54,7 +54,7 @@ The short path:
 3. Update the reference or data-flow doc if the behaviour it describes changed.
 4. Run *Verify*, plus each of the *Extra checks* whose condition the change meets.
 5. Run the cuts pass and one Codex review round (§6, same brief), and handle their findings as in §6. If a blocker needs a design decision, it wasn't a short-path change, so switch to the full workflow.
-6. Ship as in §7, without the proof media unless something visible changed. Put a short what-and-why in the PR body, plus the review result and anything not done.
+6. Ship as in §7, without the proof media unless something visible changed. Put a short what-and-why in the PR body (or the merge commit message), plus the review result and anything not done.
 
 ## 1. Understand
 
@@ -108,12 +108,12 @@ A plan that keeps growing usually means the feature should be split, or that you
 
 **Plan gate.** Unless the user already said to just build it, ask once, with the picture's link when there is one:
 
-1. **Build it — I'll review the plan with the PR** (recommended)
+1. **Build it — I'll review the plan with the PR** (recommended; "with the merge" when *Landing* is `local merge`)
 2. Let me review the plan first
 
 Recommend option 2 instead when an assumption you couldn't settle would change the shape of the feature. Comments on the picture are handled as `picture.md` says.
 
-Record the answer in the plan, on its own line under the title (and the ticket line): `Plan review: with the PR` for option 1, or when the user said to just build it. Write `Plan review: before build` only once the user has actually reviewed it.
+Record the answer in the plan, on its own line under the title (and the ticket line): `Plan review: with the PR` (or `with the merge`) for option 1, or when the user said to just build it. Write `Plan review: before build` only once the user has actually reviewed it.
 
 ## 4. Build
 
@@ -185,6 +185,8 @@ Run it in the background and wait. It prints the blocker count. The detail is in
 **Round 2** reviews the whole diff again in a fresh session. If it has no blockers, the review is done. If it has blockers, handle them the same way, then stop reviewing: say in the PR which fixes came after the final round. The same goes for code that changes after round 2 (CI fixes, conflicts from merging the base branch).
 
 ## 7. Ship
+
+If the manifest's *Landing* is `local merge`, run "Nothing ships red" below, then land it as [local-merge.md](local-merge.md) says, in place of everything from **Media** on.
 
 **Nothing ships red.** Merge the up-to-date base branch into this one (don't rebase a pushed branch). Then, on the combined result, run *Verify* and each of the *Extra checks* whose condition the change meets, with the stack from §5 up for any that need it. If the plan has a picture, check it's current: `node "$S/render-picture.mjs" --tokens <Tokens> --check <Plans>`.
 

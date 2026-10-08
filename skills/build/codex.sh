@@ -48,8 +48,7 @@ review)
   if [ -n "$(git status --porcelain --untracked-files=normal)" ]; then
     echo "round $round: commit or discard your changes first; a round reviews a commit" >&2; exit 1
   fi
-  git fetch --no-tags --quiet origin +refs/heads/main:refs/remotes/origin/main || exit 1
-  base=$(git merge-base origin/main HEAD) || exit 1
+  base=$("$here/merge-base.sh") || exit 1
   sha=$(git rev-parse HEAD)
   # A retried round must never leave an earlier result labelled with this commit: drop the
   # round first, and publish its result and commits together only once it succeeds.

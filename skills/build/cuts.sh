@@ -15,8 +15,7 @@ mkdir -p "$out"
 if [ -n "$(git status --porcelain --untracked-files=normal)" ]; then
   echo "cuts: commit or discard your changes first; the pass reads a commit" >&2; exit 1
 fi
-git fetch --no-tags --quiet origin +refs/heads/main:refs/remotes/origin/main || exit 1
-base=$(git merge-base origin/main HEAD) || exit 1
+base=$("$here/merge-base.sh") || exit 1
 rm -f "$out/cuts.json"
 # It runs in the real worktree, so it gets no shell at all, only the read tools, and reads the
 # diff from a file. The branch's own .claude settings don't load, so its hooks can't run either.
