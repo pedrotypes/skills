@@ -11,11 +11,14 @@ const css = readFileSync(join(import.meta.dirname, 'picture.css'), 'utf8')
 
 const escape = text => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
+// Plans quote other people's text verbatim, so a link may only go to the web, mail, or a relative path.
+const safeHref = href => !/^[a-z][a-z0-9+.-]*:/i.test(href) || /^(https?|mailto):/i.test(href)
+
 function inline(text) {
   const codes = []
   let out = escape(text).replace(/`([^`]+)`/g, (_, code) => `\u0000${codes.push(code) - 1}\u0000`)
   out = out
-    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2">$1</a>')
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label, href) => safeHref(href) ? `<a href="${href}">${label}</a>` : label)
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/(^|[^*\w])\*([^*]+)\*(?!\*)/g, '$1<em>$2</em>')
   return out.replace(/\u0000(\d+)\u0000/g, (_, i) => `<code>${codes[i]}</code>`)
@@ -52,7 +55,8 @@ function blocks(markdown) {
     if (marker.test(line)) {
       const list = []
       for (; i < lines.length && (marker.test(lines[i]) || /^\s{2,}\S/.test(lines[i])); i++) list.push(lines[i])
-      out.push(`<ul>${items(list.join('\n')).map(item => `<li>${inline(item)}</li>`).join('')}</ul>`)
+      const tag = /^\s*\d+\./.test(list[0]) ? 'ol' : 'ul'
+      out.push(`<${tag}>${items(list.join('\n')).map(item => `<li>${inline(item)}</li>`).join('')}</${tag}>`)
       continue
     }
     if (line.startsWith('|')) {

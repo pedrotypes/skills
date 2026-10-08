@@ -184,3 +184,21 @@ test('--check renders with the tokens the pictures were made with', () => {
   assert.equal(run('--check', dir).status, 1)
   assert.equal(run('--tokens', join(dir, 'theme.css'), '--check', dir).status, 0)
 })
+
+test('a link with an unsafe scheme renders as text', () => {
+  const html = render(plan.replace('Export runs in the browser.', "See [review](javascript:alert(1)) and [docs](https://example.com/a), [plan](./P8.md), [mail](mailto:a@b.c)."))
+  assert.doesNotMatch(html, /href="javascript:/i)
+  assert.match(html, />review<\/a>|review/)
+  assert.match(html, /<a href="https:\/\/example.com\/a">docs<\/a>/)
+  assert.match(html, /<a href="\.\/P8.md">plan<\/a>/)
+  assert.match(html, /<a href="mailto:a@b.c">mail<\/a>/)
+})
+
+test('a long unbroken word wraps instead of widening the page', () => {
+  assert.match(render(plan), /body \{[^}]*overflow-wrap: anywhere/)
+})
+
+test('a numbered list keeps its numbers', () => {
+  const html = render(plan.replace('Export runs in the browser.', '1. First step.\n2. Second step.'))
+  assert.match(html, /<ol><li>First step.<\/li><li>Second step.<\/li><\/ol>/)
+})
