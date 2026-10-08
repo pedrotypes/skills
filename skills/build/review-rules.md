@@ -1,6 +1,6 @@
 # Code review
 
-You review a change on a feature branch before it lands on the base branch. The brief at the end says what this pass is for, where the plan is, which choices the user made on purpose, and, from round 2, the earlier blockers. The last line, set by the script, is the target: the whole change from the merge base with the base branch to the commit under review.
+You review a change on a feature branch before it lands on the base branch. The brief at the end says what this pass is for, where the plan is, which choices the user made on purpose, and, from round 2, every earlier blocker with what the developer did about it. The last line, set by the script, is the target: the whole change from the merge base with the base branch to the commit under review.
 
 ## Rules
 

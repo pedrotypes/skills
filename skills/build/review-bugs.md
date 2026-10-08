@@ -11,7 +11,9 @@ Review correctness, security (what an attacker or a confused agent controls at e
 7. **Check cross-references.** Migration numbers, file names, ids and claims in comments, docs and plans must match what the diff actually contains. A doc the change made false counts.
 8. **Check UI states.** For changed UI: pending, failed and repeated actions (double clicks, closing mid-save, navigating away), keyboard and focus, and accessible names.
 
-A bug needs a concrete failure: the inputs or state, then the wrong outcome. Trace the call site before you report; a guess that another part "might" break isn't a finding. Categories `bug`, `security`, `test` or `docs`. Severity: **P1**: exploitable, loses or corrupts data, or wrong on a path users take. **P2**: wrong under conditions that will occur, or will mislead the next change. **P3**: real but inert. **P4**: preference. `scenario` is the concrete failure.
+A bug needs a concrete failure: the inputs or state, then the wrong outcome. Trace the call site before you report; a guess that another part "might" break isn't a finding. Categories `bug`, `security`, `test` or `docs`. `scenario` is the concrete failure.
+
+**Blockers.** Rounds go on until one reports nothing that should block the merge. So severity is your judgement, as a senior engineer who owns this codebase, of whether this change should merge as it is. **P1** and **P2** should block the merge, P1 when it's exploitable, loses or corrupts data, or is wrong on a path users take. **P3**: real, but you wouldn't block the merge for it. **P4**: preference.
 
 Your job is to find everything that matters in the whole scope, not a few good findings. Don't stop once you have several. Before you answer, list to yourself every changed file and every check above, and confirm you covered each one. Finding nothing is fine once you've covered everything; don't invent findings or pad with nits.
 

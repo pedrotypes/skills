@@ -1,6 +1,6 @@
 ---
 name: build
-description: Take something new from idea to an open pull request, and babysit it until it's ready to merge (or, in a repo without a remote, to a guarded local merge). Size it first — a small, clear change takes a short path (test, fix, one review, PR) instead of the full workflow, and when in doubt, ask. For real work, understand the problem until you and the user picture the same thing, get a second opinion from Codex, plan it in its own worktree, build it test-first, run it and capture screenshots and GIFs as proof, cut it down with a Claude pass, run two Codex review rounds that find what's wrong, open a PR with a green suite, babysit it to merge-ready, and hand it to the user to review and merge. Use whenever the user starts talking about building something new, a feature, a change in behaviour, or a problem to solve — "let's build…", "I want…", "we need…", "solve…", "figure out how to…", "can we make it so…" — and when they ask to resume, review or land work in a `.worktrees/` feature.
+description: Take something new from idea to an open pull request, and babysit it until it's ready to merge (or, in a repo without a remote, to a guarded local merge). Size it first — a small, clear change takes a short path (test, fix, one review, PR) instead of the full workflow, and when in doubt, ask. For real work, understand the problem until you and the user picture the same thing, get a second opinion from Codex, plan it in its own worktree, build it test-first, have a QA agent test the running change and try to break it until it passes, capture screenshots and GIFs as proof, cut it down with a Claude pass, run Codex review rounds until nothing blocks the merge, open a PR with a green suite, babysit it to merge-ready, and hand it to the user to review and merge. Use whenever the user starts talking about building something new, a feature, a change in behaviour, or a problem to solve — "let's build…", "I want…", "we need…", "solve…", "figure out how to…", "can we make it so…" — and when they ask to resume, review or land work in a `.worktrees/` feature.
 ---
 
 # Build
@@ -20,8 +20,8 @@ flowchart LR
   P --> G{Review plan now?}
   G -->|later| B
   G -->|now| R[User reviews] --> B
-  B[Build test-first] --> S[Run it, capture proof]
-  S --> K[Cuts pass] --> V[Codex review, two rounds]
+  B[Build test-first] --> QA[QA rounds until one passes] --> S[Capture proof]
+  S --> K[Cuts pass] --> V[Codex rounds until no blockers]
   V --> L[PR] --> Y[Babysit to merge-ready] --> H[Hand to the user] --> M[After merge: clean up]
 ```
 
@@ -131,11 +131,24 @@ Follow the *Routing* file and *Standards*. One scenario at a time, in plan order
 
 Build in this session. Use subagents only for independent read-only digging. Nothing waits on Codex.
 
-## 5. Run it and capture proof
+## 5. Run it: QA, then proof
 
 Tests prove the code does what the tests say. Running it proves it does what the user pictured.
 
 **Start the worktree's own stack**, with its own database, so it can't touch the user's processes, data or job queue. Run the manifest's *Isolated stack* recipe with `N=<plan number>` and `PORT=<a free port>`. It records every PID it starts in `.build/pids`. Wait until *Ready when* succeeds before anything else. If the change is in a path the isolated stack can't exercise (real third-party sign-in, say), the proof is that path's tests plus the matching *Extra checks*.
+
+**QA.** A QA agent, Claude Opus 5.5 at `medium` effort, tests the running stack like a professional QA. It knows the plan, checks that each scenario works, then tries to break it, reading the logs and the database as it goes. Its prompt is [`review-qa.md`](review-qa.md). It may write only under `.build/`, and a round that changes anything git tracks is thrown away. Commit everything, then write `.build/qa/brief-<n>.md` with:
+
+- What the change does, in a few lines, and the plan's path.
+- How to reach the stack: its URL, the database it uses and how to query it, where the logs are, `.build/pids`, and how to sign in. Name any credential by where it lives, never by its value.
+- The plan's **Your directives**, and any other choice the user made on purpose.
+- From round 2: every earlier blocker, what changed for it and in which commit, and your reason for each one you dismissed.
+
+```bash
+"$S/qa.sh" "$WT" "$WT/.build/qa/brief-<n>.md" "$WT/.build/qa" <n>
+```
+
+Run it in the background and wait. It prints the blocker count and the findings; the detail is in `round-<n>.json`. Handle the blockers as in §6. Restart whatever the fixes need, then run the next round. A round with no blockers passes QA. Nothing goes to the cuts pass or review until QA passes. QA stops at six rounds: if blockers are still open, bring them to the user.
 
 **Capture.** Write a throwaway Playwright script in `.build/proof/` against `http://localhost:$PORT` that drives each `Done when` scenario the way a user would. Screenshot every state that matters. For interactions, record video with `browser.newContext({ recordVideo: { dir } })`, and close the context before using the file. Then convert each clip:
 
@@ -161,14 +174,14 @@ Cuts come first, so the review reads only the code that stays and checks what cu
 
 It prints the cuts; each one's scenario and fix are in `cuts.json`. Take every cut and cleanup. The code should be as small as the plan allows. Skip one only when it would remove behaviour the plan asks for or make the design worse, and give the reason in your hand-off to the user. Run the tests and commit the cuts before round 1.
 
-**The review.** Codex is the reviewer: `gpt-6.1-sol` at `medium` effort, read-only, looking only for what's wrong. There are two rounds, and `codex.sh` refuses a third. Each is a fresh session over the whole diff. Commit everything before each round. `codex.sh` refuses a dirty tree, and it records the reviewed commit in `round-<n>.sha` and the merge base its diff started from in `round-<n>.base`.
+**The review.** Codex is the reviewer: `gpt-6.1-sol` at `medium` effort, read-only, looking only for what's wrong. Rounds go on until one has no blockers, for at most six; `codex.sh` refuses a seventh. Each is a fresh session over the whole diff. Commit everything before each round. `codex.sh` refuses a dirty tree, and it records the reviewed commit in `round-<n>.sha` and the merge base its diff started from in `round-<n>.base`.
 
 Write `.build/review/brief-<n>.md` with only what this round adds:
 
 - The round number.
 - What the change does, in a few lines, and the plan's path.
 - The plan's **Your directives**, and any other choice the user made on purpose, so they aren't reported as omissions.
-- In round 2: every round-1 blocker, what changed for it and in which commit, and your reason for each one you dismissed.
+- From round 2: every earlier blocker, what changed for it and in which commit, and your reason for each one you dismissed.
 
 ```bash
 "$S/codex.sh" review "$WT" "$WT/.build/review/brief-<n>.md" "$WT/.build/review" <n>
@@ -176,13 +189,13 @@ Write `.build/review/brief-<n>.md` with only what this round adds:
 
 Run it in the background and wait. It prints the blocker count. The detail is in `round-<n>.json`.
 
-**Handle every finding of round 1:**
+**Handle every finding**, in QA and in review. A blocker is anything that should block the merge, judged as a senior engineer who owns the codebase would. The reviewers use that judgement, and so do you:
 
-- **Blockers (P1, P2)**: a confirmed one gets a regression test, then the fix, then a commit naming the finding id. A misread one: cite the line that disproves it. One that's by design: cite the plan or standard that decided it.
+- **Blockers (P1, P2)**: a confirmed one gets a regression test, then the fix, then a commit naming the finding id. A misread one: cite the line that disproves it. One that's by design: cite the plan or standard that decided it. One that shouldn't block the merge: say why. Each dismissal goes in the next round's brief, where the reviewer accepts it or holds it open.
 - **P3 bugs**: fix them when the fix is small and in a file you're already changing. List the rest in your hand-off to the user.
 - If a fix would change agreed behaviour (not restore it), stop and ask the user.
 
-**Round 2** reviews the whole diff again in a fresh session. If it has no blockers, the review is done. If it has blockers, handle them the same way, then stop reviewing: say in your hand-off to the user which fixes came after the final round. The same goes for code that changes after round 2 (CI fixes, conflicts from merging the base branch).
+Then run the next round. The review is done when a round has no blockers. If round 6 still has blockers, stop and bring them to the user. Code that changes after the last round (CI fixes, conflicts from merging the base branch) goes in your hand-off to the user.
 
 ## 7. Ship
 
@@ -225,7 +238,7 @@ Run the watches in the background and act on each notification. Don't poll in a 
 - **The base branch moves on, or the branch conflicts.** Merge it in (don't rebase a pushed branch) and rerun the checks from "Nothing ships red".
 - **After any code change**, recapture the proof it affects (§5) and update the PR body so it describes the final commit. If the review rounds are over (§6), note what changed after the last one for your hand-off to the user.
 
-**Hand it to the user** once it's merge-ready: send them the link and a short summary (what it does, what the proof showed, the review result: cuts skipped and why, fixes made after the final round, findings dismissed, open P3s, and anything not done). Then stop watching. If the build was harder than it should have been (a long search, a mistake a check could have caught, a step of this skill that didn't fit), suggest `/retro` in one line.
+**Hand it to the user** once it's merge-ready: send them the link and a short summary (what it does, what the proof showed, the QA and review results: rounds run, cuts skipped and why, fixes made after the final round, findings dismissed, open P3s, and anything not done). Then stop watching. If the build was harder than it should have been (a long search, a mistake a check could have caught, a step of this skill that didn't fit), suggest `/retro` in one line.
 
 Babysitting ends at merge-ready, not at the merge. Pick the PR up again when the user reviews it, comments or asks, and babysit it back to merge-ready. The base branch moving on while it waits doesn't count, unless the user asks you to bring it up to date.
 
