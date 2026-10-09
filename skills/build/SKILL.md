@@ -125,6 +125,8 @@ Follow the *Routing* file and *Standards*. One scenario at a time, in plan order
 
 **Every bug gets a regression test**, wherever it turns up: your own testing, proof capture, Codex, CI, or the user. Write a failing test that reproduces it, then fix it, then commit naming the bug. Look for the same defect elsewhere.
 
+**What this change won't fix goes to the backlog.** When the manifest names a tracker (*Kind* isn't `none`), open a ticket in its backlog for each problem you find and leave unfixed: a P3 you don't fix, a bug that predates the change, a gap QA or a reviewer found outside the plan. Search the tracker first; if a ticket already covers it, comment there instead. Write it for someone who wasn't here: what's wrong and the evidence, where (files, routes, commands), who it hits, a proposed fix, when it's done, and the PR where it was found. Open it with the tracker's connector or CLI, and only open it: don't plan, prioritise or start it. Without a tracker, these go in your hand-off to the user instead.
+
 **When reality disagrees with the plan**, decide using the plan's goals, then add a line under `## Changed during implementation` straight away. Ask only when a goal itself would have to move, or two goals conflict.
 
 **Docs move with the code.** A behaviour change isn't finished until its doc under *Reference docs* or *Data flows* agrees with it, in present tense. Apply the plan's standards changes in the commit that first relies on them.
@@ -192,7 +194,7 @@ Run it in the background and wait. It prints the blocker count. The detail is in
 **Handle every finding**, in QA and in review. A blocker is anything that should block the merge, judged as a senior engineer who owns the codebase would. The reviewers use that judgement, and so do you:
 
 - **Blockers (P1, P2)**: a confirmed one gets a regression test, then the fix, then a commit naming the finding id. A misread one: cite the line that disproves it. One that's by design: cite the plan or standard that decided it. One that shouldn't block the merge: say why. Each dismissal goes in the next round's brief, where the reviewer accepts it or holds it open.
-- **P3 bugs**: fix them when the fix is small and in a file you're already changing. List the rest in your hand-off to the user.
+- **P3 bugs**: fix them when the fix is small and in a file you're already changing. Each of the rest goes to the backlog (§4).
 - If a fix would change agreed behaviour (not restore it), stop and ask the user.
 
 Then run the next round. The review is done when a round has no blockers. If round 6 still has blockers, stop and bring them to the user. Code that changes after the last round (CI fixes, conflicts from merging the base branch) goes in your hand-off to the user.
@@ -238,7 +240,7 @@ Run the watches in the background and act on each notification. Don't poll in a 
 - **The base branch moves on, or the branch conflicts.** Merge it in (don't rebase a pushed branch) and rerun the checks from "Nothing ships red".
 - **After any code change**, recapture the proof it affects (§5) and update the PR body so it describes the final commit. If the review rounds are over (§6), note what changed after the last one for your hand-off to the user.
 
-**Hand it to the user** once it's merge-ready: send them the link and a short summary (what it does, what the proof showed, the QA and review results: rounds run, cuts skipped and why, fixes made after the final round, findings dismissed, open P3s, and anything not done). Then stop watching. If the build was harder than it should have been (a long search, a mistake a check could have caught, a step of this skill that didn't fit), suggest `/retro` in one line.
+**Hand it to the user** once it's merge-ready: send them the link and a short summary (what it does, what the proof showed, the QA and review results: rounds run, cuts skipped and why, fixes made after the final round, findings dismissed, the backlog tickets you opened, and anything else not done). Then stop watching. If the build was harder than it should have been (a long search, a mistake a check could have caught, a step of this skill that didn't fit), suggest `/retro` in one line.
 
 Babysitting ends at merge-ready, not at the merge. Pick the PR up again when the user reviews it, comments or asks, and babysit it back to merge-ready. The base branch moving on while it waits doesn't count, unless the user asks you to bring it up to date.
 
