@@ -2,13 +2,15 @@
 # Publish PR proof media to the orphan `pr-media` branch, so screenshots and GIFs
 # never reach main.
 #
-#   publish-media.sh <p<n>-slug> <file>...
+#   publish-media.sh <p<n>-slug> README.md <file>...
 #
-# Prints one Markdown image line per file, pointing at the pushed blob. Check that they
-# render in the PR; if not, use the relative form ../blob/pr-media/<path>?raw=true.
+# README.md is the proof page, linking each file by its bare name. Prints the page's URL,
+# which the PR links: a repo page renders its relative images in the GitHub app too,
+# where an image embedded in a private repo's PR body doesn't load.
 set -euo pipefail
 dir="${1:?folder, e.g. p19-answer-export}"; shift
 [ "$#" -gt 0 ] || { echo "no files given" >&2; exit 2; }
+printf '%s\n' "$@" | grep -q '\(^\|/\)README\.md$' || { echo "no README.md proof page given" >&2; exit 2; }
 for f in "$@"; do [ -f "$f" ] || { echo "not a file: $f" >&2; exit 2; }; done
 branch=pr-media
 repo="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
@@ -32,7 +34,4 @@ git -C "$tmp" add "$dir"
 git -C "$tmp" commit -q -m "media: $dir" || true
 git -C "$tmp" push -q origin "HEAD:$branch"
 
-for f in "$@"; do
-  name="$(basename "$f")"
-  echo "![${name%.*}](https://github.com/$repo/blob/$branch/$dir/$name?raw=true)"
-done
+echo "https://github.com/$repo/blob/$branch/$dir/README.md"

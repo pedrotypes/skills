@@ -205,20 +205,23 @@ If the manifest's *Landing* is `local merge`, run "Nothing ships red" below, the
 
 Every PR check must be green too. A failure is a bug (§4), not a retry. If the change touched a trust boundary, say so in the PR.
 
-**Media.** Publish the proof files you captured to the *Proof media branch*, so they never reach the base branch. It prints a Markdown image line for each.
+**Media.** Write `.build/proof/README.md`, the proof page: one line on where and at which commit it was captured, then each GIF or screenshot under the scenario it proves, with one line on what it shows. Link each image by its bare file name. Publish the page with the files to the *Proof media branch*, so they never reach the base branch. It prints the page's URL.
 
 ```bash
-"$S/publish-media.sh" p<n>-<slug> <each captured file>
+"$S/publish-media.sh" p<n>-<slug> .build/proof/README.md <each captured file>
 ```
 
-**The PR.** Push and open it with `gh`. The title follows the repository's commit style, with the ticket ID when there is one: `feat(PROJ-12): export answers as Markdown`. Write the body for the reviewer, who didn't watch. It carries the context they need to review the change, and nothing about how it was built or reviewed: no cuts, review rounds, findings or dismissals, and no "not done" list. Anything the reviewer must know, such as a deliberate limitation, a risk, or a step they must take, goes in **What and why**.
+The PR links that page instead of embedding the images. In a private repo, an image embedded in a PR body loads only in a signed-in browser, not in the GitHub app; a repo page renders its relative images wherever the reader is signed in.
 
-- **What and why**, from the plan's summary, with the ticket link and a link to the committed picture when there are any.
-- **See it working**: each GIF or screenshot under the scenario it proves, with one line on what it shows and the commit it was captured at.
-- **Plan vs. built**: each scenario ✅ or ❌, plus every `Changed during implementation` line.
+**The PR.** Push and open it with `gh`. The title follows the repository's commit style, with the ticket ID when there is one: `feat(PROJ-12): export answers as Markdown`. Write the body for the reviewer, who didn't watch, and keep it short: what they need to judge the change and try it, nothing about how it was built or reviewed. No cuts, review rounds, findings or dismissals, no "not done" list, no scenario checklist, and no `Changed during implementation` log: those live in the plan and your hand-off.
+
+- **What and why**: two or three sentences, with the ticket link, then links to the plan and the picture. Link the plan as `https://github.com/<repo>/blob/<head sha>/<Plans>P<n>-<slug>.md`, and the picture as its artifact URL. A relative link in a PR body resolves against the PR, not the repo, so it breaks.
+- **Key decisions**: three to five bullets, only the choices a reviewer might question or need to know (a deliberate limitation, a risk, a trust boundary), each in a line or two.
+- **Test it yourself**: numbered steps a reviewer can follow on their own machine, each ending with *Look for:* and what they should see, failure paths included.
+- **Proof**: one line linking the proof page.
 - The last line: the *PR footer*, when the manifest has one.
 
-Open the PR and check that the images render. If they don't, switch to the relative form `../blob/<Proof media branch>/<path>?raw=true`.
+Open the PR, then check its rendered links (`gh api repos/<repo>/pulls/<n> -H "Accept: application/vnd.github.full+json" -q .body_html`): every one is absolute. To edit the body later, `gh api -X PATCH repos/<repo>/pulls/<n> -F body=@<file>` works where `gh pr edit` can fail.
 
 **Babysit it until it's ready to merge.** Opening the PR isn't the end. Stay with it until it's **merge-ready**. Agents never merge: the user reviews and merges every PR. Merge-ready means:
 
