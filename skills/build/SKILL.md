@@ -133,6 +133,8 @@ Follow the *Routing* file and *Standards*. One scenario at a time, in plan order
 
 Build in this session. Use subagents only for independent read-only digging. Nothing waits on Codex.
 
+**Subagents stay under 400k tokens.** Each subagent's completion report gives its token count. Before you send more work to one past 400k, stop it and hand the work to a fresh subagent. First leave the worktree clean at a pushed commit: finish or abort any half-done merge, and save uncommitted work as a patch in `.build/`. Then brief the new one in full: the worktree, the branch head, the plan, the user's decisions, what's done and what's left.
+
 ## 5. Run it: QA, then proof
 
 Tests prove the code does what the tests say. Running it proves it does what the user pictured.
