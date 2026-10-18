@@ -1,17 +1,17 @@
-// Renders a plan's Markdown as the picture: the page the user reads to confirm we picture the same thing.
-// Usage: node render-picture.mjs [--tokens theme.css] <Plans>/P<n>-<slug>.md > <Plans>/P<n>-<slug>.html
-//        node render-picture.mjs [--tokens theme.css] --check <Plans>    exits 1 naming each stale picture
-// UI mockups, if any, are read from P<n>-<slug>.mockups.html beside the plan. --tokens takes the
-// product's colours from the custom properties in the first :root block of a CSS file.
-// It understands only what plans use: headings, paragraphs, lists, tables, quotes, fences.
+// Renders a PRD's Markdown as a page: what the user reads to confirm we picture the same thing.
+// Usage: node render-prd.mjs [--tokens theme.css] <Plans>/p<n>-<slug>/prd.md > <Plans>/p<n>-<slug>/prd.html
+//        node render-prd.mjs [--tokens theme.css] --check <Plans>    exits 1 naming each stale page
+// UI mockups, if any, are read from mockups.html beside the PRD. --tokens takes the product's
+// colours from the custom properties in the first :root block of a CSS file.
+// It understands only what PRDs use: headings, paragraphs, lists, tables, quotes, fences.
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 
-const css = readFileSync(join(import.meta.dirname, 'picture.css'), 'utf8')
+const css = readFileSync(join(import.meta.dirname, 'prd.css'), 'utf8')
 
 const escape = text => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
-// Plans quote other people's text verbatim, so a link may only go to the web, mail, or a relative path.
+// PRDs quote other people's text verbatim, so a link may only go to the web, mail, or a relative path.
 const safeHref = href => !/^[a-z][a-z0-9+.-]*:/i.test(href) || /^(https?|mailto):/i.test(href)
 
 function inline(text) {
@@ -33,7 +33,7 @@ const items = markdown => (markdown ?? '').split('\n')
     return list
   }, [])
 
-// Block-level Markdown, for the parts of a plan rendered as prose.
+// Block-level Markdown, for the parts of a PRD rendered as prose.
 function blocks(markdown) {
   const lines = markdown.split('\n')
   const out = []
@@ -81,13 +81,13 @@ function blocks(markdown) {
   return out.join('\n')
 }
 
-// Renders one plan. tokens is a `:root { ... }` rule appended to the picture's own stylesheet, or ''.
+// Renders one PRD. tokens is a `:root { ... }` rule appended to the page's own stylesheet, or ''.
 function render(planPath, tokens) {
   const source = readFileSync(planPath, 'utf8')
-  const mockupsPath = planPath.replace(/\.md$/, '.mockups.html')
+  const mockupsPath = join(dirname(planPath), 'mockups.html')
   const mockups = existsSync(mockupsPath) ? readFileSync(mockupsPath, 'utf8').trim() : ''
 
-  // Split the plan into its front matter, the lines above the first section, and its sections.
+  // Split the PRD into its front matter, the lines above the first section, and its sections.
   const front = Object.fromEntries((source.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '').split('\n')
     .map(line => line.match(/^(\w+):\s*(.*)$/)).filter(Boolean).map(([, k, v]) => [k, v]))
   const body = source.replace(/^---\n[\s\S]*?\n---\n/, '')
@@ -105,12 +105,12 @@ function render(planPath, tokens) {
   }
   const [top, rest] = splitAt(body, '##')
   const sections = Object.fromEntries(rest)
-  const heading = top.match(/^# (.*)$/m)?.[1] ?? front.title ?? 'Plan'
+  const heading = top.match(/^# (.*)$/m)?.[1] ?? front.title ?? 'PRD'
   const number = heading.match(/^(P\d+)/)?.[1] ?? ''
-  const title = front.title ?? heading.replace(/^P\d+\s*[—-]\s*/, '')
+  const title = front.title ?? heading.replace(/^P\d+\s*(?:[—-]\s*)?/, '')
   const field = name => top.match(new RegExp(`^${name}:\\s*(.*)$`, 'm'))?.[1]
 
-  // The Solution's directives and decisions belong to the record, not the picture.
+  // The Solution's subsections, such as the user's directives, fold into the record.
   const [solutionLead, solutionSubs] = splitAt(sections.Solution ?? '', '###')
   const empty = text => !text.trim() || /^none\.?$/i.test(text.trim())
 
@@ -131,17 +131,18 @@ function render(planPath, tokens) {
   }).join('\n')
 
   const scenarios = items(sections['Done when']).map(item => {
-    const m = item.match(/^\*\*P\d+-(Scenario\d+)\*\*:?\s*(.*)$/)
-    return m ? `<div><span class="id">${m[1]}</span><span>${inline(m[2])}</span></div>` : `<div><span></span><span>${inline(item)}</span></div>`
+    const m = item.match(/^\*\*P\d+-(S\d+)\s+(.+?)\*\*:?\s*(.*)$/)
+    return m ? `<div><span class="id">${m[1]}</span><span><strong>${inline(m[2])}</strong>: ${inline(m[3])}</span></div>` : `<div><span></span><span>${inline(item)}</span></div>`
   }).join('\n')
 
-  const record = [...solutionSubs, ...['Standards changes', 'Out of scope', 'Open questions', 'Changed during implementation']
+  const record = [...solutionSubs, ...['Out of scope', 'Open questions']
     .map(name => [name, sections[name] ?? ''])]
     .filter(([, text]) => !empty(text))
     .map(([name, text]) => `<details><summary>${inline(name)}</summary><div class="prose">${blocks(text)}</div></details>`)
     .join('\n')
 
   const ticket = field('Ticket')
+  const signedOff = field('Signed off')
   const lede = sections.Summary ? blocks(sections.Summary) : ''
 
   return `<!doctype html>
@@ -153,7 +154,7 @@ function render(planPath, tokens) {
 ${css}${tokens}</style>
 <main>
 <header class="mast">
-<div class="meta"><span class="micro">Plan ${escape(number)}</span>${ticket ? `<span class="micro">${inline(ticket)}</span>` : ''}<span class="chip ask">Waiting for your nod</span></div>
+<div class="meta"><span class="micro">PRD ${escape(number)}</span>${ticket ? `<span class="micro">${inline(ticket)}</span>` : ''}${signedOff ? `<span class="chip">Signed off ${escape(signedOff)}</span>` : '<span class="chip ask">Waiting for your nod</span>'}</div>
 <h1>${inline(title)}</h1>
 <div class="lede">${lede}</div>
 </header>
@@ -184,9 +185,9 @@ const tokens = declarations.length ? `:root { ${declarations.join(' ')} }\n` : '
 
 if (checkDir) {
   const stale = readdirSync(checkDir)
-    .filter(name => /^P\d+-.*\.html$/.test(name) && !name.endsWith('.mockups.html'))
-    .filter(name => readFileSync(join(checkDir, name), 'utf8') !== render(join(checkDir, name.replace(/\.html$/, '.md')), tokens))
-  for (const name of stale) console.error(`${name} is stale: render it again from its plan`)
+    .filter(name => /^p\d+-/i.test(name) && existsSync(join(checkDir, name, 'prd.html')))
+    .filter(name => readFileSync(join(checkDir, name, 'prd.html'), 'utf8') !== render(join(checkDir, name, 'prd.md'), tokens))
+  for (const name of stale) console.error(`${name}/prd.html is stale: render it again from its prd.md`)
   process.exit(stale.length ? 1 : 0)
 }
 process.stdout.write(render(args[0], tokens))

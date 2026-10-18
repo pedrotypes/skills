@@ -1,6 +1,6 @@
 ## Cut it down
 
-Assume the change is bloated: that roughly a third of it could go without losing any behaviour the plan asks for, and that the design would be cleaner for it. Your job is to find that third. Report only cuts and cleanups; bugs are another pass's job.
+Assume the change is bloated: that roughly a third of it could go without losing any behaviour the plan asks for, and that the design would be cleaner for it. Your job is to find that third. Report only cuts and cleanups; bugs, shape and locality are the code review's job.
 
 Go file by file through the diff, largest additions first, and look for:
 

@@ -6,8 +6,8 @@ One self-contained HTML file. The diagrams carry the weight and the prose stays 
 
 You write the content and the diagrams, not the styling.
 
-- **Styling**: paste [`../build/picture.css`](../build/picture.css) into the page's `<style>`. Append the *Tokens* file's custom properties as render-picture.mjs does, so it looks like the product. It already has both appearances, hairlines, micro-labels (`.micro`), badges (`.chip`), tables and collapsible `<details>`. Write no CSS beyond a few lines of layout.
-- **Diagrams**: `<pre class="mermaid">` blocks, drawn by the same pinned Mermaid `<script>` pair that `render-picture.mjs` puts at the end of the page, so the report opens anywhere. Use `flowchart` with a `subgraph` per module, dashed links (`-.->`) for seams, and `classDef leak stroke:#f60439` for leaks. Hand-draw SVG only for a picture Mermaid can't express, such as a mass diagram.
+- **Styling**: paste [`../build/prd.css`](../build/prd.css) into the page's `<style>`. Append the *Tokens* file's custom properties as render-prd.mjs does, so it looks like the product. It already has both appearances, hairlines, micro-labels (`.micro`), badges (`.chip`), tables and collapsible `<details>`. Write no CSS beyond a few lines of layout.
+- **Diagrams**: `<pre class="mermaid">` blocks, drawn by the same pinned Mermaid `<script>` pair that `render-prd.mjs` puts at the end of the page, so the report opens anywhere. Use `flowchart` with a `subgraph` per module, dashed links (`-.->`) for seams, and `classDef leak stroke:#f60439` for leaks. Hand-draw SVG only for a picture Mermaid can't express, such as a mass diagram.
 
 ## Structure
 

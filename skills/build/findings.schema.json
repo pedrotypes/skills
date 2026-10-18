@@ -64,6 +64,7 @@
               "security",
               "cut",
               "cleanup",
+              "design",
               "test",
               "docs"
             ]

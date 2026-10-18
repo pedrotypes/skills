@@ -25,6 +25,7 @@ function setup(result: unknown, sideEffect = '') {
   writeFileSync(join(dir, 'brief.md'), 'brief\n')
   // codex exec ... -o <file> -: write the result to <file>.
   writeFileSync(join(bin, 'codex'), `#!/usr/bin/env bash
+echo "$@" > "${join(dir, 'codex-args.txt')}"
 while [ $# -gt 0 ]; do [ "$1" = -o ] && { cp "${join(dir, 'result.json')}" "$2"; }; shift; done
 `)
   // claude -p ... --output-format json: print the wrapped structured output.
@@ -37,8 +38,8 @@ python3 -c 'import json,sys; print(json.dumps({"is_error": False, "total_cost_us
   return { dir, wt, bin, brief: join(dir, 'brief.md'), out: join(wt, '.build', 'out') }
 }
 
-function run(script: 'codex.sh' | 'qa.sh', s: ReturnType<typeof setup>, round: number) {
-  const args = script === 'codex.sh' ? ['review', s.wt, s.brief, s.out, String(round)] : [s.wt, s.brief, s.out, String(round)]
+function run(script: 'codex.sh' | 'qa.sh', s: ReturnType<typeof setup>, round: number, ...extra: string[]) {
+  const args = script === 'codex.sh' ? ['review', s.wt, s.brief, s.out, String(round)] : [s.wt, s.brief, s.out, String(round), ...extra]
   return spawnSync('bash', [join(import.meta.dirname, script), ...args], {
     cwd: s.wt, encoding: 'utf8', env: { ...process.env, PATH: `${s.bin}:${process.env.PATH}` },
   })
@@ -88,6 +89,26 @@ for (const script of ['codex.sh', 'qa.sh'] as const) {
     assert.match(result.stdout, /^round 1: blockers=1 .*; open: X1-1$/m)
   })
 }
+
+test('codex.sh: the review runs at high effort, and its prompt names its ids', () => {
+  const s = setup(round(1))
+  assert.equal(run('codex.sh', s, 1).status, 0)
+  assert.match(readFileSync(join(s.out, 'round-1.prompt.md'), 'utf8'), /round 1; ids are `R1-<n>`/)
+  assert.match(readFileSync(join(s.dir, 'codex-args.txt'), 'utf8'), /-m gpt-6\.1-sol -c model_reasoning_effort=high /)
+})
+
+test('qa.sh ux: the UI/UX pass runs after QA round 1 and joins its ledger', () => {
+  const s = setup(round(1, [{ id: 'U-1', severity: 'P2' }]))
+  const r = run('qa.sh', s, 1, 'ux')
+  assert.equal(r.status, 0, r.stderr + r.stdout)
+  assert.ok(existsSync(join(s.out, 'round-1.ux.json')))
+  assert.ok(!existsSync(join(s.out, 'round-1.json')))
+  assert.ok(readFileSync(join(s.out, 'round-1.ux.prompt.md'), 'utf8').includes('## Check the experience'))
+  assert.match(r.stdout, /^round 1: blockers=1 .*; open: U-1$/m)
+  const later = run('qa.sh', setup(round(2)), 2, 'ux')
+  assert.notEqual(later.status, 0)
+  assert.match(later.stderr, /round 1/)
+})
 
 test('qa.sh: a QA round that changed tracked files is not published', () => {
   const s = setup(round(1), 'echo edited > app.txt')

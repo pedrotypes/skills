@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
-# Codex as a second model: read-only at medium effort, no sub-agents. consult uses
-# gpt-6-astra and review uses gpt-6.1-sol.
+# Codex as a second model: read-only, no sub-agents. consult uses gpt-6-astra at medium effort,
+# and review uses gpt-6.1-sol at high effort.
 #
 #   codex.sh consult <worktree> <brief.md> <answer.md>
 #   codex.sh review  <worktree> <brief.md> <out-dir> <round>
 #
 # consult writes Codex's free-text answer to <answer.md>.
-# review runs a fresh session per round (1 to 6) with review-rules.md, review-bugs.md and <brief.md>,
+# review runs a fresh session per round (1 to 6) with review-rules.md, review-code.md and <brief.md>,
 # writes <out-dir>/round-<n>.json (shaped by findings.schema.json) and prints only the counts
-# and summary. The cuts pass runs before it, in cuts.sh.
+# and summary. The cuts and design passes run before it, in pass.sh.
 #
 # Run it as a background command and wait for the completion notification. A round can
 # take many minutes, and polling it wastes the caller's context.
 set -u
 here="$(cd "$(dirname "$0")" && pwd)"
-effort="${CODEX_EFFORT:-medium}"
 mode="${1:?mode}"; wt="${2:?worktree}"; brief="${3:?brief}"
-if [ "$mode" = review ]; then model="${CODEX_REVIEW_MODEL:-gpt-6.1-sol}"; else model="${CODEX_MODEL:-gpt-6-astra}"; fi
+if [ "$mode" = review ]; then model="${CODEX_REVIEW_MODEL:-gpt-6.1-sol}"; effort="${CODEX_EFFORT:-high}"
+else model="${CODEX_MODEL:-gpt-6-astra}"; effort="${CODEX_EFFORT:-medium}"; fi
 common=(-m "$model" -c model_reasoning_effort="$effort" --disable multi_agent --skip-git-repo-check)
 
 cd "$wt" || exit 1
@@ -56,8 +56,8 @@ review)
   # Every round is a fresh session over the whole diff. The prompts live in this skill; the
   # brief only adds the plan, choices and earlier blockers. The target comes from the commits
   # this round records, not from the brief, so the receipt and the review can't disagree.
-  { cat "$here/review-rules.md" "$here/review-bugs.md" "$brief" || exit 1
-    printf '\n**Target, set by codex.sh:** `git diff %s %s`.\n' "$base" "$sha"
+  { cat "$here/review-rules.md" "$here/review-code.md" "$brief" || exit 1
+    printf '\n**Target, set by codex.sh:** Codex review round %s; ids are `R%s-<n>`. The change is `git diff %s %s`.\n' "$round" "$round" "$base" "$sha"
   } > "$out/round-$round.prompt.md" || exit 1
   timeout --kill-after=30s 60m codex exec "${common[@]}" --output-schema "$here/findings.schema.json" -o "$pending" \
     -s read-only -C "$wt" - < "$out/round-$round.prompt.md" > "$log" 2>&1
