@@ -65,3 +65,50 @@ test('a missing round file fails instead of counting zero blockers', () => {
   assert.notEqual(result.status, 0)
   assert.doesNotMatch(result.stdout, /blockers=0/)
 })
+
+// Writes the given files to a fresh review directory and runs the ledger on the current round.
+function ledgerFiles(files: Record<string, unknown>, current: string) {
+  const dir = mkdtempSync(join(tmpdir(), 'blockers-'))
+  for (const [name, content] of Object.entries(files)) writeFileSync(join(dir, name), JSON.stringify(content))
+  return spawnSync('python3', [join(import.meta.dirname, 'blockers.py'), dir, join(dir, current)], { encoding: 'utf8' })
+}
+
+test("a second reviewer's round-<n>.<who>.json counts with its round until a later round closes its blockers", () => {
+  const one = ledgerFiles({
+    'round-1.json': round(1, [{ id: 'R1-1', severity: 'P2' }]),
+    'round-1.sonnet.json': round(1, [{ id: 'S1-1', severity: 'P1' }, { id: 'S1-2', severity: 'P2' }, { id: 'S1-3', severity: 'P3' }]),
+  }, 'round-1.json')
+  assert.equal(one.status, 0, one.stderr)
+  assert.match(one.stdout, /^round 1: blockers=3 .*; open: R1-1 S1-1 S1-2$/m)
+  const two = ledgerFiles({
+    'round-1.json': round(1, [{ id: 'R1-1', severity: 'P2' }]),
+    'round-1.sonnet.json': round(1, [{ id: 'S1-1', severity: 'P1' }, { id: 'S1-2', severity: 'P2' }]),
+    'round-2.json': round(2, [], [{ id: 'S1-1', status: 'fixed' }, { id: 'R1-1', status: 'accepted' }]),
+    'round-2.sonnet.json': round(2, [], [{ id: 'S1-2', status: 'not fixed' }]),
+  }, 'round-2.sonnet.json')
+  assert.equal(two.status, 0, two.stderr)
+  assert.match(two.stdout, /^round 2: blockers=1 .*; open: S1-2$/m)
+})
+
+test('a blocker marked not fixed or partly in two rounds is reported as stuck', () => {
+  const files = {
+    'round-1.json': round(1, [{ id: 'R1-1', severity: 'P1' }, { id: 'R1-2', severity: 'P2' }]),
+    'round-2.json': round(2, [], [{ id: 'R1-1', status: 'not fixed' }, { id: 'R1-2', status: 'partly' }]),
+    'round-3.json': round(3, [], [{ id: 'R1-1', status: 'partly' }, { id: 'R1-2', status: 'fixed' }]),
+  }
+  const result = ledgerFiles(files, 'round-3.json')
+  assert.equal(result.status, 0, result.stderr)
+  assert.match(result.stdout, /^round 3: blockers=1 .*; open: R1-1; stuck: R1-1$/m)
+  const early = ledgerFiles({ 'round-1.json': files['round-1.json'], 'round-2.json': files['round-2.json'] }, 'round-2.json')
+  assert.doesNotMatch(early.stdout, /stuck/)
+})
+
+test("a script's raw output and a round still in flight aren't read as reviewers", () => {
+  const result = ledgerFiles({
+    'round-1.json': round(1, []),
+    'round-1.raw.json': { structured_output: {} },
+    'round-1.pending.json': { half: 'written' },
+  }, 'round-1.json')
+  assert.equal(result.status, 0, result.stderr)
+  assert.match(result.stdout, /^round 1: blockers=0 /m)
+})

@@ -1,5 +1,5 @@
-/* The plan picture. A neutral palette in both appearances; --tokens overrides any variable here
-   with the product's own, so the picture looks like the thing it plans. */
+/* The PRD page. A neutral palette in both appearances; --tokens overrides any variable here
+   with the product's own, so the page looks like the thing it plans. */
 :root {
   color-scheme: light dark;
   --canvas: light-dark(#f6f6f4, #0b0c0e); --surface: light-dark(#fdfdfc, #131519); --quote: light-dark(#ebebe7, #1a1c21);
