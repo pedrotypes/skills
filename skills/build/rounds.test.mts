@@ -51,19 +51,19 @@ const round = (n: number, findings: { id: string, severity: string }[] = []) => 
 })
 
 for (const script of ['codex.sh', 'qa.sh'] as const) {
-  test(`${script}: rounds 1 to 6 run, and round 7 is refused`, () => {
-    for (const n of [1, 3, 6]) {
+  test(`${script}: rounds 1 to 3 run, and round 4 is refused`, () => {
+    for (const n of [1, 2, 3]) {
       const s = setup(round(n))
       const result = run(script, s, n)
       assert.equal(result.status, 0, result.stderr + result.stdout)
       assert.match(result.stdout, new RegExp(`^round ${n}: blockers=0 `, 'm'))
       assert.ok(existsSync(join(s.out, `round-${n}.json`)))
     }
-    const s = setup(round(7))
-    const result = run(script, s, 7)
+    const s = setup(round(4))
+    const result = run(script, s, 4)
     assert.notEqual(result.status, 0)
-    assert.match(result.stderr, /six rounds/)
-    assert.ok(!existsSync(join(s.out, 'round-7.json')))
+    assert.match(result.stderr, /three rounds/)
+    assert.ok(!existsSync(join(s.out, 'round-4.json')))
   })
 
   test(`${script}: a finished round is never rerun`, () => {
@@ -97,7 +97,7 @@ test('codex.sh: the review runs at high effort, and its prompt names its ids', (
   assert.match(readFileSync(join(s.dir, 'codex-args.txt'), 'utf8'), /-m gpt-6\.1-sol -c model_reasoning_effort=high /)
 })
 
-test('qa.sh ux: the UI/UX pass runs after QA round 1 and joins its ledger', () => {
+test('qa.sh ux: the UI/UX pass runs in round 1 only and joins its ledger', () => {
   const s = setup(round(1, [{ id: 'U-1', severity: 'P2' }]))
   const r = run('qa.sh', s, 1, 'ux')
   assert.equal(r.status, 0, r.stderr + r.stdout)

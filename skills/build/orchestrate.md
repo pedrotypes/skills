@@ -16,8 +16,8 @@ Each of these goes to a subagent: `subagent_type: general-purpose` with `model: 
 
 - **The code map** (§3): one subagent, with [`research.md`](research.md) as its prompt.
 - **The steps** (§4): one builder per chain of dependent steps.
-- **Each round's findings** (§5): one subagent triages them from the round's files as §5 says, and returns each dismissal with its citation, for the next brief.
-- **The simplifier's cuts and the proof** (§5).
+- **Each round's findings** (§5): one subagent triages them, cuts included, from the round's files as §5 says, and returns each dismissal with its citation, for the next brief.
+- **The proof** (§5).
 - **Each CI failure or review comment that needs a fix** (§6).
 
 Read-only work (the passes, `Explore` searches) can run in parallel with anything.
@@ -40,6 +40,7 @@ The builder saw nothing, so the brief is complete on its own:
 - Its scope: the steps of its chain, by number and name, and that it stops after each to report.
 - The rules it follows: §4 of `${CLAUDE_SKILL_DIR}/SKILL.md`.
 - Start from the code map: `.build/research.md` and the earlier builders' additions in `.build/research/`. Search beyond them only for what they don't cover, and write what you found to `.build/research/step-<k>.md` in the feature worktree, so the next builder doesn't search again.
+- To prove a scenario runs (§4): the manifest's *Isolated stack*, *Ready when* and *QA notes*, and the `N` and port to use.
 - Before reporting, run *Verify* over the whole suite (in a parallel worktree, at least the tests of its scope; the full suite runs after the merge).
 
 ## The report
@@ -48,6 +49,7 @@ Ask for at most ten lines, and nothing else:
 
 - each commit, as short sha and subject
 - the *Verify* result
+- the scenarios it ran on a stack, and their proof scripts
 - any line added under `Changed during implementation`
 - what it found and left unfixed, for the backlog (§4)
 - whether the step still makes sense against the PRD, and any question it couldn't settle

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The Claude passes, each a read-only Sonnet 5.5 agent over the whole change:
 #   cuts        the simplifier: assumes the change is bloated and reports cuts and cleanups, at
-#               medium effort. It runs before QA, and the agent applies its cuts.
+#               medium effort. It runs beside the code review and QA, and the agent applies its cuts.
 #   review <n>  the second reviewer beside Codex round <n>, at high effort, on the same prompt.
 #               It writes round-<n>.sonnet.json, which joins that round in the blocker ledger.
 #
@@ -17,7 +17,7 @@ case "$kind" in
 cuts) effort=medium; prompt="$here/review-cuts.md"; name=cuts; pass="the cuts pass; ids are \`C-<n>\`" ;;
 review)
   round="${5:?round}"
-  case "$round" in [1-6]) ;; *) echo "review round $round: the review stops at six rounds; what's still open goes to the user" >&2; exit 1 ;; esac
+  case "$round" in [1-3]) ;; *) echo "review round $round: the review stops at three rounds; what's still open goes to the user" >&2; exit 1 ;; esac
   effort=high; prompt="$here/review-code.md"; name="round-$round.sonnet"; pass="Sonnet's review, round $round; ids are \`S$round-<n>\`" ;;
 *) echo "pass.sh: the pass is cuts or review, not $kind" >&2; exit 2 ;;
 esac

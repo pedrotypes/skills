@@ -1,6 +1,6 @@
 ## Find what's wrong
 
-Review correctness, security (what an attacker or a confused agent controls at each boundary), design, and what the next change will get wrong. Cuts were made in an earlier pass; report only what's wrong. You may run read-only commands, a single test file, or a throwaway script in a temp directory to prove a claim. Don't run the whole suite. Run each check on everything in scope:
+Review correctness, security (what an attacker or a confused agent controls at each boundary), design, and what the next change will get wrong. A separate pass looks for cuts; report only what's wrong. You may run read-only commands, a single test file, or a throwaway script in a temp directory to prove a claim. Don't run the whole suite. Run each check on everything in scope:
 
 1. **Match the PRD's wording.** For every scenario in the PRD, find the code that enforces it and the test that proves it. Compare the code's condition with the scenario's exact words: "under its title" isn't "anywhere in the file". Report code that's looser or stricter than its text, and a scenario with no test for the refused case.
 2. **Check lists and rules against the code.** For any allowlist, denylist, glob, path rule, policy or config that says what counts as X: take each rule's stated purpose, search the repository for the code that actually does X, and check the rule covers it.
@@ -22,7 +22,9 @@ Review correctness, security (what an attacker or a confused agent controls at e
 
 A bug needs a concrete failure: the inputs or state, then the wrong outcome. Trace the call site before you report; a guess that another part "might" break isn't a finding. A design finding names the concrete next change and what goes wrong for it, and the leverage or locality lost, never "cleaner". Categories `bug`, `security`, `test`, `docs` or `design`. `scenario` is the concrete failure.
 
-**Blockers.** Rounds go on until one reports nothing that should block the merge. So severity is your judgement, as a senior engineer who owns this codebase, of whether this change should merge as it is. **P1** and **P2** should block the merge, P1 when it's exploitable, loses or corrupts data, or is wrong on a path users take. **P3**: real, but you wouldn't block the merge for it. **P4**: preference. A design finding is P1 or P2 only when it breaks a written rule in the *Standards* or the plan, and it quotes that rule. Otherwise it's P3, and its `fix` may propose the rule as a new standard.
+**Blockers.** Rounds stop once one reports nothing that should block the merge. So severity is your judgement, as a senior engineer who owns this codebase, of whether this change should merge as it is. **P1** and **P2** should block the merge, P1 when it's exploitable, loses or corrupts data, or is wrong on a path users take. **P3**: real, but you wouldn't block the merge for it. **P4**: preference. A design finding is P1 or P2 only when it breaks a written rule in the *Standards* or the plan, and it quotes that rule. Otherwise it's P3, and its `fix` may propose the rule as a new standard.
+
+**Scope.** The brief says `full` or `fixes`. `full` is the whole change. `fixes` is the commits the brief lists and the code they touch, plus every earlier blocker; don't review the rest of the change again.
 
 Your job is to find everything that matters in the whole scope, not a few good findings. Don't stop once you have several. Before you answer, list to yourself every changed file and every check above, and confirm you covered each one. Finding nothing is fine once you've covered everything; don't invent findings or pad with nits.
 

@@ -6,9 +6,9 @@
 #   codex.sh review  <worktree> <brief.md> <out-dir> <round>
 #
 # consult writes Codex's free-text answer to <answer.md>.
-# review runs a fresh session per round (1 to 6) with review-rules.md, review-code.md and <brief.md>,
+# review runs a fresh session per round (1 to 3) with review-rules.md, review-code.md and <brief.md>,
 # writes <out-dir>/round-<n>.json (shaped by findings.schema.json) and prints only the counts
-# and summary. The cuts and design passes run before it, in pass.sh.
+# and summary. The cuts pass runs beside it, in pass.sh.
 #
 # Run it as a background command and wait for the completion notification. A round can
 # take many minutes, and polling it wastes the caller's context.
@@ -38,8 +38,8 @@ review)
   json="$out/round-$round.json"; log="$out/round-$round.log"; pending="$out/round-$round.pending.json"
   # Each round records the commit it reviewed (round-<n>.sha) and the merge base its diff started
   # from (round-<n>.base). Uncommitted changes would make the review cover something no commit
-  # holds. Rounds go on until one has no blockers, for at most six.
-  case "$round" in [1-6]) ;; *) echo "round $round: the review stops at six rounds; what's still open goes to the user" >&2; exit 1 ;; esac
+  # holds. Rounds go on until one has no blockers, for at most three.
+  case "$round" in [1-3]) ;; *) echo "round $round: the review stops at three rounds; what's still open goes to the user" >&2; exit 1 ;; esac
   # Rerunning a finished round would replace its findings with a review of later code. A failed
   # round leaves no round-<n>.json, so it can still be retried.
   if [ -e "$json" ]; then

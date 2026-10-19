@@ -71,11 +71,11 @@ test('pass.sh review: Sonnet at high effort on the code review prompt writes the
   assert.match(r.stdout, /^round 2: blockers=1 .*; open: S2-1$/m)
 })
 
-test('pass.sh review: a round outside 1 to 6, or one already done, is refused', () => {
-  const s = setup(result('S7-1', 7))
-  const seven = run(s, 'review', '7')
-  assert.notEqual(seven.status, 0)
-  assert.match(seven.stderr, /six rounds/)
+test('pass.sh review: a round outside 1 to 3, or one already done, is refused', () => {
+  const s = setup(result('S4-1', 4))
+  const four = run(s, 'review', '4')
+  assert.notEqual(four.status, 0)
+  assert.match(four.stderr, /three rounds/)
   const t = setup(result('S1-1', 1))
   assert.equal(run(t, 'review', '1').status, 0)
   const again = run(t, 'review', '1')
