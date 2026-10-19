@@ -1,7 +1,7 @@
 # The blocker ledger, used by codex.sh, qa.sh and pass.sh: python3 blockers.py <dir> <round file>.
 # A round is round-<n>.json plus any second reviewer's round-<n>.<who>.json. A P1 or P2 stays open
 # from the round that found it until a later round marks it fixed or accepted; one marked partly or
-# not fixed reopens it, and one marked so in two rounds is stuck. Prints the open count, the stuck
+# not fixed reopens it, and one marked so in two rounds is stuck, however many passes say so in a round. Prints the open count, the stuck
 # ones and the round summary.
 import json, sys, re, os, collections
 out, d = sys.argv[1], json.load(open(sys.argv[2]))
@@ -17,10 +17,12 @@ for n in range(1, max((n for n, _ in files), default=0) + 1):
                 and all(isinstance(p, dict) and isinstance(p.get("id"), str) and p.get("status") in ("fixed", "accepted", "partly", "not fixed") for p in r["previous"])):
             sys.exit(f"{name} in {out} doesn't have valid findings and previous statuses")
         rounds.append(r)
+    missed = set()
     for r in rounds:
         for p in r["previous"]:
             if p["status"] in ("fixed", "accepted"): open_ids.discard(p["id"])
-            elif p["id"] in known: open_ids.add(p["id"]); misses[p["id"]] += 1
+            elif p["id"] in known: open_ids.add(p["id"]); missed.add(p["id"])
+    misses.update(missed)
     for r in rounds:
         for f in r["findings"]:
             if f["severity"] in ("P1", "P2"): open_ids.add(f["id"]); known.add(f["id"])

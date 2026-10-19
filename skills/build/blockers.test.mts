@@ -103,6 +103,16 @@ test('a blocker marked not fixed or partly in two rounds is reported as stuck', 
   assert.doesNotMatch(early.stdout, /stuck/)
 })
 
+test('two passes marking a blocker not fixed in the same round count as one miss', () => {
+  const result = ledgerFiles({
+    'round-1.json': round(1, [{ id: 'Q1-1', severity: 'P2' }]),
+    'round-2.json': round(2, [], [{ id: 'Q1-1', status: 'not fixed' }]),
+    'round-2.ux.json': round(2, [], [{ id: 'Q1-1', status: 'partly' }]),
+  }, 'round-2.ux.json')
+  assert.equal(result.status, 0, result.stderr)
+  assert.match(result.stdout, /^round 2: blockers=1 .*; open: Q1-1$/m)
+})
+
 test("a script's raw output and a round still in flight aren't read as reviewers", () => {
   const result = ledgerFiles({
     'round-1.json': round(1, []),

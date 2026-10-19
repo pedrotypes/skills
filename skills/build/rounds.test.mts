@@ -98,13 +98,13 @@ test('codex.sh: the review runs at high effort, and its prompt names its ids', (
 })
 
 test('qa.sh ux: the UI/UX pass runs in rounds 1 to 3 and joins its ledger', () => {
-  const s = setup(round(1, [{ id: 'U-1', severity: 'P2' }]))
+  const s = setup(round(1, [{ id: 'U1-1', severity: 'P2' }]))
   const r = run('qa.sh', s, 1, 'ux')
   assert.equal(r.status, 0, r.stderr + r.stdout)
   assert.ok(existsSync(join(s.out, 'round-1.ux.json')))
   assert.ok(!existsSync(join(s.out, 'round-1.json')))
   assert.ok(readFileSync(join(s.out, 'round-1.ux.prompt.md'), 'utf8').includes('## Check the experience'))
-  assert.match(r.stdout, /^round 1: blockers=1 .*; open: U-1$/m)
+  assert.match(r.stdout, /^round 1: blockers=1 .*; open: U1-1$/m)
   const fixes = setup(round(2))
   const second = run('qa.sh', fixes, 2, 'ux')
   assert.equal(second.status, 0, second.stderr + second.stdout)

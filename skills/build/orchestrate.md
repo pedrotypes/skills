@@ -40,7 +40,7 @@ The builder saw nothing, so the brief is complete on its own:
 - Its scope: the steps of its chain, by number and name, and that it stops after each to report.
 - The rules it follows: §4 of `${CLAUDE_SKILL_DIR}/SKILL.md`.
 - Start from the code map: `.build/research.md` and the earlier builders' additions in `.build/research/`. Search beyond them only for what they don't cover, and write what you found to `.build/research/step-<k>.md` in the feature worktree, so the next builder doesn't search again.
-- To prove a scenario runs (§4): the manifest's *Isolated stack*, *Ready when* and *QA notes*, and the `N` and port to use.
+- To prove a scenario runs (§4): the manifest's *Isolated stack*, *Ready when* and *QA notes*, the `N` and port to use, and the feature worktree's absolute path for the proof scripts.
 - Before reporting, run *Verify* over the whole suite (in a parallel worktree, at least the tests of its scope; the full suite runs after the merge).
 
 ## The report
