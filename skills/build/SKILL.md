@@ -18,7 +18,9 @@ flowchart LR
   F -->|yes| D
   F -->|no| B[Orchestrate builders]
   B --> V[Round 1, all at once: cuts, Sonnet + Codex,<br/>QA if high-risk, UI/UX if UI-heavy] --> FX[One fixes round]
-  FX --> R2{Blockers fixed?} -->|yes| C2[Round 2 on the fixes only] --> PF
+  FX --> R2{Round 1 had blockers?} -->|yes| C2[Round 2 on the fixes only] --> O{Still open?}
+  O -->|yes, after round 3| U[Bring it to the user]
+  O -->|no| PF
   R2 -->|no| PF[Proof on the final commit] --> L[PR] --> Y[Babysit to merge-ready] --> H[Hand to the user] --> M[After merge: clean up]
 ```
 
@@ -136,7 +138,7 @@ You orchestrate, and fresh Opus 5.5 builders write the code, as [`orchestrate.md
 
 1. **Red.** Write the tests for what the step serves and watch them fail for the right reason. Include the failure modes that apply (bad input, concurrency, cancellation, a dependency refusing or hanging), and for anything crossing a trust boundary, the abuse case.
 2. **Green.** Write the least code that passes, following the standards.
-3. **Prove it runs.** When the step completes a scenario its user can reach (UI, API or CLI), start an isolated stack for it: the manifest's *Isolated stack* with `N=<plan number><step number>` and a free port. Do the scenario as its user would, and check the result where it lands (the rows, the job, the log lines). Save the happy path as a script under `.build/qa/proof/` in the feature worktree, named by the scenario's id and name, that saves its key screenshots. Stop the stack before you report. Passing tests aren't this check.
+3. **Prove it runs.** When the step completes a scenario its user can reach (UI, API or CLI), start an isolated stack for it: the manifest's *Isolated stack* with `N=<plan number>_<step number>` and a free port. Do the scenario as its user would, and check the result where it lands (the rows, the job, the log lines). Save the happy path as a script under `.build/qa/proof/` in the feature worktree, named by the scenario's id and name, that saves its key screenshots. Before you report, stop the stack and run the *Isolated stack*'s *Cleanup* with the same `N`. Passing tests aren't this check.
 4. **Commit**, naming the scenario: `P19-S3: refuse a second vote while one is in flight`.
 
 **Check against the PRD as you go.** When what you're building stops making sense against the PRD's goals, say so. When reality disagrees with the plan, decide by the PRD's goals and add a line under `## Changed during implementation`. Escalate only when you're stuck, or when a `Done when` scenario or a directive would have to change.
@@ -156,7 +158,7 @@ Each stage runs on a commit, and the scripts refuse a dirty tree. The prompts li
 - **QA** when the change is high-risk: auth, credentials or permissions; data that can be lost or corrupted (migrations, deletes, imports, sync); concurrency (locks, queues, retries); or the user asks for it.
 - **UI/UX** when a new screen or flow is a main part of the change.
 
-**Round 1: everything at once, on one commit.** Write the briefs with scope `full`, start every pass in the background, and wait for all of them.
+**Round 1: everything at once, on one commit.** First, every `Done when` scenario its user can reach needs a builder's proof script in `.build/qa/proof/`. One that only became runnable once chains merged goes to a builder to prove now. Then write the briefs with scope `full`, start every pass in the background, and wait for all of them.
 
 - **Cuts.** Claude Sonnet 5.5 assumes the change is bloated and reports cuts and cleanups:
 
@@ -179,22 +181,22 @@ Each stage runs on a commit, and the scripts refuse a dirty tree. The prompts li
   "$S/qa.sh" "$WT" "$WT/.build/qa/brief-<n>.md" "$WT/.build/qa" <n>
   ```
 
-- **UI/UX**, when it runs, on a second stack (`N=<plan number>0`) so QA's interruption tests can't disturb it. Claude Opus 5.5 walks each scenario on desktop and phone and checks the flow, every state, the PRD's promise, consistency with the product and its design system, and access. Its blockers join QA's round 1.
+- **UI/UX**, when it runs, on the same stack and brief. When QA runs too, start it once QA's round has returned, so QA's interruption tests can't disturb it; it still overlaps the cuts and the code review. Without QA, start the stack as above and run it right away. Claude Opus 5.5 walks each scenario on desktop and phone and checks the flow, every state, the PRD's promise, consistency with the product and its design system, and access. Its blockers join QA's round in the same ledger.
 
   ```bash
-  "$S/qa.sh" "$WT" "$WT/.build/qa/brief-1.md" "$WT/.build/qa" 1 ux
+  "$S/qa.sh" "$WT" "$WT/.build/qa/brief-<n>.md" "$WT/.build/qa" <n> ux
   ```
 
 **One fixes round.** A subagent handles every finding of round 1 together, from all its files (`cuts.json`, `round-1.json` and `round-1.sonnet.json` in `.build/review/`, and `round-1.json` and `round-1.ux.json` in `.build/qa/`):
 
-- **Cuts and cleanups**: take every one. Skip one only when it would remove behaviour the PRD asks for, contradict a directive, or make the design worse, and say why in your hand-off.
+- **Cuts and cleanups**: take every one. They keep behaviour, so they ship on *Verify* and the proof unless a round 2 runs, whose brief lists them with the fixes. Skip one only when it would remove behaviour the PRD asks for, contradict a directive, or make the design worse, and say why in your hand-off.
 - **Blockers (P1, P2)**: a confirmed one gets a regression test, then the fix, then a commit naming the finding id. A misread one: cite the line that disproves it. One that's by design: cite the PRD, plan or standard that decided it. A duplicate: name the finding it repeats. One that shouldn't block the merge: say why. Each dismissal goes in the next round's brief, where the reviewers accept it or hold it open.
 - **P3s**: fix them when the fix is small and in a file the change already touches. Each of the rest goes to the backlog (§4), and a design P3 that proposes a standard goes in your hand-off.
 - If a fix would change agreed behaviour (not restore it), stop and ask the user.
 
 Then run *Verify* and commit.
 
-**Round 2 checks the fixes, not the whole change.** Run it only when round 1 had blockers. Its briefs have scope `fixes`: the commits since round 1, listed, and every round-1 blocker with its fix (and commit) or your reason for dismissing it. The code review runs again, and when QA or UI/UX found blockers, QA runs a `fixes` round on the stack restarted at the new commit. Cuts applied without a blocker need no round 2: *Verify* and the proof cover them. A round with no open blockers ends the review. A blocker still open after round 2 gets one more fixes round and round 3. Anything open after that, or reported `stuck` (marked not fixed twice), goes to the user.
+**Round 2 checks the fixes, not the whole change.** Run it only when round 1 had blockers. Its briefs have scope `fixes`: every commit since round 1 (fixes, cuts, P3s), listed, and every round-1 blocker with its fix (and commit) or your reason for dismissing it. The code review runs again. With the stack restarted at the new commit, QA runs a `fixes` round when QA found blockers, and the UI/UX pass when it did. A round with no open blockers ends the review. A blocker still open after round 2 gets one more fixes round and round 3. Anything open after that, or reported `stuck` (marked not fixed twice), goes to the user.
 
 **Proof on the final commit.** Once review passes, start or restart the stack (`N=<plan number>`) on the head commit and rerun every proof script in `.build/qa/proof/`, the builders' and QA's, against it. It's the last smoke test, and its screenshots and clips are the PR's evidence. A scenario that no longer behaves as the PRD says is a bug (§4). Convert each clip with the manifest's *ffmpeg* in place of `ffmpeg` when it has one:
 

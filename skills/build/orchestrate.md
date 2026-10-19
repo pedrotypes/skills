@@ -28,7 +28,7 @@ Read-only work (the passes, `Explore` searches) can run in parallel with anythin
 
 **Parallel when the plan allows.** Steps that share no dependency and no scope form separate chains, once any step they all depend on has landed. Give each chain its own worktree and builder: `git worktree add <Worktrees>/p<n>-<slug>-<chain> -b feat/p<n>-<slug>-<chain> feat/p<n>-<slug>`, then *Install* there. Don't use the Agent tool's worktree isolation: it branches from your checkout and cleans up on its own.
 
-**Integrate as work lands.** When a chain's step is done, merge its branch into the feature branch in the feature worktree, then run *Verify* over the whole suite there. A conflict or a red suite goes to a subagent as a bug (§4). The next step of that chain starts from the merged feature branch.
+**Integrate as work lands.** When a chain's step is done, merge its branch into the feature branch in the feature worktree, then run *Verify* over the whole suite there. A scenario that becomes runnable only once chains merge goes to a builder on the feature branch to prove (§4). A conflict or a red suite goes to a subagent as a bug (§4). The next step of that chain starts from the merged feature branch.
 
 **One report per step.** A builder stops after each step and reports. You see its token count in the completion. Under about 350k tokens, continue it with `SendMessage` and its next step. Past that, start a fresh builder for the rest of the chain, briefed in full. Before a handover, the worktree is clean at a commit: a half-done merge finished or aborted, uncommitted work saved as a patch in `.build/`.
 

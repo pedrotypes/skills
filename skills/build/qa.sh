@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # The QA round: Claude Opus 5.5 at medium effort tests the running change like a professional QA.
 # It knows the plan, checks the change works, then tries to break it, watching the logs and the
-# database. It runs beside the cuts pass and the code review, and its fixes round retests what was fixed.
+# database. It runs beside the cuts pass and the code review; a later round retests the fixes.
 #
 #   qa.sh <worktree> <brief.md> <out-dir> <round> [ux]
 #
 # Writes <out-dir>/round-<n>.json (shaped by findings.schema.json) and prints the blocker count,
-# the findings and the summary. With `ux`, it runs the UI/UX pass instead, with review-ux.md, in
-# round 1 only: it writes round-1.ux.json, which joins round 1 in the blocker ledger. The isolated stack must already be up. Run it as a background
+# the findings and the summary. With `ux`, it runs the UI/UX pass instead, with review-ux.md: it
+# writes round-<n>.ux.json, which joins round <n> in the blocker ledger. The isolated stack must already be up. Run it as a background
 # command and wait for the completion notification.
 set -u
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -18,7 +18,7 @@ case "$mode" in
 qa) name="round-$round"; prompt="$here/review-qa.md"
   case "$round" in [1-3]) ;; *) echo "QA round $round: QA stops at three rounds; what's still open goes to the user" >&2; exit 1 ;; esac ;;
 ux) name="round-$round.ux"; prompt="$here/review-ux.md"
-  [ "$round" = 1 ] || { echo "the UI/UX pass runs in round 1 only" >&2; exit 1; } ;;
+  case "$round" in [1-3]) ;; *) echo "UI/UX round $round: the UI/UX pass stops at three rounds; what's still open goes to the user" >&2; exit 1 ;; esac ;;
 *) echo "qa.sh: the mode is ux or nothing, not $mode" >&2; exit 2 ;;
 esac
 json="$out/$name.json"

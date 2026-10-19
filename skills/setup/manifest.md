@@ -76,7 +76,7 @@ Read by the pedrotypes skills. See the setup skill's manifest.md for what each l
 - **Verify**: the whole local suite. Nothing ships unless it's green.
 - **Extra checks**: suites that run only when certain areas change, each with its condition.
 
-**Isolated stack**: how `build` runs the change for proof without touching the user's own processes, data or queues. `$N` is the plan number and `$PORT` a free port, both set by the skill. The skill kills everything in `.build/pids` when it's done, then runs the cleanup after the PR merges. *QA notes* go into every QA brief, so the QA agent doesn't rediscover how to drive the stack. *ffmpeg* turns proof videos into GIFs.
+**Isolated stack**: how `build` runs the change for proof without touching the user's own processes, data or queues. `$N` names the stack and `$PORT` is a free port, both set by the skill: `$N` is the plan number, or `<plan number>_<step number>` for a builder's stack, so it holds only digits and `_`. The skill kills everything in `.build/pids` when it's done, then runs the cleanup after the PR merges. *QA notes* go into every QA brief, so the QA agent doesn't rediscover how to drive the stack. *ffmpeg* turns proof videos into GIFs.
 
 **Workflow**
 - **Base branch**: what features branch from and land on.

@@ -97,7 +97,7 @@ test('codex.sh: the review runs at high effort, and its prompt names its ids', (
   assert.match(readFileSync(join(s.dir, 'codex-args.txt'), 'utf8'), /-m gpt-6\.1-sol -c model_reasoning_effort=high /)
 })
 
-test('qa.sh ux: the UI/UX pass runs in round 1 only and joins its ledger', () => {
+test('qa.sh ux: the UI/UX pass runs in rounds 1 to 3 and joins its ledger', () => {
   const s = setup(round(1, [{ id: 'U-1', severity: 'P2' }]))
   const r = run('qa.sh', s, 1, 'ux')
   assert.equal(r.status, 0, r.stderr + r.stdout)
@@ -105,9 +105,13 @@ test('qa.sh ux: the UI/UX pass runs in round 1 only and joins its ledger', () =>
   assert.ok(!existsSync(join(s.out, 'round-1.json')))
   assert.ok(readFileSync(join(s.out, 'round-1.ux.prompt.md'), 'utf8').includes('## Check the experience'))
   assert.match(r.stdout, /^round 1: blockers=1 .*; open: U-1$/m)
-  const later = run('qa.sh', setup(round(2)), 2, 'ux')
-  assert.notEqual(later.status, 0)
-  assert.match(later.stderr, /round 1/)
+  const fixes = setup(round(2))
+  const second = run('qa.sh', fixes, 2, 'ux')
+  assert.equal(second.status, 0, second.stderr + second.stdout)
+  assert.ok(existsSync(join(fixes.out, 'round-2.ux.json')))
+  const fourth = run('qa.sh', setup(round(4)), 4, 'ux')
+  assert.notEqual(fourth.status, 0)
+  assert.match(fourth.stderr, /three rounds/)
 })
 
 test('qa.sh: a QA round that changed tracked files is not published', () => {
