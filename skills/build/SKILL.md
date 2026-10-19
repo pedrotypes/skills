@@ -166,7 +166,7 @@ Each stage runs on a commit, and the scripts refuse a dirty tree. The prompts li
   "$S/pass.sh" cuts "$WT" "$WT/.build/review/brief-cuts.md" "$WT/.build/review"
   ```
 
-- **Code review.** Claude Sonnet 5.5 and Codex `gpt-6.1-sol`, both at `xhigh` effort in round 1 and `high` in the rounds that check fixes, review the whole diff in parallel, on the same prompt and brief: bugs, security, and departures from the architecture and the design standards. Each round is fresh sessions on one commit. Without `codex`, Sonnet reviews alone. Whichever finishes last prints the round's blocker count.
+- **Code review.** Claude Sonnet 5.5 and Codex `gpt-6.1-sol`, both at `medium` effort, review the whole diff in parallel, on the same prompt and brief: bugs, security, and departures from the architecture and the design standards. Each round is fresh sessions on one commit. Without `codex`, Sonnet reviews alone. Whichever finishes last prints the round's blocker count.
 
   ```bash
   "$S/codex.sh" review "$WT" "$WT/.build/review/brief-<n>.md" "$WT/.build/review" <n>

@@ -59,18 +59,18 @@ test('pass.sh cuts: Sonnet at medium effort on the cuts prompt writes cuts.json'
   assert.equal(JSON.parse(readFileSync(join(s.out, 'cuts.json'), 'utf8')).findings[0].id, 'C-1')
 })
 
-test('pass.sh review: round 1 runs Sonnet at xhigh effort', () => {
+test('pass.sh review: round 1 runs Sonnet at medium effort', () => {
   const s = setup(result('S1-1', 1))
   const r = run(s, 'review', '1')
   assert.equal(r.status, 0, r.stderr + r.stdout)
-  assert.match(readFileSync(join(s.dir, 'args.txt'), 'utf8'), /--model claude-sonnet-5-5 --effort xhigh /)
+  assert.match(readFileSync(join(s.dir, 'args.txt'), 'utf8'), /--model claude-sonnet-5-5 --effort medium /)
 })
 
-test('pass.sh review: later rounds run Sonnet at high effort on the code review prompt, beside Codex', () => {
+test('pass.sh review: later rounds run Sonnet at medium effort on the code review prompt, beside Codex', () => {
   const s = setup(result('S2-1', 2))
   const r = run(s, 'review', '2')
   assert.equal(r.status, 0, r.stderr + r.stdout)
-  assert.match(readFileSync(join(s.dir, 'args.txt'), 'utf8'), /--model claude-sonnet-5-5 --effort high /)
+  assert.match(readFileSync(join(s.dir, 'args.txt'), 'utf8'), /--model claude-sonnet-5-5 --effort medium /)
   const sent = readFileSync(join(s.dir, 'prompt.txt'), 'utf8')
   assert.ok(sent.includes('## Find what\'s wrong'))
   assert.match(sent, /Sonnet's review, round 2; ids are `S2-<n>`/)

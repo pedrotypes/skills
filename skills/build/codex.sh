@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Codex as a second model: read-only, no sub-agents. consult uses gpt-6-astra at medium effort,
-# and review uses gpt-6.1-sol at xhigh effort in round 1 and high after.
+# and review uses gpt-6.1-sol at medium effort.
 #
 #   codex.sh consult <worktree> <brief.md> <answer.md>
 #   codex.sh review  <worktree> <brief.md> <out-dir> <round>
@@ -15,9 +15,7 @@
 set -u
 here="$(cd "$(dirname "$0")" && pwd)"
 mode="${1:?mode}"; wt="${2:?worktree}"; brief="${3:?brief}"
-# Round 1 reviews the whole change, so it gets the deepest look; later rounds read only the fixes.
-if [ "$mode" = review ]; then model="${CODEX_REVIEW_MODEL:-gpt-6.1-sol}"
-  if [ "${5:-}" = 1 ]; then effort="${CODEX_EFFORT:-xhigh}"; else effort="${CODEX_EFFORT:-high}"; fi
+if [ "$mode" = review ]; then model="${CODEX_REVIEW_MODEL:-gpt-6.1-sol}"; effort="${CODEX_EFFORT:-medium}"
 else model="${CODEX_MODEL:-gpt-6-astra}"; effort="${CODEX_EFFORT:-medium}"; fi
 common=(-m "$model" -c model_reasoning_effort="$effort" --disable multi_agent --skip-git-repo-check)
 
