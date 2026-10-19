@@ -17,11 +17,11 @@ for n in range(1, max((n for n, _ in files), default=0) + 1):
                 and all(isinstance(p, dict) and isinstance(p.get("id"), str) and p.get("status") in ("fixed", "accepted", "partly", "not fixed") for p in r["previous"])):
             sys.exit(f"{name} in {out} doesn't have valid findings and previous statuses")
         rounds.append(r)
-    missed = set()
-    for r in rounds:
-        for p in r["previous"]:
-            if p["status"] in ("fixed", "accepted"): open_ids.discard(p["id"])
-            elif p["id"] in known: open_ids.add(p["id"]); missed.add(p["id"])
+    # Within a round, one pass saying a blocker isn't fixed outweighs any pass saying it is.
+    closed = {p["id"] for r in rounds for p in r["previous"] if p["status"] in ("fixed", "accepted")}
+    missed = {p["id"] for r in rounds for p in r["previous"] if p["status"] not in ("fixed", "accepted") and p["id"] in known}
+    open_ids -= closed - missed
+    open_ids |= missed
     misses.update(missed)
     for r in rounds:
         for f in r["findings"]:

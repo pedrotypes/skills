@@ -113,6 +113,18 @@ test('two passes marking a blocker not fixed in the same round count as one miss
   assert.match(result.stdout, /^round 2: blockers=1 .*; open: Q1-1$/m)
 })
 
+test('in one round, a pass marking a blocker not fixed wins over one marking it fixed, whatever the file order', () => {
+  for (const [first, second] of [['fixed', 'not fixed'], ['not fixed', 'fixed'], ['accepted', 'partly']]) {
+    const result = ledgerFiles({
+      'round-1.json': round(1, [{ id: 'R1-1', severity: 'P2' }]),
+      'round-2.json': round(2, [], [{ id: 'R1-1', status: first }]),
+      'round-2.sonnet.json': round(2, [], [{ id: 'R1-1', status: second }]),
+    }, 'round-2.sonnet.json')
+    assert.equal(result.status, 0, result.stderr)
+    assert.match(result.stdout, /^round 2: blockers=1 .*; open: R1-1$/m, `${first} then ${second}`)
+  }
+})
+
 test("a script's raw output and a round still in flight aren't read as reviewers", () => {
   const result = ledgerFiles({
     'round-1.json': round(1, []),

@@ -19,7 +19,7 @@ flowchart LR
   F -->|no| B[Orchestrate builders]
   B --> V[Round 1, all at once: cuts, Sonnet + Codex,<br/>QA if high-risk, UI/UX if UI-heavy] --> FX[One fixes round]
   FX --> R2{Round 1 had blockers?} -->|yes| C2[Round 2 on the fixes only] --> O{Still open?}
-  O -->|yes, after round 3| U[Bring it to the user]
+  O -->|yes, after round 3| U[Fix the rest, no more rounds] --> PF
   O -->|no| PF
   R2 -->|no| PF[Proof on the final commit] --> L[PR] --> Y[Babysit to merge-ready] --> H[Hand to the user] --> M[After merge: clean up]
 ```
@@ -166,7 +166,7 @@ Each stage runs on a commit, and the scripts refuse a dirty tree. The prompts li
   "$S/pass.sh" cuts "$WT" "$WT/.build/review/brief-cuts.md" "$WT/.build/review"
   ```
 
-- **Code review.** Claude Sonnet 5.5 and Codex `gpt-6.1-sol`, both at `high` effort, review the whole diff in parallel, on the same prompt and brief: bugs, security, and departures from the architecture and the design standards. Each round is fresh sessions on one commit. Without `codex`, Sonnet reviews alone. Whichever finishes last prints the round's blocker count.
+- **Code review.** Claude Sonnet 5.5 and Codex `gpt-6.1-sol`, both at `xhigh` effort in round 1 and `high` in the rounds that check fixes, review the whole diff in parallel, on the same prompt and brief: bugs, security, and departures from the architecture and the design standards. Each round is fresh sessions on one commit. Without `codex`, Sonnet reviews alone. Whichever finishes last prints the round's blocker count.
 
   ```bash
   "$S/codex.sh" review "$WT" "$WT/.build/review/brief-<n>.md" "$WT/.build/review" <n>
@@ -190,13 +190,13 @@ Each stage runs on a commit, and the scripts refuse a dirty tree. The prompts li
 **One fixes round.** A subagent handles every finding of round 1 together, from all its files (`cuts.json`, `round-1.json` and `round-1.sonnet.json` in `.build/review/`, and `round-1.json` and `round-1.ux.json` in `.build/qa/`):
 
 - **Cuts and cleanups**: take every one. They keep behaviour, so they ship on *Verify* and the proof unless a round 2 runs, whose brief lists them with the fixes. Skip one only when it would remove behaviour the PRD asks for, contradict a directive, or make the design worse, and say why in your hand-off.
-- **Blockers (P1, P2)**: a confirmed one gets a regression test, then the fix, then a commit naming the finding id. A misread one: cite the line that disproves it. One that's by design: cite the PRD, plan or standard that decided it. A duplicate: name the finding it repeats. One that shouldn't block the merge: say why. Each dismissal goes in the next round's brief, where the reviewers accept it or hold it open.
+- **Blockers (P1, P2)**: a confirmed one gets a regression test, then the fix, then a commit naming the finding id. A fix is finished when everything that names or relies on what it changed agrees: search for those names across the code, prompts, docs and tests, and update them in the same commit. A misread one: cite the line that disproves it. One that's by design: cite the PRD, plan or standard that decided it. A duplicate: name the finding it repeats. One that shouldn't block the merge: say why. Each dismissal goes in the next round's brief, where the reviewers accept it or hold it open.
 - **P3s**: fix them when the fix is small and in a file the change already touches. Each of the rest goes to the backlog (§4), and a design P3 that proposes a standard goes in your hand-off.
 - If a fix would change agreed behaviour (not restore it), stop and ask the user.
 
 Then run *Verify* and commit.
 
-**Round 2 checks the fixes, not the whole change.** Run it only when round 1 had blockers. Its briefs have scope `fixes`: every commit since round 1 (fixes, cuts, P3s), listed, and every round-1 blocker with its fix (and commit) or your reason for dismissing it. The code review runs again. With the stack restarted at the new commit, QA runs a `fixes` round when QA found blockers, and the UI/UX pass when it did. A round with no open blockers ends the review. A blocker still open after round 2 gets one more fixes round and round 3. Anything open after that, or reported `stuck` (marked not fixed twice), goes to the user.
+**Round 2 checks the fixes, not the whole change.** Run it only when round 1 had blockers. Its briefs have scope `fixes`: every commit since round 1 (fixes, cuts, P3s), listed, and every round-1 blocker with its fix (and commit) or your reason for dismissing it. The code review runs again. With the stack restarted at the new commit, QA runs a `fixes` round when QA found blockers, and the UI/UX pass when it did. A round with no open blockers ends the review. A blocker still open after round 2 gets one more fixes round and round 3. After round 3 no round runs: fix whatever is still open the same way, run *Verify*, and list those fixes in the review report as made after the last round. A `stuck` blocker (marked not fixed twice) means the fixes keep missing: give it to a fresh subagent with the reviewers' evidence. Only a fix that would change agreed behaviour goes to the user.
 
 **Proof on the final commit.** Once review passes, start or restart the stack (`N=<plan number>`) on the head commit and rerun every proof script in `.build/qa/proof/`, the builders' and QA's, against it. It's the last smoke test, and its screenshots and clips are the PR's evidence. A scenario that no longer behaves as the PRD says is a bug (§4). Convert each clip with the manifest's *ffmpeg* in place of `ffmpeg` when it has one:
 

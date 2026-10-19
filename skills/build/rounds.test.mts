@@ -90,11 +90,14 @@ for (const script of ['codex.sh', 'qa.sh'] as const) {
   })
 }
 
-test('codex.sh: the review runs at high effort, and its prompt names its ids', () => {
+test('codex.sh: round 1 runs at xhigh effort and later rounds at high, and its prompt names its ids', () => {
   const s = setup(round(1))
   assert.equal(run('codex.sh', s, 1).status, 0)
   assert.match(readFileSync(join(s.out, 'round-1.prompt.md'), 'utf8'), /round 1; ids are `R1-<n>`/)
-  assert.match(readFileSync(join(s.dir, 'codex-args.txt'), 'utf8'), /-m gpt-6\.1-sol -c model_reasoning_effort=high /)
+  assert.match(readFileSync(join(s.dir, 'codex-args.txt'), 'utf8'), /-m gpt-6\.1-sol -c model_reasoning_effort=xhigh /)
+  const t = setup(round(2))
+  assert.equal(run('codex.sh', t, 2).status, 0)
+  assert.match(readFileSync(join(t.dir, 'codex-args.txt'), 'utf8'), /-m gpt-6\.1-sol -c model_reasoning_effort=high /)
 })
 
 test('qa.sh ux: the UI/UX pass runs in rounds 1 to 3 and joins its ledger', () => {

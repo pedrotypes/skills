@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Codex as a second model: read-only, no sub-agents. consult uses gpt-6-astra at medium effort,
-# and review uses gpt-6.1-sol at high effort.
+# and review uses gpt-6.1-sol at xhigh effort in round 1 and high after.
 #
 #   codex.sh consult <worktree> <brief.md> <answer.md>
 #   codex.sh review  <worktree> <brief.md> <out-dir> <round>
@@ -15,7 +15,9 @@
 set -u
 here="$(cd "$(dirname "$0")" && pwd)"
 mode="${1:?mode}"; wt="${2:?worktree}"; brief="${3:?brief}"
-if [ "$mode" = review ]; then model="${CODEX_REVIEW_MODEL:-gpt-6.1-sol}"; effort="${CODEX_EFFORT:-high}"
+# Round 1 reviews the whole change, so it gets the deepest look; later rounds read only the fixes.
+if [ "$mode" = review ]; then model="${CODEX_REVIEW_MODEL:-gpt-6.1-sol}"
+  if [ "${5:-}" = 1 ]; then effort="${CODEX_EFFORT:-xhigh}"; else effort="${CODEX_EFFORT:-high}"; fi
 else model="${CODEX_MODEL:-gpt-6-astra}"; effort="${CODEX_EFFORT:-medium}"; fi
 common=(-m "$model" -c model_reasoning_effort="$effort" --disable multi_agent --skip-git-repo-check)
 
@@ -39,7 +41,7 @@ review)
   # Each round records the commit it reviewed (round-<n>.sha) and the merge base its diff started
   # from (round-<n>.base). Uncommitted changes would make the review cover something no commit
   # holds. Rounds go on until one has no blockers, for at most three.
-  case "$round" in [1-3]) ;; *) echo "round $round: the review stops at three rounds; what's still open goes to the user" >&2; exit 1 ;; esac
+  case "$round" in [1-3]) ;; *) echo "round $round: the review stops at three rounds; fix what's still open without another round" >&2; exit 1 ;; esac
   # Rerunning a finished round would replace its findings with a review of later code. A failed
   # round leaves no round-<n>.json, so it can still be retried.
   if [ -e "$json" ]; then

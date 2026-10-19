@@ -16,9 +16,9 @@ cd "$wt" || exit 1
 mkdir -p "$out"
 case "$mode" in
 qa) name="round-$round"; prompt="$here/review-qa.md"
-  case "$round" in [1-3]) ;; *) echo "QA round $round: QA stops at three rounds; what's still open goes to the user" >&2; exit 1 ;; esac ;;
+  case "$round" in [1-3]) ;; *) echo "QA round $round: QA stops at three rounds; fix what's still open without another round" >&2; exit 1 ;; esac ;;
 ux) name="round-$round.ux"; prompt="$here/review-ux.md"
-  case "$round" in [1-3]) ;; *) echo "UI/UX round $round: the UI/UX pass stops at three rounds; what's still open goes to the user" >&2; exit 1 ;; esac ;;
+  case "$round" in [1-3]) ;; *) echo "UI/UX round $round: the UI/UX pass stops at three rounds; fix what's still open without another round" >&2; exit 1 ;; esac ;;
 *) echo "qa.sh: the mode is ux or nothing, not $mode" >&2; exit 2 ;;
 esac
 json="$out/$name.json"
