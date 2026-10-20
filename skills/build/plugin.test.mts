@@ -20,3 +20,7 @@ test('P1-S1 Install: Codex marketplace packages the shared skills and helpers', 
   }
   assert.ok(existsSync(resolve(root, plugin.skills, 'build/review.sh')))
 })
+
+test('P1-S1 Install: Codex disables inherited Claude update hooks', () => {
+  assert.deepEqual(json('.codex-plugin/plugin.json').hooks, [])
+})
