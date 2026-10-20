@@ -6,7 +6,7 @@ On the full workflow you run the build and subagents do the work. Your context h
 
 - Talk to the user, write the PRD, the plan and the briefs, and decide.
 - Read the PRD, the plan, the code map, subagent reports, `git log --oneline` and the summaries the scripts print.
-- Run `codex.sh` and `pass.sh` in the background. They print short summaries; the detail stays in their files for the subagent that handles it.
+- Run `consult.sh` and `review.sh` in the background. They print short summaries; the detail stays in their files for the subagent that handles it.
 
 If you're about to read a source file, a diff or a log longer than a screen, send a subagent instead.
 

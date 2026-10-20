@@ -7,7 +7,7 @@ For a repo whose manifest says `Landing: local merge`. There is no remote and th
 You merge it yourself only when all of these hold. Otherwise it waits for the user.
 
 - The suite (*Verify* and the *Extra checks* that apply) is green at the branch head, after merging the base branch in.
-- Every slice was reviewed (`.build/review/<slice>/codex.sha`, or `sonnet.sha` without Codex, is an ancestor of `HEAD`), every blocker raised is fixed with a regression test or dismissed with a citation, and every proof script reran on `HEAD`.
+- Every slice was reviewed (`.build/review/<slice>/review.sha` is an ancestor of `HEAD`), every blocker raised is fixed with a regression test or dismissed with a citation, and every proof script reran on `HEAD`.
 - The PRD says `Signed off`, or the change took the short path.
 - It touches nothing on the manifest's *Always waits for the user* list. Those changes alter the rules the next change is judged by, or the boundary that keeps the system safe.
 

@@ -22,7 +22,7 @@ flowchart LR
 
 - **Codes carry names** wherever a person reads them: "P92 (reusable rockets) S3 (landing legs)", never "P92 S3".
 - **Progress notes:** at each change of stage, one line on what finished and what's next.
-- **A second opinion** is one run of `codex.sh consult`, or without Codex one fresh subagent told to poke holes.
+- **A second opinion** is one run of `consult.sh`, or without Codex one fresh subagent told to poke holes.
 
 ## 0. Size it
 
@@ -32,7 +32,7 @@ Read the *Routing* file and the docs it names for the area, the ticket if there 
 
 ## 1. Understand and agree the PRD
 
-Read the *Routing* docs, the *Plans index*, other worktrees' PRDs and the ticket with its comments. Ask code questions of an `Explore` subagent. Reproduce, measure, spike when a choice turns on a fact, and compare real alternatives including the smallest. Put your understanding and draft questions in `.build/consult.md` to a second opinion (`"$S/codex.sh" consult "$PWD" .build/consult.md .build/consult-answer.md`, in the background), settle what it settles, then ask the user only what only they can say, in batches, recommendation first.
+Read the *Routing* docs, the *Plans index*, other worktrees' PRDs and the ticket with its comments. Ask code questions of an `Explore` subagent. Reproduce, measure, spike when a choice turns on a fact, and compare real alternatives including the smallest. Put your understanding and draft questions in `.build/consult.md` to a second opinion (`"$S/consult.sh" "$PWD" .build/consult.md .build/consult-answer.md`, in the background), settle what it settles, then ask the user only what only they can say, in batches, recommendation first.
 
 A technical directive from the user beats a standard: say in a sentence what the standard protects, follow the directive, and quote it in the PRD under **Your directives**.
 
@@ -78,11 +78,10 @@ When reality disagrees with the plan, decide by the PRD and log it under `Change
 
 ## 4. Review once, fix once, fold in
 
-Write `.build/review/<slice>/brief.md`: what the slice does, the paths of the PRD, the plan and `.build/proof/`, its scenarios, and the user's deliberate choices. The prompt is [`review.md`](review.md); change it there, not in a brief. Run both in the background on the same commit (`$SW` the slice worktree, `$WT` the feature worktree; the last argument makes the diff only this slice's):
+Write `.build/review/<slice>/brief.md`: what the slice does, the paths of the PRD, the plan and `.build/proof/`, its scenarios, and the user's deliberate choices. The prompt is [`review.md`](review.md); change it there, not in a brief. Sonnet and Codex review it in parallel; run it in the background (`$SW` the slice worktree, `$WT` the feature worktree; the last argument makes the diff only this slice's):
 
 ```bash
-"$S/codex.sh" review "$SW" "$WT/.build/review/<slice>/brief.md" "$WT/.build/review/<slice>" feat/p<n>-<slug>
-"$S/pass.sh" "$SW" "$WT/.build/review/<slice>/brief.md" "$WT/.build/review/<slice>" feat/p<n>-<slug>
+"$S/review.sh" "$SW" "$WT/.build/review/<slice>/brief.md" "$WT/.build/review/<slice>" feat/p<n>-<slug>
 ```
 
 One subagent then handles every finding once:

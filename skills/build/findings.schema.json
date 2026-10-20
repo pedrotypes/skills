@@ -1,71 +1,20 @@
 {
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "summary",
-    "findings"
-  ],
+  "type": "object", "additionalProperties": false, "required": ["summary", "findings"],
   "properties": {
-    "summary": {
-      "type": "string"
-    },
-    "findings": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "category",
-          "severity",
-          "file",
-          "line",
-          "title",
-          "scenario",
-          "fix"
-        ],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "severity": {
-            "type": "string",
-            "enum": [
-              "P1",
-              "P2",
-              "P3",
-              "P4"
-            ]
-          },
-          "file": {
-            "type": "string"
-          },
-          "line": {
-            "type": "integer"
-          },
-          "title": {
-            "type": "string"
-          },
-          "scenario": {
-            "type": "string"
-          },
-          "fix": {
-            "type": "string"
-          },
-          "category": {
-            "type": "string",
-            "enum": [
-              "bug",
-              "security",
-              "cut",
-              "cleanup",
-              "design",
-              "test",
-              "docs"
-            ]
-          }
-        }
+    "summary": {"type": "string"},
+    "findings": {"type": "array", "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "category", "severity", "file", "line", "title", "scenario", "fix"],
+      "properties": {
+        "id": {"type": "string"},
+        "severity": {"type": "string", "enum": ["P1", "P2", "P3", "P4"]},
+        "file": {"type": "string"},
+        "line": {"type": "integer"},
+        "title": {"type": "string"},
+        "scenario": {"type": "string"},
+        "fix": {"type": "string"},
+        "category": {"type": "string", "enum": ["bug", "security", "cut", "cleanup", "design", "test", "docs"]}
       }
-    }
+    }}
   }
 }
