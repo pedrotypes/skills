@@ -1,13 +1,13 @@
 # Landing by local merge
 
-For a repo whose manifest says `Landing: local merge`. There is no remote and there are no pull requests. Work lands by merging the feature branch into the local base branch, after the same evidence a PR would have needed. Never add a remote, push, or run `gh`. This replaces §6's PR steps, slice by slice. "Nothing ships red" still applies.
+For a repo whose manifest says `Landing: local merge`. There is no remote and there are no pull requests. Work lands by merging the feature branch into the local base branch, after the same evidence a PR would have needed. Never add a remote, push, or run `gh`. This replaces §6's PR steps. "Nothing ships red" still applies.
 
 ## The merge rules
 
 You merge it yourself only when all of these hold. Otherwise it waits for the user.
 
 - The suite (*Verify* and the *Extra checks* that apply) is green at the branch head, after merging the base branch in.
-- The slice's review covers it (`codex.sha`, or `sonnet.sha` without Codex, is an ancestor of `HEAD`), every blocker it raised is fixed with a regression test or dismissed with a citation, and the evidence reran on `HEAD`.
+- Every slice was reviewed (`.build/review/<slice>/codex.sha`, or `sonnet.sha` without Codex, is an ancestor of `HEAD`), every blocker raised is fixed with a regression test or dismissed with a citation, and every proof script reran on `HEAD`.
 - The PRD says `Signed off`, or the change took the short path.
 - It touches nothing on the manifest's *Always waits for the user* list. Those changes alter the rules the next change is judged by, or the boundary that keeps the system safe.
 

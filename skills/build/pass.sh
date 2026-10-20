@@ -2,13 +2,16 @@
 # Sonnet's review of a slice: a read-only Sonnet 5.5 agent at medium effort over the whole diff,
 # on the same prompt as Codex. One review per slice.
 #
-#   pass.sh <worktree> <brief.md> <out-dir>
+#   pass.sh <worktree> <brief.md> <out-dir> [<base ref>]
+#
+# The diff runs from the merge base with <base ref> (a slice's feature branch), or else with the
+# base branch.
 #
 # Writes <out-dir>/sonnet.json and sonnet.sha, and prints the findings and the blocker count.
 # Run it as a background command and wait for the completion notification.
 set -u
 here="$(cd "$(dirname "$0")" && pwd)"
-wt="${1:?worktree}"; brief="${2:?brief}"; out="${3:?out dir}"
+wt="${1:?worktree}"; brief="${2:?brief}"; out="${3:?out dir}"; ref="${4:-}"
 cd "$wt" || exit 1
 mkdir -p "$out"
 json="$out/sonnet.json"
@@ -18,7 +21,7 @@ fi
 if [ -n "$(git status --porcelain --untracked-files=normal)" ]; then
   echo "sonnet: commit or discard your changes first; the review reads a commit" >&2; exit 1
 fi
-base=$("$here/merge-base.sh") || exit 1
+base=$("$here/merge-base.sh" $ref) || exit 1
 # It runs in the real worktree, so it gets no shell at all, only the read tools, and reads the
 # diff from a file. The branch's own .claude settings don't load, so its hooks can't run either.
 sha=$(git rev-parse HEAD)

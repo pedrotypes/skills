@@ -32,8 +32,8 @@ while [ $# -gt 0 ]; do [ "$1" = -o ] && { cp "${join(dir, 'result.json')}" "$2";
   return { dir, wt, bin, brief: join(dir, 'brief.md'), out: join(wt, '.build', 'review') }
 }
 
-function run(s: ReturnType<typeof setup>) {
-  return spawnSync('bash', [join(import.meta.dirname, 'codex.sh'), 'review', s.wt, s.brief, s.out], {
+function run(s: ReturnType<typeof setup>, ...base: string[]) {
+  return spawnSync('bash', [join(import.meta.dirname, 'codex.sh'), 'review', s.wt, s.brief, s.out, ...base], {
     cwd: s.wt, encoding: 'utf8', env: { ...process.env, PATH: `${s.bin}:${process.env.PATH}` },
   })
 }
@@ -86,4 +86,14 @@ test('codex.sh review: a review whose HEAD moved is not published', () => {
   assert.notEqual(r.status, 0)
   assert.match(r.stderr, /HEAD moved/)
   assert.ok(!existsSync(join(s.out, 'codex.json')))
+})
+
+test('codex.sh: a slice is reviewed against the feature branch it folds into', () => {
+  const s = setup(result())
+  git(s.wt, 'switch', '-q', '-c', 'slice')
+  writeFileSync(join(s.wt, 'app.txt'), 'v3\n')
+  git(s.wt, '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qam', 'slice')
+  const r = run(s, 'feat')
+  assert.equal(r.status, 0, r.stderr + r.stdout)
+  assert.match(readFileSync(join(s.out, 'codex.prompt.md'), 'utf8'), new RegExp(git(s.wt, 'rev-parse', 'feat')))
 })

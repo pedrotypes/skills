@@ -3,11 +3,13 @@
 # and review uses gpt-6.1-sol at medium effort.
 #
 #   codex.sh consult <worktree> <brief.md> <answer.md>
-#   codex.sh review  <worktree> <brief.md> <out-dir>
+#   codex.sh review  <worktree> <brief.md> <out-dir> [<base ref>]
 #
 # consult writes Codex's free-text answer to <answer.md>.
 # review reviews a slice once, with review.md and <brief.md>, beside Sonnet's pass.sh. It writes
 # <out-dir>/codex.json (shaped by findings.schema.json) and prints the findings and the blocker count.
+# The diff runs from the merge base with <base ref> (a slice's feature branch), or else with the
+# base branch.
 #
 # Run it as a background command and wait for the completion notification. A review can
 # take many minutes, and polling it wastes the caller's context.
@@ -32,7 +34,7 @@ consult)
   echo "consult done: $answer"
   ;;
 review)
-  out="${4:?out dir}"
+  out="${4:?out dir}"; ref="${5:-}"
   mkdir -p "$out"
   json="$out/codex.json"; log="$out/codex.log"; pending="$out/codex.pending.json"
   # A slice gets one review, on one commit. It records the commit (codex.sha) and the merge base
@@ -43,7 +45,7 @@ review)
   if [ -n "$(git status --porcelain --untracked-files=normal)" ]; then
     echo "codex: commit or discard your changes first; the review reads a commit" >&2; exit 1
   fi
-  base=$("$here/merge-base.sh") || exit 1
+  base=$("$here/merge-base.sh" $ref) || exit 1
   sha=$(git rev-parse HEAD)
   rm -f "$pending" "$out/codex.sha" "$out/codex.base"
   # The target comes from the commits this review records, not from the brief, so the receipt and

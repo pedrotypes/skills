@@ -49,3 +49,14 @@ test("with an origin, the merge base is with origin's base branch, not a stale l
   assert.equal(result.status, 0, result.stderr)
   assert.equal(result.stdout.trim(), git(upstream.dir, 'rev-parse', 'main'))
 })
+
+test('a ref given as the argument is the base, without a fetch', () => {
+  const { dir } = repo()
+  const slicePoint = git(dir, 'rev-parse', 'HEAD')
+  git(dir, 'switch', '-q', '-c', 'slice')
+  git(dir, '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '--allow-empty', '-m', 'slice')
+  git(dir, 'remote', 'add', 'origin', '/nonexistent')
+  const result = spawnSync('bash', [join(import.meta.dirname, 'merge-base.sh'), 'feat'], { cwd: dir, encoding: 'utf8' })
+  assert.equal(result.status, 0, result.stderr)
+  assert.equal(result.stdout.trim(), slicePoint)
+})

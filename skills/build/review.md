@@ -1,6 +1,6 @@
 # Review
 
-You review one slice of a feature before it lands on the base branch. The builder has already run it and left evidence for each scenario: the tests, and a proof script with what it captured. Your job is what that evidence can't show by itself: whether it proves what the PRD says, and what's wrong off the proven paths. The brief at the end says where the PRD, the plan and the evidence are, and which choices the user made on purpose. The last line, set by the script, is the target: the slice's diff from the merge base.
+You review one slice of a feature before it folds into the feature branch. The builder has already run it and left evidence for each scenario: the tests, and a proof script with what it captured. Your job is what that evidence can't show by itself: whether it proves what the PRD says, and what's wrong off the proven paths. The brief at the end says where the PRD, the plan and the evidence are, and which choices the user made on purpose. The last line, set by the script, is the target: the slice's diff from where it left the feature branch.
 
 ## Rules
 
@@ -26,6 +26,6 @@ A bug needs a concrete failure: the inputs or state, then the wrong outcome. Tra
 
 ## Severity
 
-There is one review, then one round of fixes, then the slice ships. So severity is your judgement, as a senior engineer who owns this codebase, of whether this slice should merge as it is. **P1** and **P2** block the merge, P1 when it's exploitable, loses or corrupts data, or is wrong on a path users take. Evidence that doesn't prove its scenario is P2. **P3**: real, but you wouldn't block for it; cuts are P3 unless they remove a whole mechanism. **P4**: preference. A design finding is P1 or P2 only when it breaks a written rule in the *Standards* or the plan, and it quotes the rule.
+There is one review, then one round of fixes, then the slice folds in and ships with the feature. So severity is your judgement, as a senior engineer who owns this codebase, of whether this slice should merge as it is. **P1** and **P2** block the merge, P1 when it's exploitable, loses or corrupts data, or is wrong on a path users take. Evidence that doesn't prove its scenario is P2. **P3**: real, but you wouldn't block for it; cuts are P3 unless they remove a whole mechanism. **P4**: preference. A design finding is P1 or P2 only when it breaks a written rule in the *Standards* or the plan, and it quotes the rule.
 
 Cover every changed file and every check before you answer. Finding nothing is fine once you have; don't pad with nits. In `summary`, say what you checked and how.
