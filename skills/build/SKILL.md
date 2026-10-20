@@ -38,7 +38,7 @@ A technical directive from the user beats a standard: say in a sentence what the
 
 **Worktree.** Plan number: one above the highest anywhere (`git log --all --name-only --format= -- '<Plans>' | grep -ioE '(^|/)p[0-9]+'`, plus other worktrees). Create `<Worktrees>/p<n>-<slug>` on `feat/p<n>-<slug>` from the up-to-date base branch, with the ticket ID after the number when there is one. Copy `.env`, *Install*, exclude `.build/`.
 
-**The PRD**, `<Plans>p<n>-<slug>/prd.md`, follows [`prd-format.md`](prd-format.md). Its `Done when` scenarios (`P<n>-S<k> <name>`) are the goals, the test names and the proof checklist. Commit it with the index entry, publish it, and ask the user to approve or correct it. That's their one stop. Once approved, add `Signed off: <date>` and commit.
+**The PRD**, `<Plans>p<n>-<slug>/prd.md`, follows [`prd-format.md`](prd-format.md). Its `Done when` scenarios (`P<n>-S<k> <name>`) are the goals, the test names and the proof checklist. Commit it with the index entry and get the user's sign-off as that file says. That's their one stop.
 
 ## 2. Map and plan
 
@@ -98,7 +98,7 @@ When every slice is in, start the stack (`N=<plan>`) on the feature head and rer
 
 With *Landing* `local merge`, run "Nothing ships red", then follow [local-merge.md](local-merge.md) instead of the rest.
 
-**Nothing ships red.** Merge the up-to-date base branch in (never rebase a pushed branch), run *Verify* and the *Extra checks* that apply, and check the PRD page with `node "$S/render-prd.mjs" --tokens <Tokens> --check <Plans>`. A failure is a bug, not a retry.
+**Nothing ships red.** Merge the up-to-date base branch in (never rebase a pushed branch), run *Verify* and the *Extra checks* that apply. A failure is a bug, not a retry.
 
 **The record.** `.build/proof/README.md` lists each capture under its scenario with one line on what it shows, at the commit it was taken. `.build/proof/review.md` lists each slice's findings and what happened to them. Turn clips into GIFs with the manifest's *ffmpeg* (`-vf "fps=10,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse"`), then publish:
 

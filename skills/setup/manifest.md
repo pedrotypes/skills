@@ -62,7 +62,7 @@ Read by the pedrotypes skills. See the setup skill's manifest.md for what each l
 ## What each line means
 
 **Paths**
-- **Plans**: where `build` keeps a folder per plan, `p<n>-<slug>/`, holding the PRD (`prd.md`, rendered to `prd.html`) and its mockups. A plan number is one above the highest on any branch.
+- **Plans**: where `build` keeps a folder per plan, `p<n>-<slug>/`, holding the PRD, `prd.md`. A plan number is one above the highest on any branch.
 - **Plans index**: the list `build` adds each new plan to.
 - **Standards**: team decisions that code must follow. `build` follows them and reviewers enforce them. `retro` adds reviewer rules here.
 - **Reference docs**: describe the code as it is now. `build` keeps them true. `improve-architecture` records rejected candidates in a `Considered and rejected` list at the end of the doc for that area.
@@ -88,5 +88,5 @@ Read by the pedrotypes skills. See the setup skill's manifest.md for what each l
 - **Proof media branch**: the orphan branch that `build` publishes screenshots and GIFs to. Pull requests only.
 
 **Design**
-- **Tokens**: the PRD page takes its colours from this file, so it looks like the product. Without it, the page uses its own neutral palette.
-- **Standard**: the doc that UI work and mockups follow.
+- **Tokens**: the architecture report takes its colours from this file, so it looks like the product. Without it, the report uses its own neutral palette.
+- **Standard**: the doc that UI work follows.
