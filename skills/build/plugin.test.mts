@@ -22,5 +22,5 @@ test('P1-S1 Install: Codex marketplace packages the shared skills and helpers', 
 })
 
 test('P1-S1 Install: Codex disables inherited Claude update hooks', () => {
-  assert.deepEqual(json('.codex-plugin/plugin.json').hooks, [])
+  assert.deepEqual(json('.codex-plugin/plugin.json').hooks, { hooks: {} })
 })

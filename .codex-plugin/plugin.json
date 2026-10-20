@@ -12,5 +12,7 @@
     "displayName": "pedrotypes skills",
     "shortDescription": "Build features, review architecture and improve your workflow."
   },
-  "hooks": []
+  "hooks": {
+    "hooks": {}
+  }
 }
