@@ -10,13 +10,14 @@ node "$S/render-prd.mjs" --tokens <Tokens> <Plans>p<n>-<slug>/prd.md > <Plans>p<
 
 Leave out `--tokens` when the manifest has no *Tokens* line: the page then uses its own neutral palette.
 
-The page is committed in the plan folder, so anyone can open it in a browser, years from now, without a Claude account. It loads Mermaid from a pinned CDN to draw its diagrams. Render it again in the same commit as every PRD change. `--check <Plans>`, with the same `--tokens`, exits non-zero and names each page that no longer matches its PRD. §6 runs it before shipping. What the renderer needs:
+The page is committed in the plan folder, so anyone can open it in a browser, years from now, without a Claude account. It loads Mermaid from a pinned CDN to draw its diagrams. Render it again in the same commit as every PRD change. `--check <Plans>`, with the same `--tokens`, exits non-zero and names each page that no longer matches its PRD. §5 runs it before shipping. What the renderer needs:
 
-- **The title**: `# P<n> <Name>`.
+- **The title**: `# P<n> <Name>`, then the ticket link when there is one, `PRD: <artifact url>`, and once approved `Signed off: <date>`.
+- **`## Summary`**: what and why, in two or three sentences.
 - **`## What you said`**: one bullet per point, `<their words, quoted, with the source> → <your reading>`. Quote only what they actually wrote or said. A decision you only have secondhand is a paraphrase, labelled as one, with no quotation marks. A made-up quote breaks the one thing this section exists to do.
 - **`## Where I might be wrong`**: one bullet per assumption, `**<Claim>.** <detail>. **If not:** <what changes>`. Two to four of them, and only ones that would change what gets built, not how.
-- **`## Done when`**: `**P<n>-S<k> <short name>**: <behaviour>`. The page shows the name beside the id.
-- **`## Solution`**: the text before the first `###` is the page's "How it works". Draw it with a `mermaid` fence (a state, sequence or flow diagram). The `###` subsections (`Your directives`), `Out of scope` and `Open questions` fold into the record. A section that's empty or says "None." is left out.
+- **`## Done when`**: `**P<n>-S<k> <short name>**: <behaviour>`, failure paths included. Always the full id, so one grep finds the PRD row, test, proof script and commit. The page shows the name beside the id.
+- **`## Solution`**: the text before the first `###` is the page's "How it works", with the rejected alternative in one line. Draw it with a `mermaid` fence (a state, sequence or flow diagram). The `###` subsections (`Your directives`), `Out of scope` and `Open questions` fold into the record. A section that's empty or says "None." is left out.
 
 ## Mockups
 

@@ -1,6 +1,6 @@
 # Landing by local merge
 
-For a repo whose manifest says `Landing: local merge`. There is no remote and there are no pull requests. Work lands by merging the feature branch into the local base branch, after the same evidence a PR would have needed. Never add a remote, push, or run `gh`. This replaces §6's PR steps. "Nothing ships red" still applies.
+For a repo whose manifest says `Landing: local merge`. There is no remote and there are no pull requests. Work lands by merging the feature branch into the local base branch, after the same evidence a PR would have needed. Never add a remote, push, or run `gh`. This replaces §5's PR steps. "Nothing ships red" still applies.
 
 ## The merge rules
 
@@ -24,7 +24,7 @@ From the main checkout: `git merge --no-ff <branch>`. Write the merge commit mes
 - the path of the proof page in `.build/proof/`, with the review report beside it;
 - the last line: the *PR footer*, when the manifest has one.
 
-Then run *Verify* on the base branch. If it's red, that's a bug (§4): fix it there straight away, with a regression test.
+Then run *Verify* on the base branch. If it's red, that's a bug (§3): fix it there straight away, with a regression test.
 
 ## Handing it to the user
 

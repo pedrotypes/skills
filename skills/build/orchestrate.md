@@ -14,11 +14,11 @@ If you're about to read a source file, a diff or a log longer than a screen, sen
 
 Each of these goes to a subagent: `subagent_type: general-purpose` with `model: "opus"`, except the code map, which is `model: "sonnet"`. Never a fork, since a fork inherits your whole context.
 
-- **The code map** (§3): one subagent, with [`research.md`](research.md) as its prompt.
-- **Each slice** (§4): one builder, step after step.
-- **Rerunning the evidence** (§4): one subagent starts the stack, reruns the proof scripts and reports which pass.
-- **The round of fixes** (§5): one subagent, which returns each dismissal with its citation for the review report.
-- **Each CI failure or review comment that needs a fix** (§6).
+- **The code map** (§2): one subagent, with [`research.md`](research.md) as its prompt.
+- **Each slice** (§3): one builder, step after step.
+- **Rerunning the evidence** (§3): one subagent starts the stack, reruns the proof scripts and reports which pass.
+- **The round of fixes** (§4): one subagent, which returns each dismissal with its citation for the review report.
+- **Each CI failure or review comment that needs a fix** (§5).
 
 Read-only work (the passes, `Explore` searches) can run in parallel with anything.
 
@@ -34,9 +34,9 @@ The builder saw nothing, so the brief is complete on its own:
 
 - Its worktree and branch head, and the paths of the PRD, the plan and the code map (`.build/` in the feature worktree).
 - Its scope: the slice and its steps, by number and name, and that it stops after each to report.
-- The rules it follows: §4 of `${CLAUDE_SKILL_DIR}/SKILL.md`.
+- The rules it follows: §3 of `${CLAUDE_SKILL_DIR}/SKILL.md`.
 - Start from the code map: `.build/research.md` and the earlier builders' additions in `.build/research/`. Search beyond them only for what they don't cover, and write what you found to `.build/research/step-<k>.md` in the feature worktree, so the next builder doesn't search again.
-- To prove a scenario (§4): the manifest's *Isolated stack*, *Ready when* and *QA notes*, the `N` and port to use, and the feature worktree's absolute path for `.build/proof/`.
+- To prove a scenario (§3): the manifest's *Isolated stack*, *Ready when* and *QA notes*, the `N` and port to use, and the feature worktree's absolute path for `.build/proof/`.
 - Before reporting, run *Verify* over the whole suite.
 
 ## The report
@@ -47,7 +47,7 @@ Ask for at most ten lines, and nothing else:
 - the *Verify* result
 - per scenario: the test that failed first (and its failure line), the proof script, and what it captured in `.build/proof/out/`
 - any line added under `Changed during implementation`
-- what it found and left unfixed, for the backlog (§4)
+- what it found and left unfixed, for the backlog (§3)
 - whether the step still makes sense against the PRD, and any question it couldn't settle
 
 Don't ask for the diff or test output. When a report says a `Done when` scenario or a directive would have to change, bring it to the user. Otherwise decide, and send the next step.

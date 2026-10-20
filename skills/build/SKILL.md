@@ -1,209 +1,121 @@
 ---
 name: build
-description: Take something new from idea to one merge-ready pull request (or, in a repo without a remote, a guarded local merge), built in small slices. Size it first — a small, clear change takes a short path (test, fix, one review, PR), and when in doubt, ask. For real work, understand the problem with a second opinion until you and the user picture the same thing, write a visual PRD for them to sign off, map the code and cut the plan into thin vertical slices. Then, per slice (in parallel where the plan allows), fresh builder agents build it test-first and prove each scenario on a running stack, leaving rerunnable evidence; you rerun the evidence, Sonnet and Codex review the slice once, one round of fixes follows, and the slice folds into the feature branch. Once every slice is in, rerun all the evidence, open one short what-why-evidence PR, babysit it to merge-ready, and hand it to the user to review and merge. Use whenever the user starts talking about building something new, a feature, a change in behaviour, or a problem to solve — "let's build…", "I want…", "we need…", "solve…", "figure out how to…", "can we make it so…" — and when they ask to resume, review or land work in a `.worktrees/` feature.
+description: Take something new from idea to one merge-ready pull request (or a guarded local merge in a repo without a remote). Small, clear changes take a short path. Real work gets a PRD the user signs off, then thin slices that fresh builder agents build test-first and prove on a running stack; each slice is reviewed once by Sonnet and Codex, fixed once and folded into the feature branch, and the feature ships as one short what-why-evidence PR, babysat to merge-ready. Use whenever the user wants to build something, change behaviour or solve a problem — "let's build…", "I want…", "we need…", "solve…", "can we make it so…" — or to resume or land work in a `.worktrees/` feature.
 ---
 
 # Build
 
-The user owns the problem, the taste and the veto. You own everything else. Anything the code, the docs, an experiment, the web or a second opinion can answer, you answer yourself.
-
-What can't be fixed later is building the wrong thing. So every interaction with the user serves one purpose: making sure your picture of the problem and the solution matches theirs. Treat them as a busy CPTO: stop for them only when a decision is truly theirs, lead with what they must decide, and link everything else.
-
-Small slices make a single review enough. Each slice is small enough to review whole, and its builder proves it works before anyone reviews it.
+The user owns the problem, the taste and the veto. You own everything else: what the code, the docs, an experiment or a second opinion can answer, you answer. Treat the user as a busy CPTO. Stop for them only when a decision is truly theirs, lead with it, and link the rest.
 
 ```mermaid
 flowchart LR
-  Z{Small and clear?} -->|yes| SP[Short path: test, fix, one review] --> L
-  Z -->|unsure| ASK[Ask the user] --> Z
-  Z -->|no| U[Understand, second opinion, ask] --> D[PRD: user signs off]
-  D --> R[Map the code, plan the slices] --> F{Feasibility: does<br/>the PRD change?}
-  F -->|yes| D
-  F -->|no| B
-  subgraph each slice, in parallel where the plan allows
-    B[Build and prove] --> E[Rerun the evidence] --> V[One review: Sonnet + Codex] --> FX[One round of fixes] --> FI[Fold into the feature branch]
+  Z{Small and clear?} -->|yes| SP[Short path] --> L
+  Z -->|no| U[Understand] --> D[PRD: user signs off] --> R[Map and plan slices]
+  subgraph each slice, in parallel where it can
+    B[Build and prove] --> V[One review] --> FX[One round of fixes] --> FI[Fold in]
   end
-  FI --> A[All slices in: rerun all the evidence] --> L[One PR, babysit to merge-ready] --> H[Hand to the user] --> M[After merge: clean up]
+  R --> B
+  FI --> A[Rerun all evidence] --> L[One PR, babysit to merge-ready] --> H[Hand to the user]
 ```
 
-If a `.worktrees/p<n>-*` worktree already holds a PRD for this, resume at the first step that isn't done. Settled things stay settled.
+**Before anything:** read `.agents/project.md`, the manifest ([manifest.md](../setup/manifest.md)); run `/setup` if it's missing. *Plans*, *Verify* and the like below mean its lines. `S="${CLAUDE_SKILL_DIR}"`. If a `.worktrees/p<n>-*` worktree holds a PRD for this, resume at the first step not done.
 
-**The manifest.** Read `.agents/project.md` before anything else. It names this repo's paths, tracker, commands, isolated stack and workflow, described in the `setup` skill's [manifest.md](../setup/manifest.md). If it's missing, run `/setup` first. Below, *Plans*, *Verify*, *the base branch* and the like mean that line of the manifest.
+- **Codes carry names** wherever a person reads them: "P92 (reusable rockets) S3 (landing legs)", never "P92 S3".
+- **Progress notes:** at each change of stage, one line on what finished and what's next.
+- **A second opinion** is one run of `codex.sh consult`, or without Codex one fresh subagent told to poke holes.
 
-`$S` below is this skill's directory: `S="${CLAUDE_SKILL_DIR}"`.
+## 0. Size it
 
-**Codes carry names.** Wherever a person reads it (the PRD, the PR, comments, messages to the user), every plan, slice, scenario or finding code carries its short name: "P92 (reusable rockets) S3 (retractable landing legs)", never "P92 S3".
+Read the *Routing* file and the docs it names for the area, the ticket if there is one, and enough code to size it. Take the full workflow when the request and docs leave behaviour open, there's more than one approach the user would care about, it touches auth, data, migrations, infrastructure or CI, or it spans components or about 150 lines. Otherwise take the short path. When unsure, ask in one question, your recommendation first.
 
-**Progress notes.** At each change of stage, tell the user in one line what finished and what's next, with no question attached.
+**The short path:** a worktree `<Worktrees>/<slug>` on `fix/<slug>` or `chore/<slug>`, *Install*, and `.build/` in `$(git rev-parse --git-common-dir)/info/exclude`. A failing test, the fix, a commit. Update the doc it affects, run *Verify* and the *Extra checks* that apply, review once and fix as §4 says (folder `.build/review/`, the request in place of a PRD), and ship as §5 says. A blocker that needs a design decision means switching to the full workflow.
 
-**A second opinion** is Codex when `codex` is installed (`codex.sh consult`), and otherwise one fresh Claude subagent told to poke holes. Either way it's one run per question, never a loop.
+## 1. Understand and agree the PRD
 
-## 0. Size it first
+Read the *Routing* docs, the *Plans index*, other worktrees' PRDs and the ticket with its comments. Ask code questions of an `Explore` subagent. Reproduce, measure, spike when a choice turns on a fact, and compare real alternatives including the smallest. Put your understanding and draft questions in `.build/consult.md` to a second opinion (`"$S/codex.sh" consult "$PWD" .build/consult.md .build/consult-answer.md`, in the background), settle what it settles, then ask the user only what only they can say, in batches, recommendation first.
 
-Read first: the manifest's *Routing* file and every doc it names for the area, the ticket with its comments and linked issues if there is one, and enough of the code to size it. Something that looks like an obvious fix may be deliberate, and the docs say why.
+A technical directive from the user beats a standard: say in a sentence what the standard protects, follow the directive, and quote it in the PRD under **Your directives**.
 
-**The full workflow** (§1 onward) is required if any of these hold:
+**Worktree.** Plan number: one above the highest anywhere (`git log --all --name-only --format= -- '<Plans>' | grep -ioE '(^|/)p[0-9]+'`, plus other worktrees). Create `<Worktrees>/p<n>-<slug>` on `feat/p<n>-<slug>` from the up-to-date base branch, with the ticket ID after the number when there is one. Copy `.env`, *Install*, exclude `.build/`.
 
-- It adds or changes behaviour in a way that neither the request nor what you just read settles.
-- There is more than one reasonable approach, and the user would care which.
-- It touches auth, data or migrations, infrastructure, or CI.
-- It spans more than one component, or goes past roughly 150 changed lines.
-- The ticket's "done" needs pinning down, or the docs or ticket contradict the request.
+**The PRD**, `<Plans>p<n>-<slug>/prd.md`, follows [`prd-format.md`](prd-format.md). Its `Done when` scenarios (`P<n>-S<k> <name>`) are the goals, the test names and the proof checklist. Commit it with the index entry, publish it, and ask the user to approve or correct it. That's their one stop. Once approved, add `Signed off: <date>` and commit.
 
-**The short path** is for everything else: a bug fix restoring documented behaviour, a copy tweak, a change the request specifies completely, edits to skills, docs or config. When in doubt, ask the user in one question, your recommendation first.
+## 2. Map and plan
 
-1. Work in its own worktree (`<Worktrees>/<slug>`, branch `fix/<slug>` or `chore/<slug>`, with the ticket ID after the prefix when there is one). Run *Install*, and add `.build/` to `$(git rev-parse --git-common-dir)/info/exclude`.
-2. For code: a failing test that shows the problem, then the fix, then a commit. Prose-only changes have nothing to test.
-3. Update the reference or data-flow doc if the behaviour it describes changed, and run *Verify* plus each *Extra check* whose condition the change meets.
-4. Review it once and fix as §5 says, with `.build/review/` as the review folder and the request in place of a PRD in the brief. If a blocker needs a design decision, it wasn't a short-path change: say so and switch.
-5. Ship as in §6, with proof only when something visible changed.
-
-## 1. Understand
-
-Read before you ask: the *Routing* file and every document it names for this work, the *Plans index*, and the PRDs in other worktrees (`git worktree list`). Another plan may already own part of this. To answer a question about the code, send an `Explore` subagent rather than reading files yourself.
-
-**A ticket, if there is one** (a key matching the *Key pattern*, a link, or the branch name): read it, its comments and linked issues. If there's no ticket, don't invent one or ask for one.
-
-Get evidence, not opinions. Reproduce the problem, measure it, and find out what the code really does. When a choice turns on a fact, run a cheap spike in the scratchpad. Compare real alternatives, including the smallest change that could work. If the request names a solution and not its purpose, find out what it buys.
-
-**Second opinion, then ask.** Write `.build/consult.md` (in the scratchpad until the worktree exists) with your understanding, the alternatives and your draft questions, and ask what's wrong with the approach, whether its design holds up, which questions the code or docs already answer, and what you missed. Run it in the background:
-
-```bash
-"$S/codex.sh" consult "$PWD" .build/consult.md .build/consult-answer.md
-```
-
-Whatever it settled, you settle. Ask the user only what only they can say: a goal, a trade-off between their goals, money, taste, or a conflict with something they decided. Play your understanding back and ask in batches, your recommended answer first, until what you say back is what they had in mind.
-
-A technical directive from the user ("use X") beats a standard. If it contradicts one, say in a sentence what the standard protects, then follow the directive and record it as a standards change. Every directive goes into the PRD under **Your directives**, quoted: it's settled, and reviewers don't reopen it.
-
-## 2. The PRD
-
-**Worktree.** Number the plan one above the highest plan number anywhere: *Plans* on the base branch, in every worktree, and on every branch (`git log --all --name-only --format= -- '<Plans>' | grep -ioE '(^|/)p[0-9]+'`). Create `<Worktrees>/p<n>-<slug>` on branch `feat/p<n>-<slug>` from an up-to-date base branch. With a ticket, its ID goes after the number: `p19-proj-12-<slug>`. Copy the root `.env` in if there is one, run *Install*, and add `.build/` to `$(git rev-parse --git-common-dir)/info/exclude`.
-
-**The PRD** is the what and why, for the user: `<Plans>p<n>-<slug>/prd.md`, rendered to `prd.html` and published for comments, as [`prd-format.md`](prd-format.md) describes. Under the title `# P<n> <Name>`: the ticket link when there is one, `PRD: <artifact url>`, and the sign-off line. Then:
-
-- `## Summary`: what and why, in two or three sentences.
-- `## What you said`: the user's words, quoted verbatim with their source, each followed by `→` and your reading. A decision you only have secondhand is a paraphrase, labelled as one.
-- `## Where I might be wrong`: the assumptions that would change what gets built, each with **If not:** and what would change.
-- `## Done when`: the scenarios, `**P<n>-S<k> <short name>**: <observable behaviour>`, failure paths included. They're the goals, the test names and the proof checklist. Always write the full id, so one grep finds PRD row, test, proof script and commit.
-- `## Solution`: how it works, drawn where a drawing is clearer, with the rejected alternative in one line. Then `### Your directives`, quoted.
-- `## Out of scope`, and `## Open questions` when there are any.
-
-Add the index entry and commit the PRD folder as the worktree's first commit.
-
-**Sign-off.** The one stop for the user: send the PRD's link and ask them to approve or correct it. Once they approve, write `Signed off: <date>` under the title and commit. The PRD changes after that only with the user.
-
-## 3. Map and plan
-
-**The code map.** A documentarian subagent, with [`research.md`](research.md) as its prompt, maps the code into `.build/research.md`. You plan from it, and every builder starts from it.
-
-**The plan** is for agents: `.build/plan.md`. It names each slice's scope and goal, not its code.
+A documentarian subagent maps the code into `.build/research.md`, with [`research.md`](research.md) as its prompt. Plan from it into `.build/plan.md`:
 
 ```markdown
 # P<n> <Name>: plan
-
 ## Decisions
 | Choice | Rejected | Why |
-
 ## Standards changes
-The exact new wording for each file under *Standards*, as blockquotes. Only when there are some.
-
-## Slice 1: <short name>
-- Depends on: none, or the slices it needs
-- Serves: P<n>-S1 (<name>), P<n>-S2 (<name>)
-- Proof: how each scenario is shown working (UI, API, CLI), or why only tests can show it
-
-### Step 1: <short name>
-- Depends on: none, or the steps it needs
-- Scope: the files and areas it may change
-- Done when: what's true when it's finished
-
+Exact new wording, as blockquotes. Only when there are some.
+## Slice 1: <name>
+- Depends on: none, or slices
+- Serves: P<n>-S1 (<name>)
+- Proof: how each scenario is shown working, or why only tests can
+### Step 1: <name>
+- Scope: files and areas · Done when: what's true after
 ## Changed during implementation
-One line per departure, added as it happens.
 ```
 
-**Slices.** A slice is the smallest set of steps after which the feature branch still works and could ship. Slices are how the work is built and reviewed; the feature still ships as one PR. It cuts through every layer its scenarios need (data, API, UI, tests), serves one to three scenarios, and fits one builder's fresh context. Split one that grows past three scenarios or about 400 changed lines. Order them so the first proves the riskiest part. Slices that share no dependency and no scope run in parallel; when they'd share types, interfaces or a migration, a first slice lands those. A wide mechanical change (a rename across the codebase) goes expand, migrate in batches, contract, each its own slice. When nothing short of the whole feature can ship, it's one slice, and the plan says why.
+**A slice** is the smallest set of steps after which the feature branch still works. It cuts through every layer its scenarios need, serves one to three of them, and stays under about 400 changed lines. The first slice proves the riskiest part. Slices sharing no dependency run in parallel; shared types or migrations go in an earlier slice. When nothing smaller can work, it's one slice. Steps run in order and are numbered across the plan.
 
-Steps within a slice run in order, and step numbers run across the whole plan, so each is unique.
+**Feasibility.** Put the PRD, map and plan to a second opinion and settle what it raises. Go back to the user only if a scenario or directive would change.
 
-**Feasibility.** Put the PRD, the map and the plan to a second opinion: what won't work, what the plan misses, which slice is mis-cut. Settle what it raises yourself. Stop for the user only when a `Done when` scenario would be added, removed or reworded, or a directive broken: update the PRD with them and sign it off again.
+## 3. Build and prove
 
-## 4. Build and prove
+You orchestrate; a fresh Opus 5.5 builder takes each slice in its own worktree, as [`orchestrate.md`](orchestrate.md) says. Builders follow the *Routing* file, the *Standards* and these rules:
 
-For each slice. You orchestrate, and fresh Opus 5.5 builders write the code, one builder per slice in its own worktree, as [`orchestrate.md`](orchestrate.md) says. Every builder follows the *Routing* file, the *Standards* and these rules:
-
-1. **Red.** Write the tests for the scenarios the step serves, named by scenario id, and watch them fail for the right reason. Include the failure modes that apply (bad input, permissions, concurrency, a dependency refusing or hanging), and for anything crossing a trust boundary, the abuse case.
-2. **Green.** Write the least code that passes, following the standards.
-3. **Prove it.** When the step completes a scenario its user can reach, start an isolated stack (the manifest's *Isolated stack* with `N=<plan number>_<slice number>` and a free port), do the scenario as its user would, and check the result where it lands: the rows, the job, the log lines. Save that as `.build/proof/<scenario id>-<name>.<ext>` in the feature worktree, where every slice's scripts collect, a script that reads the stack's address from the environment (`BASE_URL`), so anyone can rerun it. It writes what it captured to `.build/proof/out/`: the request and response or the rows as text, and for UI, screenshots on desktop and phone, with a clip where an interaction matters. Then stop the stack and run its *Cleanup*. Passing tests aren't proof.
+1. **Red.** Tests for the step's scenarios, named by scenario id, seen failing for the right reason. Include the failure modes that apply, and the abuse case at a trust boundary.
+2. **Green.** The least code that passes.
+3. **Prove it.** For a scenario its user can reach: start the *Isolated stack* (`N=<plan>_<slice>`, a free port), do it as the user would, and check where the result lands (rows, jobs, logs). Save that as a script, `.build/proof/<scenario id>-<name>.<ext>` in the feature worktree, that reads `BASE_URL` from the environment and writes its captures to `.build/proof/out/`: text for requests, responses and rows; desktop and phone screenshots for UI, and a clip where an interaction matters. Stop the stack and run its *Cleanup*.
 4. **Commit**, naming the scenario: `P19-S3: refuse a second vote while one is in flight`.
 
-**Check against the PRD as you go.** When reality disagrees with the plan, decide by the PRD's goals and add a line under `## Changed during implementation`. Escalate only when stuck, or when a `Done when` scenario or a directive would have to change.
+When reality disagrees with the plan, decide by the PRD and log it under `Changed during implementation`; escalate only when a scenario or directive would change. Every bug, from anyone, gets a failing test first. A behaviour change includes its *Reference docs* or *Data flows* update. Problems left unfixed go to the tracker's backlog (search first; what, where, evidence, proposed fix), or into the hand-off without a tracker.
 
-**Every bug gets a regression test**, wherever it turns up: a builder, a reviewer, CI or the user. A failing test that reproduces it, then the fix, then a commit naming the bug.
+**Rerun the evidence** once the slice's steps have landed: start its stack on the slice head and rerun every proof script its code can run. One that fails, or captures something other than its scenario says, goes back to the builder. No review until it reruns.
 
-**Docs move with the code.** A behaviour change isn't finished until its doc under *Reference docs* or *Data flows* agrees with it. Apply the plan's standards changes in the commit that first relies on them.
+## 4. Review once, fix once, fold in
 
-**What this change won't fix goes to the backlog.** With a tracker (*Kind* isn't `none`), open a ticket for each problem found and left unfixed, after searching for one that already covers it: what's wrong and the evidence, where, who it hits, a proposed fix, and the PR where it was found. Only open it. Without a tracker, list them in your hand-off.
-
-**Rerun the evidence.** Once every step of the slice has landed, start the stack (`N=<plan number>_<slice number>`) on the slice's head and rerun every proof script in `.build/proof/` that its code can run, folded slices' included. A script that fails, or captures something other than its scenario says, goes back to a builder as a bug. Don't review a slice whose evidence doesn't rerun.
-
-## 5. Review once, then fold in
-
-Each slice gets one review of its own diff, then one round of fixes, then folds into the feature branch. The prompt is [`review.md`](review.md); change it there, not in a brief. Write `.build/review/<slice>/brief.md`: what the slice does, the paths of the PRD, the plan and `.build/proof/`, which scenarios it serves, and the user's directives and other deliberate choices. Then run both in the background, on the same commit, and wait for both:
+Write `.build/review/<slice>/brief.md`: what the slice does, the paths of the PRD, the plan and `.build/proof/`, its scenarios, and the user's deliberate choices. The prompt is [`review.md`](review.md); change it there, not in a brief. Run both in the background on the same commit (`$SW` the slice worktree, `$WT` the feature worktree; the last argument makes the diff only this slice's):
 
 ```bash
 "$S/codex.sh" review "$SW" "$WT/.build/review/<slice>/brief.md" "$WT/.build/review/<slice>" feat/p<n>-<slug>
 "$S/pass.sh" "$SW" "$WT/.build/review/<slice>/brief.md" "$WT/.build/review/<slice>" feat/p<n>-<slug>
 ```
 
-`$SW` is the slice's worktree and `$WT` the feature worktree. The last argument makes the diff run from the feature branch, so the review reads only this slice. Without `codex`, Sonnet reviews alone. Each prints its findings and its blocker count.
+One subagent then handles every finding once:
 
-**One round of fixes.** One subagent handles every finding from `codex.json` and `sonnet.json`:
+- **P1, P2:** confirmed ones get a regression test, the fix, and a commit naming the finding, with everything that refers to the change updated. Otherwise cite what disproves it, the PRD or standard that decided it, or the finding it duplicates. Weak evidence gets better evidence.
+- **P3s and cuts:** take the small ones in files the slice touches; backlog the rest.
+- A fix that would change agreed behaviour goes to the user.
 
-- **Blockers (P1, P2)**: a confirmed one gets a regression test, then the fix, then a commit naming the finding. A fix is finished when everything that names or relies on what it changed agrees. A misread one: cite the line that disproves it. One that's by design: cite the PRD, plan or standard. A duplicate: name the finding it repeats. Evidence that doesn't prove its scenario gets better evidence, not a dismissal.
-- **P3s and cuts**: take them when small and in a file the slice touches. The rest go to the backlog (§4).
-- A fix that would change agreed behaviour (not restore it) goes to the user.
+Run *Verify*, rerun the evidence, then **fold in**: merge the slice into the feature branch and run *Verify* there. No second review, and no waiting for the user between slices. Dependent slices start from the feature branch.
 
-Then run *Verify* and rerun the evidence. No second review runs.
+When every slice is in, start the stack (`N=<plan>`) on the feature head and rerun every proof script. Its captures are the PR's evidence.
 
-**Fold it in.** Merge the slice's branch into the feature branch in the feature worktree and run *Verify* there. A conflict or a red suite is a bug (§4). Slices that depended on this one start from the feature branch now. Don't wait for the user between slices.
+## 5. Ship
 
-**All slices in.** Start the stack (`N=<plan number>`) on the feature branch's head and rerun every proof script. Its captures are the PR's evidence. A scenario that no longer behaves as the PRD says is a bug (§4).
+With *Landing* `local merge`, run "Nothing ships red", then follow [local-merge.md](local-merge.md) instead of the rest.
 
-## 6. Ship
+**Nothing ships red.** Merge the up-to-date base branch in (never rebase a pushed branch), run *Verify* and the *Extra checks* that apply, and check the PRD page with `node "$S/render-prd.mjs" --tokens <Tokens> --check <Plans>`. A failure is a bug, not a retry.
 
-The feature ships as one PR, or one local merge. If the manifest's *Landing* is `local merge`, run "Nothing ships red", then land it as [local-merge.md](local-merge.md) says, in place of everything from **The record** on.
-
-**Nothing ships red.** Merge the up-to-date base branch in (don't rebase a pushed branch). On the result, run *Verify* and the *Extra checks* that apply, with the stack up for any that need it, and check the PRD page is current: `node "$S/render-prd.mjs" --tokens <Tokens> --check <Plans>`. Every PR check must be green too. A failure is a bug (§4), not a retry.
-
-**The record.** Write `.build/proof/README.md`, the proof page: the commit it was captured at, then each screenshot, GIF or captured output under the scenario it proves (id and name), with one line on what it shows. Convert clips with the manifest's *ffmpeg* in place of `ffmpeg` when it has one:
+**The record.** `.build/proof/README.md` lists each capture under its scenario with one line on what it shows, at the commit it was taken. `.build/proof/review.md` lists each slice's findings and what happened to them. Turn clips into GIFs with the manifest's *ffmpeg* (`-vf "fps=10,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse"`), then publish:
 
 ```bash
-ffmpeg -y -i in.webm -vf "fps=10,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse" out.gif
+"$S/publish-media.sh" p<n>-<slug> .build/proof/README.md .build/proof/review.md .build/plan.md .build/research.md <each capture>
 ```
 
-Beside it, `review.md`: each slice's findings and what happened to each. Publish them with `plan.md` and `research.md` to the *Proof media branch*. It prints the page's URL.
+**The PR**, readable in a minute. Title in the repo's commit style with the ticket ID. Body: **What** (two lines), **Why** (two lines, ticket and PRD links), **Evidence** (two to four embedded captures, each under its scenario, then anything the user must decide, then the proof page link), and the *PR footer*. Every link absolute; images are `https://github.com/<repo>/blob/<Proof media branch>/p<n>-<slug>/<file>?raw=true`. Edit the body with `gh api -X PATCH repos/<repo>/pulls/<n> -F body=@<file>`.
 
-```bash
-"$S/publish-media.sh" p<n>-<slug> .build/proof/README.md .build/proof/review.md .build/plan.md .build/research.md <each captured file>
-```
+**Babysit to merge-ready:** checks green at the head, threads settled, the current base branch merged in. Agents never merge. Watch in the background; fixes go to subagents.
 
-**The PR**, for a busy CPTO who reads it in under a minute. Push and open it with `gh`. The title follows the repository's commit style, with the ticket ID when there is one: `feat(PROJ-12): export answers as Markdown`. The body, with nothing about how it was built:
+- A failing or flaky check is a bug.
+- A review comment: if right, regression test, fix, reply with the commit; if wrong, reply with the evidence; if it changes agreed behaviour, ask the user. Resolve a bot's thread once settled; leave a person's for them.
+- A requested bot review missing after 30 minutes: carry on and say so.
+- After any code change, rerun the evidence and update the PR and proof page.
 
-- **What**: two lines.
-- **Why**: two lines, with the ticket link and the PRD's link.
-- **Evidence**: two to four key screenshots, clips or captured outputs, embedded, each under one line naming the scenario. Then anything the user must decide or do, and one line linking the proof page.
-- The last line: the *PR footer*, when the manifest has one.
+**Hand it over:** the link, what needs the user first, one line on what it does and what the proof showed. Stop the stack (`.build/pids`). Suggest `/retro` if the build was harder than it should have been.
 
-Make every link and image absolute: an image is `https://github.com/<repo>/blob/<Proof media branch>/p<n>-<slug>/<file>?raw=true`. Check them with `gh api repos/<repo>/pulls/<n> -H "Accept: application/vnd.github.full+json" -q .body_html`. To edit the body later, `gh api -X PATCH repos/<repo>/pulls/<n> -F body=@<file>`.
-
-**Babysit it until it's merge-ready**: every check green at the head, every review thread settled, and the branch containing the current base branch without conflicts. Agents never merge. Run the watches in the background and act on each notification; fixes go to subagents.
-
-- **A check fails**: a bug (§4). A check that fails and then passes with no change is flaky, and that's a bug too.
-- **A review comment arrives**, from a person or a bot: check it against the code. Right: regression test, fix, commit, reply with the commit. Wrong: reply with the line, PRD or standard that shows why. Changes agreed behaviour: ask the user. Resolve a bot's thread once the fix is green or the dismissal cites evidence; leave a person's thread for them.
-- **A requested bot review hasn't arrived** after about 30 minutes: carry on without it, and say so in your hand-off.
-- **The base branch moves on**: merge it in and rerun "Nothing ships red".
-- **After any code change**: rerun the evidence, and update the PR body and the proof page to show the head.
-
-**Hand it to the user** once it's merge-ready: the link, then what needs them first, then one line each on what it does and what the proof showed. Stop the stack (the PIDs in `.build/pids`). Pick the PR up again when the user comments or asks. If the build was harder than it should have been, suggest `/retro` in one line.
-
-**After the user merges it**, if they ask you to clean up: check the PR is `MERGED` at the head you pushed (`gh pr view <n> --json state,headRefOid`). Kill anything left in `.build/pids` and run the *Isolated stack*'s *Cleanup* with each `N` used. Fast-forward the base branch, `git worktree remove` the worktree and any builder worktrees, and delete the feature and slice branches (`-D` is fine for these exact verified branches, since squash merges don't keep ancestry) and any remote branch GitHub left.
+**After the merge**, if asked to clean up: confirm `gh pr view <n> --json state,headRefOid` is `MERGED` at your head, kill `.build/pids`, run *Cleanup* for each `N`, fast-forward the base branch, remove the worktrees, and delete the feature and slice branches (`-D` is safe for these verified branches).
