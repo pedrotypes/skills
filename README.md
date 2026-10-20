@@ -6,7 +6,7 @@ Pedro's skills for coding agents. They take a feature from idea to a merge-ready
 
 | Skill | Purpose |
 | --- | --- |
-| `build` | Idea to one merge-ready PR, built in thin slices. Size the change, agree on a visual PRD the user signs off, map the code and cut the plan into vertical slices. Per slice, in parallel where it can: fresh builders build it test-first and prove each scenario on a running stack, the evidence is rerun, Sonnet and Codex review it once, one round of fixes, then it folds into the feature branch. Then one short what-why-evidence PR, babysat until it's ready to merge. |
+| `build` | Idea to one merge-ready PR, built in thin slices. Size the change, agree on a short Markdown PRD the user signs off, map the code and cut the plan into vertical slices. Per slice, in parallel where it can: fresh builders build it test-first and prove each scenario on a running stack, the evidence is rerun, Sonnet and Codex review it once, one round of fixes, then it folds into the feature branch. Then one short what-why-evidence PR, babysat until it's ready to merge. |
 | `improve-architecture` | Periodic survey of the most-changed code for deepening opportunities: shallow modules whose complexity could sit behind a smaller interface. Writes a visual report and never changes code. User-invoked. |
 | `retro` | After a hard session, propose changes to the environment (a check, a reviewer rule, a pointer, a deletion) so the next session doesn't repeat it. User-invoked. |
 | `setup` | Write the repo's project manifest, which the other skills read. |
