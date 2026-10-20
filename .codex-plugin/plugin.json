@@ -1,0 +1,18 @@
+{
+  "name": "pedrotypes-skills",
+  "version": "1.0.0",
+  "description": "Pedro's skills for coding agents: build, architecture review, retro and setup.",
+  "author": {
+    "name": "Pedro Carvalho"
+  },
+  "repository": "https://github.com/pedrotypes/skills",
+  "license": "MIT",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "pedrotypes skills",
+    "shortDescription": "Build features, review architecture and improve your workflow."
+  },
+  "hooks": {
+    "hooks": {}
+  }
+}

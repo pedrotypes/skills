@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # Improve architecture
 
+Read [Host compatibility](../build/orchestrate.md#host-compatibility) for skill paths, invocation and agent roles.
+
 Agents copy the code they find. A shallow module, a leaky seam or a concept spread across five files becomes the pattern the next change imitates. This skill finds those places while they're still cheap to fix, and queues the fix as ordinary work. It never edits code. Its output is a report, a conversation, and at most one decision that goes into `/build`.
 
 The words are fixed. Read [vocabulary.md](vocabulary.md) before you start and use its terms exactly: module, interface, implementation, depth, seam, adapter, leverage, locality. For the domain, use the nouns the *Reference docs* already use, never invented class names.
