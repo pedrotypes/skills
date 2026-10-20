@@ -33,88 +33,58 @@ python3 -c 'import json,sys; print(json.dumps({"is_error": False, "total_cost_us
   return { dir, wt, bin, brief: join(dir, 'brief.md'), out: join(wt, '.build', 'review') }
 }
 
-function run(s: ReturnType<typeof setup>, ...args: string[]) {
-  const [kind, ...rest] = args
-  return spawnSync('bash', [join(import.meta.dirname, 'pass.sh'), kind, s.wt, s.brief, s.out, ...rest], {
+function run(s: ReturnType<typeof setup>) {
+  return spawnSync('bash', [join(import.meta.dirname, 'pass.sh'), s.wt, s.brief, s.out], {
     cwd: s.wt, encoding: 'utf8', env: { ...process.env, PATH: `${s.bin}:${process.env.PATH}` },
   })
 }
 
-const result = (id: string, round = 0) => ({
-  round, summary: 'summary', previous: [],
-  findings: [{ id, category: 'bug', severity: 'P2', file: 'app.txt', line: 1, title: 'the title', scenario: 's', fix: 'f' }],
+const result = (id: string, severity = 'P2') => ({
+  summary: 'summary',
+  findings: [{ id, category: 'bug', severity, file: 'app.txt', line: 1, title: 'the title', scenario: 's', fix: 'f' }],
 })
 
-test('pass.sh cuts: Sonnet at medium effort on the cuts prompt writes cuts.json', () => {
-  const s = setup(result('C-1'))
-  const r = run(s, 'cuts')
+test('pass.sh: Sonnet at medium effort on the review prompt writes sonnet.json and the commit it read', () => {
+  const s = setup(result('S-1'))
+  const r = run(s)
   assert.equal(r.status, 0, r.stderr + r.stdout)
   assert.match(readFileSync(join(s.dir, 'args.txt'), 'utf8'), /--model claude-sonnet-5-5 --effort medium /)
   const sent = readFileSync(join(s.dir, 'prompt.txt'), 'utf8')
-  assert.ok(sent.startsWith('# Code review'), 'review-rules.md comes first')
-  assert.ok(sent.includes('## Cut it down'))
+  assert.ok(sent.startsWith('# Review'), 'review.md is the prompt')
   assert.ok(sent.includes('brief\n'))
-  assert.match(sent, /the cuts pass; ids are `C-<n>`/)
-  assert.match(r.stdout, /^C-1 P2 bug app.txt:1 - the title$/m)
-  assert.equal(JSON.parse(readFileSync(join(s.out, 'cuts.json'), 'utf8')).findings[0].id, 'C-1')
+  assert.match(sent, /Sonnet's review; ids are `S-<n>`/)
+  assert.match(r.stdout, /^S-1 P2 bug app.txt:1 - the title$/m)
+  assert.match(r.stdout, /^sonnet: blockers=1$/m)
+  assert.equal(JSON.parse(readFileSync(join(s.out, 'sonnet.json'), 'utf8')).findings[0].id, 'S-1')
+  assert.equal(readFileSync(join(s.out, 'sonnet.sha'), 'utf8').trim(), git(s.wt, 'rev-parse', 'HEAD'))
 })
 
-test('pass.sh review: round 1 runs Sonnet at medium effort', () => {
-  const s = setup(result('S1-1', 1))
-  const r = run(s, 'review', '1')
-  assert.equal(r.status, 0, r.stderr + r.stdout)
-  assert.match(readFileSync(join(s.dir, 'args.txt'), 'utf8'), /--model claude-sonnet-5-5 --effort medium /)
+test('pass.sh: only P1 and P2 count as blockers', () => {
+  const r = run(setup(result('S-1', 'P3')))
+  assert.equal(r.status, 0, r.stderr)
+  assert.match(r.stdout, /^sonnet: blockers=0$/m)
 })
 
-test('pass.sh review: later rounds run Sonnet at medium effort on the code review prompt, beside Codex', () => {
-  const s = setup(result('S2-1', 2))
-  const r = run(s, 'review', '2')
-  assert.equal(r.status, 0, r.stderr + r.stdout)
-  assert.match(readFileSync(join(s.dir, 'args.txt'), 'utf8'), /--model claude-sonnet-5-5 --effort medium /)
-  const sent = readFileSync(join(s.dir, 'prompt.txt'), 'utf8')
-  assert.ok(sent.includes('## Find what\'s wrong'))
-  assert.match(sent, /Sonnet's review, round 2; ids are `S2-<n>`/)
-  assert.equal(JSON.parse(readFileSync(join(s.out, 'round-2.sonnet.json'), 'utf8')).findings[0].id, 'S2-1')
-  assert.match(r.stdout, /^round 2: blockers=1 .*; open: S2-1$/m)
-})
-
-test('pass.sh review: a round outside 1 to 3, or one already done, is refused', () => {
-  const s = setup(result('S4-1', 4))
-  const four = run(s, 'review', '4')
-  assert.notEqual(four.status, 0)
-  assert.match(four.stderr, /three rounds/)
-  const t = setup(result('S1-1', 1))
-  assert.equal(run(t, 'review', '1').status, 0)
-  const again = run(t, 'review', '1')
+test('pass.sh: a slice is reviewed once', () => {
+  const s = setup(result('S-1'))
+  assert.equal(run(s).status, 0)
+  const again = run(s)
   assert.notEqual(again.status, 0)
-  assert.match(again.stderr, /already done/)
-})
-
-test('pass.sh: an unknown pass is refused', () => {
-  const s = setup(result('X-1'))
-  const r = run(s, 'design')
-  assert.notEqual(r.status, 0)
-  assert.match(r.stderr, /cuts or review/)
+  assert.match(again.stderr, /already reviewed/)
 })
 
 test('pass.sh: a dirty worktree is refused', () => {
-  const s = setup(result('X-1'))
+  const s = setup(result('S-1'))
   writeFileSync(join(s.wt, 'app.txt'), 'uncommitted\n')
-  const r = run(s, 'cuts')
+  const r = run(s)
   assert.notEqual(r.status, 0)
   assert.match(r.stderr, /commit or discard/)
 })
 
 test('pass.sh: a pass that changed the worktree is not published', () => {
-  const s = setup(result('S1-1', 1), 'echo edited > app.txt')
-  const r = run(s, 'review', '1')
+  const s = setup(result('S-1'), 'echo edited > app.txt')
+  const r = run(s)
   assert.notEqual(r.status, 0)
   assert.match(r.stderr, /worktree changed/)
-  assert.ok(!existsSync(join(s.out, 'round-1.sonnet.json')))
-})
-
-test('pass.sh review: records the commit it reviewed, for a repo without Codex', () => {
-  const s = setup(result('S1-1', 1))
-  assert.equal(run(s, 'review', '1').status, 0)
-  assert.equal(readFileSync(join(s.out, 'round-1.sonnet.sha'), 'utf8').trim(), execFileSync('git', ['rev-parse', 'HEAD'], { cwd: s.wt, encoding: 'utf8' }).trim())
+  assert.ok(!existsSync(join(s.out, 'sonnet.json')))
 })

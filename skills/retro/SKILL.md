@@ -38,7 +38,7 @@ Look for the moments that cost something: a long search, a wrong turn that was l
 
 **Mechanical violations get a check, not a sentence.** A banned construct, an import direction, a file location, a colour literal: a check fails, prose doesn't. Model it on the repo's existing checks: an architecture test, a lint rule, a CI job. Before proposing a new one, read what the manifest's *Verify* runs and the CI workflows. A check that exists but isn't wired in, or is silently skipped, is the finding, not a new check.
 
-**Judgement calls go to the reviewer, not the implementer.** The implementing agent works under the most context pressure. The reviewer reads a diff and has room to apply rules. So a judgement rule about this repo's code goes under the manifest's *Standards*, marked "Reviewer-only, not enforced", which the reviewers read. A rule about reviewing in general goes in the build skill's `review-rules.md`, in the plugin's repo.
+**Judgement calls go to the reviewer, not the implementer.** The implementing agent works under the most context pressure. The reviewer reads a diff and has room to apply rules. So a judgement rule about this repo's code goes under the manifest's *Standards*, marked "Reviewer-only, not enforced", which the reviewers read. A rule about reviewing in general goes in the build skill's `review.md`, in the plugin's repo.
 
 **Deletion is a candidate too.** Propose removing a standard, check or steering line when the session shows it fired on good code, when the code now teaches the same thing on its own, or when nothing in it changed behaviour. The environment should get smaller over time as well as sharper.
 

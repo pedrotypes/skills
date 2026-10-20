@@ -3,14 +3,13 @@
 # and review uses gpt-6.1-sol at medium effort.
 #
 #   codex.sh consult <worktree> <brief.md> <answer.md>
-#   codex.sh review  <worktree> <brief.md> <out-dir> <round>
+#   codex.sh review  <worktree> <brief.md> <out-dir>
 #
 # consult writes Codex's free-text answer to <answer.md>.
-# review runs a fresh session per round (1 to 3) with review-rules.md, review-code.md and <brief.md>,
-# writes <out-dir>/round-<n>.json (shaped by findings.schema.json) and prints only the counts
-# and summary. The cuts pass runs beside it, in pass.sh.
+# review reviews a slice once, with review.md and <brief.md>, beside Sonnet's pass.sh. It writes
+# <out-dir>/codex.json (shaped by findings.schema.json) and prints the findings and the blocker count.
 #
-# Run it as a background command and wait for the completion notification. A round can
+# Run it as a background command and wait for the completion notification. A review can
 # take many minutes, and polling it wastes the caller's context.
 set -u
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -33,52 +32,40 @@ consult)
   echo "consult done: $answer"
   ;;
 review)
-  out="${4:?out dir}"; round="${5:?round}"
+  out="${4:?out dir}"
   mkdir -p "$out"
-  json="$out/round-$round.json"; log="$out/round-$round.log"; pending="$out/round-$round.pending.json"
-  # Each round records the commit it reviewed (round-<n>.sha) and the merge base its diff started
-  # from (round-<n>.base). Uncommitted changes would make the review cover something no commit
-  # holds. Rounds go on until one has no blockers, for at most three.
-  case "$round" in [1-3]) ;; *) echo "round $round: the review stops at three rounds; fix what's still open without another round" >&2; exit 1 ;; esac
-  # Rerunning a finished round would replace its findings with a review of later code. A failed
-  # round leaves no round-<n>.json, so it can still be retried.
+  json="$out/codex.json"; log="$out/codex.log"; pending="$out/codex.pending.json"
+  # A slice gets one review, on one commit. It records the commit (codex.sha) and the merge base
+  # its diff started from (codex.base). A failed review leaves no codex.json, so it can be retried.
   if [ -e "$json" ]; then
-    echo "round $round: already done; review later code in the next round" >&2; exit 1
+    echo "codex: already reviewed; a slice gets one review" >&2; exit 1
   fi
   if [ -n "$(git status --porcelain --untracked-files=normal)" ]; then
-    echo "round $round: commit or discard your changes first; a round reviews a commit" >&2; exit 1
+    echo "codex: commit or discard your changes first; the review reads a commit" >&2; exit 1
   fi
   base=$("$here/merge-base.sh") || exit 1
   sha=$(git rev-parse HEAD)
-  # A retried round must never leave an earlier result labelled with this commit: drop the
-  # round first, and publish its result and commits together only once it succeeds.
-  rm -f "$json" "$pending" "$out/round-$round.sha" "$out/round-$round.base"
-  # Every round is a fresh session over the whole diff. The prompts live in this skill; the
-  # brief only adds the plan, choices and earlier blockers. The target comes from the commits
-  # this round records, not from the brief, so the receipt and the review can't disagree.
-  { cat "$here/review-rules.md" "$here/review-code.md" "$brief" || exit 1
-    printf '\n**Target, set by codex.sh:** Codex review round %s; ids are `R%s-<n>`. The change is `git diff %s %s`.\n' "$round" "$round" "$base" "$sha"
-  } > "$out/round-$round.prompt.md" || exit 1
+  rm -f "$pending" "$out/codex.sha" "$out/codex.base"
+  # The target comes from the commits this review records, not from the brief, so the receipt and
+  # the review can't disagree.
+  { cat "$here/review.md" "$brief" || exit 1
+    printf '\n**Target, set by codex.sh:** Codex'"'"'s review; ids are `C-<n>`. The change is `git diff %s %s`.\n' "$base" "$sha"
+  } > "$out/codex.prompt.md" || exit 1
   timeout --kill-after=30s 60m codex exec "${common[@]}" --output-schema "$here/findings.schema.json" -o "$pending" \
-    -s read-only -C "$wt" - < "$out/round-$round.prompt.md" > "$log" 2>&1
+    -s read-only -C "$wt" - < "$out/codex.prompt.md" > "$log" 2>&1
   rc=$?
   if [ "$rc" -ne 0 ] || ! python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$pending" 2>/dev/null; then
     rm -f "$pending"
-    echo "round $round failed (exit $rc); last lines of $log:"; tail -n 15 "$log"; exit 1
+    echo "codex failed (exit $rc); last lines of $log:"; tail -n 15 "$log"; exit 1
   fi
   if [ "$(git rev-parse HEAD)" != "$sha" ]; then
     rm -f "$pending"
-    echo "round $round: HEAD moved during the review; rerun the round" >&2; exit 1
+    echo "codex: HEAD moved during the review; rerun it" >&2; exit 1
   fi
-  # The result names its own round, and a mismatch would make the evidence contradict itself.
-  if ! python3 -c 'import json,sys; sys.exit(json.load(open(sys.argv[1])).get("round") != int(sys.argv[2]))' "$pending" "$round"; then
-    rm -f "$pending"
-    echo "round $round: the reviewer reported a different round; rerun the round" >&2; exit 1
-  fi
-  printf '%s\n' "$base" > "$out/round-$round.base"
-  printf '%s\n' "$sha" > "$out/round-$round.sha"
+  printf '%s\n' "$base" > "$out/codex.base"
+  printf '%s\n' "$sha" > "$out/codex.sha"
   mv "$pending" "$json"
-  python3 "$here/blockers.py" "$out" "$json"
+  python3 "$here/findings.py" codex "$json"
   ;;
 *) echo "usage: codex.sh consult|review ..." >&2; exit 2 ;;
 esac
