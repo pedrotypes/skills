@@ -2,7 +2,8 @@
 # One review of a slice: Sonnet 5.5 and Codex gpt-6.1-sol, both read-only at medium effort, in
 # parallel on the same commit, with review.md and the brief. Without codex, Sonnet reviews alone.
 #
-#   review.sh <worktree> <brief.md> <out-dir> [<base ref>]
+#   review.sh <worktree> <brief.md> <out-dir> [<base ref>] [claude|codex]
+# Codex host requires Codex and runs only its review; Claude host is the default.
 #
 # The diff runs from the merge base with <base ref> (a slice's feature branch), or else with the
 # base branch. Writes sonnet.json and codex.json (shaped by findings.schema.json), and the commit
@@ -10,7 +11,14 @@
 # Run it as a background command and wait for the completion notification.
 set -u
 here="$(cd "$(dirname "$0")" && pwd)"
-wt="${1:?worktree}"; brief="${2:?brief}"; out="${3:?out dir}"; ref="${4:-}"
+wt="${1:?worktree}"; brief="${2:?brief}"; out="${3:?out dir}"; ref="${4:-}"; host="${5:-claude}"
+case "$host" in
+  claude|codex) ;;
+  *) echo "host must be claude or codex" >&2; exit 1 ;;
+esac
+if [ "$host" = codex ] && ! command -v codex >/dev/null; then
+  echo "codex is required for the codex host" >&2; exit 1
+fi
 cd "$wt" || exit 1
 mkdir -p "$out"
 if [ -e "$out/review.sha" ]; then
@@ -27,6 +35,7 @@ target() { printf '\n**Target, set by review.sh:** %s; ids are `%s-<n>`. The dif
 
 # Sonnet runs in the real worktree, so it gets only the read tools and no shell. The branch's
 # own .claude settings don't load, so its hooks can't run either.
+if [ "$host" = claude ]; then
 { cat "$here/review.md" "$brief"; target "Sonnet's review" S
   echo 'You have no shell: read the diff and the files with Read, Grep and Glob.'; } > "$out/sonnet.prompt.md"
 timeout --kill-after=30s 30m claude -p --model claude-sonnet-5-5 --effort medium \
@@ -34,6 +43,7 @@ timeout --kill-after=30s 30m claude -p --model claude-sonnet-5-5 --effort medium
   --tools Read Grep Glob --setting-sources user \
   < "$out/sonnet.prompt.md" > "$out/sonnet.raw.json" 2> "$out/sonnet.log" &
 sonnet=$!
+fi
 if command -v codex >/dev/null; then
   { cat "$here/review.md" "$brief"; target "Codex's review" C; } > "$out/codex.prompt.md"
   timeout --kill-after=30s 60m codex exec -m "${CODEX_REVIEW_MODEL:-gpt-6.1-sol}" -c model_reasoning_effort=medium \
@@ -41,27 +51,46 @@ if command -v codex >/dev/null; then
     -o "$out/codex.json" -s read-only -C "$wt" - < "$out/codex.prompt.md" > "$out/codex.log" 2>&1 &
   codex=$!
 fi
-wait "$sonnet"; sonnet_rc=$?
+sonnet_rc=0; [ -n "${sonnet:-}" ] && { wait "$sonnet"; sonnet_rc=$?; }
 codex_rc=0; [ -n "${codex:-}" ] && { wait "$codex"; codex_rc=$?; }
 
 # A review that changed the worktree didn't read the commit it names, so nothing is published.
 if [ "$(git rev-parse HEAD)" != "$sha" ] || [ -n "$(git status --porcelain --untracked-files=normal)" ]; then
   echo "the worktree changed during the review; inspect it with git status, then rerun" >&2; exit 1
 fi
-python3 - "$out" "$sonnet_rc" "$codex_rc" "${codex:+codex}" <<'PY' || exit 1
+python3 - "$out" "$sonnet_rc" "$codex_rc" "${codex:+codex}" "$host" "$here/findings.schema.json" <<'PY' || exit 1
 import json, sys
-out, sonnet_rc, codex_rc, has_codex = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4]
+out, sonnet_rc, codex_rc, has_codex, host, schema_path = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), *sys.argv[4:]
 def fail(who, rc):
     tail = open(f"{out}/{who}.log").read().splitlines()[-15:]
     sys.exit(f"{who} failed (exit {rc}); last lines of {out}/{who}.log:\n" + "\n".join(tail))
-raw = json.load(open(f"{out}/sonnet.raw.json"))
-if sonnet_rc or raw.get("is_error") or not isinstance(raw.get("structured_output"), dict): fail("sonnet", sonnet_rc)
-json.dump(raw["structured_output"], open(f"{out}/sonnet.json", "w"), indent=2)
-reviews = {"sonnet": raw["structured_output"]}
+# Validate the schema's types, required keys, enums and closed objects before publication.
+schema = json.load(open(schema_path))
+def valid(value, rule):
+    kind = rule.get("type")
+    if kind == "object":
+        if not isinstance(value, dict): return False
+        props = rule["properties"]
+        if not all(key in value for key in rule.get("required", [])): return False
+        if rule.get("additionalProperties") is False and value.keys() - props.keys(): return False
+        return all(valid(item, props[key]) for key, item in value.items() if key in props)
+    if kind == "array":
+        return isinstance(value, list) and all(valid(item, rule["items"]) for item in value)
+    if kind == "string" and not isinstance(value, str): return False
+    if kind == "integer" and type(value) is not int: return False
+    return "enum" not in rule or value in rule["enum"]
+reviews = {}
+if host == "claude":
+    try: raw = json.load(open(f"{out}/sonnet.raw.json"))
+    except (OSError, ValueError): fail("sonnet", sonnet_rc)
+    if sonnet_rc or not isinstance(raw, dict) or raw.get("is_error") or not valid(raw.get("structured_output"), schema): fail("sonnet", sonnet_rc)
+    reviews["sonnet"] = raw["structured_output"]
 if has_codex:
     try: reviews["codex"] = json.load(open(f"{out}/codex.json"))
     except (OSError, ValueError): fail("codex", codex_rc)
-    if codex_rc: fail("codex", codex_rc)
+    if codex_rc or not valid(reviews["codex"], schema): fail("codex", codex_rc)
+if "sonnet" in reviews:
+    json.dump(reviews["sonnet"], open(f"{out}/sonnet.json", "w"), indent=2)
 blockers = 0
 for who, r in reviews.items():
     for f in r["findings"]:
@@ -70,5 +99,8 @@ for who, r in reviews.items():
     print(f"{who}: {r['summary']}")
 print(f"blockers={blockers}")
 PY
+if [ "$(git rev-parse HEAD)" != "$sha" ] || [ -n "$(git status --porcelain --untracked-files=normal)" ]; then
+  echo "the worktree changed during the review; inspect it with git status, then rerun" >&2; exit 1
+fi
 printf '%s\n' "$base" > "$out/review.base"
 printf '%s\n' "$sha" > "$out/review.sha"

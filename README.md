@@ -43,6 +43,40 @@ Then run `/reload-plugins`.
 
 The skills work across repos because each repo keeps a **project manifest** at `.agents/project.md`. It lists where plans, standards, reference docs and data flows live, the ticket tracker, the commands that install, verify and run an isolated copy of the app, the workflow (base branch, worktrees, PR footer) and the design tokens. Run `/setup` in a repo to write it. The contract is [skills/setup/manifest.md](skills/setup/manifest.md).
 
+## Install (Codex)
+
+Paste this into a Codex session:
+
+> Install the pedrotypes skills plugin from https://github.com/pedrotypes/skills for my user account. Run `codex plugin marketplace add pedrotypes/skills`, then `codex plugin add pedrotypes-skills@pedrotypes`. Verify that build, setup, improve-architecture and retro are available. Tell me if I need to start a new session.
+
+Or run in a terminal:
+
+```bash
+codex plugin marketplace add pedrotypes/skills
+codex plugin add pedrotypes-skills@pedrotypes
+```
+
+Use a Codex release with `codex plugin add` (tested with CLI 0.163.0). Start a new session after installation. Claude Code is not required.
+
+Say “let's build…” and Codex can select the build skill from its description. To select it explicitly, use `$pedrotypes-skills:build`; setup, retro and improve-architecture use the same prefix. Retro and architecture review require an explicit request.
+
+**Updates.** Paste this into Codex:
+
+> Update my pedrotypes skills plugin. Run `codex plugin marketplace upgrade pedrotypes`, then `codex plugin add pedrotypes-skills@pedrotypes`. Verify the installed skills and tell me to start a new session.
+
+Or run:
+
+```bash
+codex plugin marketplace upgrade pedrotypes
+codex plugin add pedrotypes-skills@pedrotypes
+```
+
+Start a new session to load the updated skills. Updates are manual. Repeating `plugin add` refreshes the installed files, including when the package version is unchanged.
+
+For a team, put these installation instructions in the repo's onboarding docs. Each teammate installs the plugin for their own account.
+
+Codex installation follows the [official plugin packaging guide](https://developers.openai.com/plugins/build/plugins). Conversational selection and explicit invocation follow the [official skills guide](https://learn.chatgpt.com/docs/build-skills).
+
 ## Install (opencode and other harnesses)
 
 ```bash

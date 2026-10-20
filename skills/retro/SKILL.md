@@ -6,17 +6,19 @@ disable-model-invocation: true
 
 # Retro
 
+Read [Host compatibility](../build/orchestrate.md#host-compatibility) for skill paths, invocation and agent roles.
+
 You improve the environment the agent works in, not the code it wrote. The bug the agent shipped, the file it took twenty tool calls to find, the rule the reviewer missed: you don't fix those. You ask what in the repo let them happen, and propose what stops it next time. Adapted from Matt Pocock's `retro` skill.
 
 ## 1. Read the session
 
-Default to the current session. If the user names another one, find it among this repo's session records, which include the ones run in its worktrees. List them newest first, then `grep -l` for a branch, ticket or phrase they gave:
+Default to the current session. In Claude Code, read its session record; find a named session among this repo's records, including its worktrees. List them newest first, then `rg -l` for a branch, ticket or phrase:
 
 ```bash
 ls -t ~/.claude/projects/"$(git rev-parse --path-format=absolute --git-common-dir | sed 's#/\.git$##; s#[/.]#-#g')"*/*.jsonl
 ```
 
-Read the record itself, not your memory of it. By the end of a long session you'll have forgotten the struggles in the middle, and those are the findings.
+In Codex, use the current conversation and available session evidence. For a named session, inspect the installed CLI's help and supported session tools; do not assume a storage path or format. Read accessible records and cite their locations or message/tool references. If records or earlier context are unavailable, state the limit and use only evidence you can inspect; never invent moments or claim a complete session review.
 
 Look for the moments that cost something: a long search, a wrong turn that was later undone, a test that went red in CI but not locally, a review finding that a check could have caught, a question to the user that the docs should have answered, a tool call that returned far more than it was worth, a step of a skill that didn't fit.
 

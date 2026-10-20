@@ -1,6 +1,6 @@
 ---
 name: build
-description: Take something new from idea to one merge-ready pull request (or a guarded local merge in a repo without a remote). Small, clear changes take a short path. Real work gets a PRD the user signs off, then thin slices that fresh builder agents build test-first and prove on a running stack; each slice is reviewed once by Sonnet and Codex, fixed once and folded into the feature branch, and the feature ships as one short what-why-evidence PR, babysat to merge-ready. Use whenever the user wants to build something, change behaviour or solve a problem — "let's build…", "I want…", "we need…", "solve…", "can we make it so…" — or to resume or land work in a `.worktrees/` feature.
+description: Take something new from idea to one merge-ready pull request (or a guarded local merge in a repo without a remote). Small, clear changes take a short path. Real work gets a PRD the user signs off, then thin slices that fresh builder agents build test-first and prove on a running stack; each slice gets one host-appropriate review, is fixed once and folded into the feature branch, and the feature ships as one short what-why-evidence PR, babysat to merge-ready. Use whenever the user wants to build something, change behaviour or solve a problem — "let's build…", "I want…", "we need…", "solve…", "can we make it so…" — or to resume or land work in a `.worktrees/` feature.
 ---
 
 # Build
@@ -18,11 +18,11 @@ flowchart LR
   FI --> A[Rerun all evidence] --> L[One PR, babysit to merge-ready] --> H[Hand to the user]
 ```
 
-**Before anything:** read `.agents/project.md`, the manifest ([manifest.md](../setup/manifest.md)); run `/setup` if it's missing. *Plans*, *Verify* and the like below mean its lines. `S="${CLAUDE_SKILL_DIR}"`. If a `.worktrees/p<n>-*` worktree holds a PRD for this, resume at the first step not done.
+**Before anything:** read `.agents/project.md`, the manifest ([manifest.md](../setup/manifest.md)); run `/setup` if it's missing. *Plans*, *Verify* and the like below mean its lines. Read [Host compatibility](orchestrate.md#host-compatibility) for skill paths, invocation, agent roles and helpers. If a `.worktrees/p<n>-*` worktree holds a PRD for this, resume at the first step not done.
 
 - **Codes carry names** wherever a person reads them: "P92 (reusable rockets) S3 (landing legs)", never "P92 S3".
 - **Progress notes:** at each change of stage, one line on what finished and what's next.
-- **A second opinion** is one run of `consult.sh`, or without Codex one fresh subagent told to poke holes.
+- **A second opinion** follows the host mapping in [orchestrate.md](orchestrate.md#host-compatibility).
 
 ## 0. Size it
 
@@ -32,7 +32,7 @@ Read the *Routing* file and the docs it names for the area, the ticket if there 
 
 ## 1. Understand and agree the PRD
 
-Read the *Routing* docs, the *Plans index*, other worktrees' PRDs and the ticket with its comments. Ask code questions of an `Explore` subagent. Reproduce, measure, spike when a choice turns on a fact, and compare real alternatives including the smallest. Put your understanding and draft questions in `.build/consult.md` to a second opinion (`"$S/consult.sh" "$PWD" .build/consult.md .build/consult-answer.md`, in the background), settle what it settles, then ask the user only what only they can say, in batches, recommendation first.
+Read the *Routing* docs, the *Plans index*, other worktrees' PRDs and the ticket with its comments. Ask code questions of an `Explore` subagent. Reproduce, measure, spike when a choice turns on a fact, and compare real alternatives including the smallest. Put your understanding and draft questions in `.build/consult.md` to a second opinion (Claude: `"$S/consult.sh" "$PWD" .build/consult.md .build/consult-answer.md`, in the background; Codex: critique it yourself and write `.build/consult-answer.md`), settle what it settles, then ask the user only what only they can say, in batches, recommendation first.
 
 A technical directive from the user beats a standard: say in a sentence what the standard protects, follow the directive, and quote it in the PRD under **Your directives**.
 
@@ -65,7 +65,7 @@ Exact new wording, as blockquotes. Only when there are some.
 
 ## 3. Build and prove
 
-You orchestrate; a fresh Opus 5.5 builder takes each slice in its own worktree, as [`orchestrate.md`](orchestrate.md) says. Builders follow the *Routing* file, the *Standards* and these rules:
+You orchestrate; a fresh builder (Opus 5.5 in Claude Code, Codex under Codex) takes each slice in its own worktree, as [`orchestrate.md`](orchestrate.md) says. Builders follow the *Routing* file, the *Standards* and these rules:
 
 1. **Red.** Tests for the step's scenarios, named by scenario id, seen failing for the right reason. Include the failure modes that apply, and the abuse case at a trust boundary.
 2. **Green.** The least code that passes.
@@ -78,10 +78,10 @@ When reality disagrees with the plan, decide by the PRD and log it under `Change
 
 ## 4. Review once, fix once, fold in
 
-Write `.build/review/<slice>/brief.md`: what the slice does, the paths of the PRD, the plan and `.build/proof/`, its scenarios, and the user's deliberate choices. The prompt is [`review.md`](review.md); change it there, not in a brief. Sonnet and Codex review it in parallel; run it in the background (`$SW` the slice worktree, `$WT` the feature worktree; the last argument makes the diff only this slice's):
+Write `.build/review/<slice>/brief.md`: what the slice does, the paths of the PRD, the plan and `.build/proof/`, its scenarios, and the user's deliberate choices. The prompt is [`review.md`](review.md); change it there, not in a brief. Use the host mapping for reviewers: Sonnet and Codex under Claude Code; Codex alone under Codex. Run in the background (`$SW` the slice worktree, `$WT` the feature worktree; the fourth argument limits the diff to this slice; `REVIEW_HOST=codex` under Codex, `claude` under Claude Code):
 
 ```bash
-"$S/review.sh" "$SW" "$WT/.build/review/<slice>/brief.md" "$WT/.build/review/<slice>" feat/p<n>-<slug>
+"$S/review.sh" "$SW" "$WT/.build/review/<slice>/brief.md" "$WT/.build/review/<slice>" feat/p<n>-<slug> "$REVIEW_HOST"
 ```
 
 One subagent then handles every finding once:

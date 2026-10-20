@@ -5,6 +5,8 @@ description: Write or update this repo's project manifest, `.agents/project.md`,
 
 # Setup
 
+Read [Host compatibility](../build/orchestrate.md#host-compatibility) for skill paths, invocation and agent roles.
+
 The manifest is how one set of skills works across many repos. Its contract is in [manifest.md](manifest.md). Read it first.
 
 ## 1. Read the repo
@@ -28,5 +30,5 @@ Put what you couldn't infer to the user in one batch, each question with your be
 
 - Write `.agents/project.md` from the template, filled in.
 - Add `.build/` to `$(git rev-parse --git-common-dir)/info/exclude` if it isn't there. The skills keep scratch files in it.
-- If the repo's `.claude/settings.json` doesn't register these skills, offer to add the snippet from the plugin's README, so teammates who open the repo are told to install them.
+- Offer the host's team setup when missing: Claude Code's `.claude/settings.json` snippet from the plugin README, or Codex installation instructions from that README in the repo's onboarding docs. Never write Claude settings for a Codex-only setup.
 - Show the user the manifest, and commit it only when they agree, through the repo's normal flow.

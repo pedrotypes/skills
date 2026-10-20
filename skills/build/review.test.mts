@@ -14,7 +14,7 @@ const finding = (id: string, severity: string) =>
 // A worktree one commit ahead of main, with .build/ ignored, and stubs for claude and codex on a
 // PATH holding only them and the tools the script needs. Each stub records its arguments and
 // prompt and answers with its result; `sideEffect` runs in the worktree during the review.
-function setup({ sonnet = 'P3', codex = 'P1' as string | null, sideEffect = '' } = {}) {
+function setup({ sonnet = 'P3', codex = 'P1' as string | null, sideEffect = '', codexSideEffect = '', codexExit = 0 } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'review-'))
   const wt = join(dir, 'wt'), bin = join(dir, 'bin')
   mkdirSync(wt); mkdirSync(bin)
@@ -40,7 +40,9 @@ python3 -c 'import json,sys; print(json.dumps({"is_error": False, "structured_ou
     writeFileSync(join(bin, 'codex'), `#!/usr/bin/env bash
 echo "$@" > "${join(dir, 'codex-args.txt')}"
 cat > "${join(dir, 'codex-prompt.txt')}"
+${codexSideEffect}
 while [ $# -gt 0 ]; do [ "$1" = -o ] && cp "${join(dir, 'codex.json')}" "$2"; shift; done
+exit ${codexExit}
 `)
     chmodSync(join(bin, 'codex'), 0o755)
   }
@@ -125,3 +127,89 @@ test('review.sh: a slice is reviewed against the feature branch it folds into', 
   assert.equal(r.status, 0, r.stderr + r.stdout)
   assert.equal(readFileSync(join(s.out, 'review.base'), 'utf8').trim(), git(s.wt, 'rev-parse', 'feat'))
 })
+
+test('review.sh: Codex host reviews without calling installed Claude', () => {
+  const s = setup()
+  const r = run(s, '', 'codex')
+  assert.equal(r.status, 0, r.stderr + r.stdout)
+  assert.ok(!existsSync(join(s.dir, 'claude-args.txt')))
+  assert.ok(!existsSync(join(s.out, 'sonnet.json')))
+  assert.match(r.stdout, /^codex: codex summary$/m)
+  assert.match(r.stdout, /^blockers=1$/m)
+})
+
+test('review.sh: Codex host requires Codex without falling back to Claude', () => {
+  const s = setup({ codex: null })
+  const r = run(s, '', 'codex')
+  assert.notEqual(r.status, 0)
+  assert.match(r.stderr, /codex.*required/i)
+  assert.ok(!existsSync(join(s.dir, 'claude-args.txt')))
+  assert.ok(!existsSync(join(s.out, 'review.sha')))
+})
+
+test('review.sh: invalid hosts fail before invoking reviewers', () => {
+  const s = setup()
+  const r = run(s, '', 'other')
+  assert.notEqual(r.status, 0)
+  assert.match(r.stderr, /host/)
+  assert.ok(!existsSync(join(s.dir, 'claude-args.txt')))
+  assert.ok(!existsSync(join(s.dir, 'codex-args.txt')))
+})
+
+for (const host of ['claude', 'codex']) {
+  test(`review.sh: ${host} host preserves completed evidence`, () => {
+    const s = setup()
+    assert.equal(run(s, '', host).status, 0)
+    const evidence = ['review.sha', 'review.base', 'review.diff', 'codex.json'].map(name => readFileSync(join(s.out, name), 'utf8'))
+    writeFileSync(join(s.dir, 'codex.json'), '{}')
+    assert.notEqual(run(s, '', host).status, 0)
+    assert.deepEqual(['review.sha', 'review.base', 'review.diff', 'codex.json'].map(name => readFileSync(join(s.out, name), 'utf8')), evidence)
+  })
+
+  for (const payload of ['not json', '{}', '{"summary":5,"findings":[]}', JSON.stringify({ summary: 's', findings: [finding('C-1', 'P0')] }), JSON.stringify({ summary: 's', findings: [{ ...finding('C-1', 'P1'), line: true }] }), JSON.stringify({ summary: 's', findings: [], extra: true })]) {
+    test(`review.sh: ${host} host refuses invalid findings ${payload}`, () => {
+      const s = setup()
+      writeFileSync(join(s.dir, 'codex.json'), payload)
+      const r = run(s, '', host)
+      assert.notEqual(r.status, 0)
+      assert.ok(!existsSync(join(s.out, 'review.sha')))
+      assert.ok(!existsSync(join(s.out, 'review.base')))
+    })
+  }
+}
+
+test('review.sh: Codex CLI failure does not publish evidence', () => {
+  const s = setup({ codexExit: 7 })
+  const r = run(s, '', 'codex')
+  assert.notEqual(r.status, 0)
+  assert.match(r.stderr, /codex failed \(exit 7\)/)
+  assert.ok(!existsSync(join(s.out, 'review.sha')))
+})
+
+test('review.sh: Codex mutation does not publish evidence', () => {
+  const s = setup({ codexSideEffect: 'echo edited > app.txt' })
+  const r = run(s, '', 'codex')
+  assert.notEqual(r.status, 0)
+  assert.match(r.stderr, /worktree changed/)
+  assert.ok(!existsSync(join(s.out, 'review.sha')))
+})
+
+
+test('review.sh: Claude findings must satisfy the schema', () => {
+  const s = setup()
+  writeFileSync(join(s.dir, 'sonnet.json'), JSON.stringify({ summary: 's', findings: [{ ...finding('S-1', 'P3'), category: 'invalid' }] }))
+  const r = run(s)
+  assert.notEqual(r.status, 0)
+  assert.match(r.stderr, /sonnet failed/)
+  assert.ok(!existsSync(join(s.out, 'review.sha')))
+})
+
+for (const sideEffect of ['echo untracked > extra.txt', 'git reset --hard HEAD^']) {
+  test(`review.sh: Codex ${sideEffect} prevents publication`, () => {
+    const s = setup({ codexSideEffect: sideEffect })
+    const r = run(s, '', 'codex')
+    assert.notEqual(r.status, 0)
+    assert.match(r.stderr, /worktree changed/)
+    assert.ok(!existsSync(join(s.out, 'review.sha')))
+  })
+}
