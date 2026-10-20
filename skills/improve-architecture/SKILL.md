@@ -39,7 +39,7 @@ Only a suspect that passes the **deletion test** gets a card, with its dependenc
 
 ## 4. The report
 
-Write one self-contained HTML file to the session scratchpad, `architecture-review-<YYYY-MM-DD>.html`, never into the repo. Follow [html-format.md](html-format.md): the build skill's `prd.css` for styling and Mermaid for diagrams, so you write content, not CSS. If the Artifact tool is available, publish it as a private artifact and give the user the link. Otherwise give them the absolute path.
+Write one self-contained HTML file to the session scratchpad, `architecture-review-<YYYY-MM-DD>.html`, never into the repo. Follow [html-format.md](html-format.md): `report.css` for styling and Mermaid for diagrams, so you write content, not CSS. If the Artifact tool is available, publish it as a private artifact and give the user the link. Otherwise give them the absolute path.
 
 One card per candidate, strongest first, ending with a top recommendation, as html-format.md specifies. If every candidate is Speculative, the code is in good shape here: say so, and don't invent friction to fill the page.
 

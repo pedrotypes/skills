@@ -1,245 +1,120 @@
 ---
 name: build
-description: Take something new from idea to an open pull request, and babysit it until it's ready to merge (or, in a repo without a remote, to a guarded local merge). Size it first — a small, clear change takes a short path (test, fix, one review round, PR) instead of the full workflow, and when in doubt, ask. For real work, understand the problem with a second opinion until you and the user picture the same thing, write a visual PRD for them to sign off, map the code and plan the steps, check feasibility, then orchestrate fresh builder agents (in parallel where the plan allows) while keeping your own context lean. Then simplify, QA the running change until it can't be broken, review it with Sonnet and Codex until nothing blocks the merge, capture proof on the final commit, open a short what-why-evidence PR, babysit it to merge-ready, and hand it to the user to review and merge. Use whenever the user starts talking about building something new, a feature, a change in behaviour, or a problem to solve — "let's build…", "I want…", "we need…", "solve…", "figure out how to…", "can we make it so…" — and when they ask to resume, review or land work in a `.worktrees/` feature.
+description: Take something new from idea to one merge-ready pull request (or a guarded local merge in a repo without a remote). Small, clear changes take a short path. Real work gets a PRD the user signs off, then thin slices that fresh builder agents build test-first and prove on a running stack; each slice is reviewed once by Sonnet and Codex, fixed once and folded into the feature branch, and the feature ships as one short what-why-evidence PR, babysat to merge-ready. Use whenever the user wants to build something, change behaviour or solve a problem — "let's build…", "I want…", "we need…", "solve…", "can we make it so…" — or to resume or land work in a `.worktrees/` feature.
 ---
 
 # Build
 
-The user owns the problem, the taste and the veto. You own everything else. Anything the code, the docs, an experiment, the web or a second opinion can answer, you answer yourself.
-
-What can't be fixed later is building the wrong thing. So every interaction with the user serves one purpose: making sure your picture of the problem and the solution matches theirs. Treat them as a busy CPTO: stop for them only when a decision is truly theirs, lead with what they must decide, and link everything else.
+The user owns the problem, the taste and the veto. You own everything else: what the code, the docs, an experiment or a second opinion can answer, you answer. Treat the user as a busy CPTO. Stop for them only when a decision is truly theirs, lead with it, and link the rest.
 
 ```mermaid
 flowchart LR
-  Z{Small and clear?} -->|yes| SP[Short path: test, fix, one review round] --> L
-  Z -->|unsure| ASK[Ask the user] --> Z
-  Z -->|no| U[Understand, second opinion, ask] --> D[PRD: user signs off]
-  D --> R[Map the code, plan the steps] --> F{Feasibility: does<br/>the PRD change?}
-  F -->|yes| D
-  F -->|no| B[Orchestrate builders]
-  B --> K[Simplify] --> QA[QA + UI/UX until no blockers] --> V[Sonnet + Codex review until no blockers]
-  V --> PF[Proof on the final commit] --> L[PR] --> Y[Babysit to merge-ready] --> H[Hand to the user] --> M[After merge: clean up]
+  Z{Small and clear?} -->|yes| SP[Short path] --> L
+  Z -->|no| U[Understand] --> D[PRD: user signs off] --> R[Map and plan slices]
+  subgraph each slice, in parallel where it can
+    B[Build and prove] --> V[One review] --> FX[One round of fixes] --> FI[Fold in]
+  end
+  R --> B
+  FI --> A[Rerun all evidence] --> L[One PR, babysit to merge-ready] --> H[Hand to the user]
 ```
 
-If a `.worktrees/p<n>-*` worktree already holds a PRD for this, resume at the first step that isn't done. Settled things stay settled.
+**Before anything:** read `.agents/project.md`, the manifest ([manifest.md](../setup/manifest.md)); run `/setup` if it's missing. *Plans*, *Verify* and the like below mean its lines. `S="${CLAUDE_SKILL_DIR}"`. If a `.worktrees/p<n>-*` worktree holds a PRD for this, resume at the first step not done.
 
-**The manifest.** Read `.agents/project.md` before anything else. It names this repo's paths, tracker, commands, isolated stack and workflow, described in the `setup` skill's [manifest.md](../setup/manifest.md). If it's missing, run `/setup` first. Below, *Plans*, *Verify*, *the base branch* and the like mean that line of the manifest.
+- **Codes carry names** wherever a person reads them: "P92 (reusable rockets) S3 (landing legs)", never "P92 S3".
+- **Progress notes:** at each change of stage, one line on what finished and what's next.
+- **A second opinion** is one run of `consult.sh`, or without Codex one fresh subagent told to poke holes.
 
-`$S` below is this skill's directory: `S="${CLAUDE_SKILL_DIR}"`.
+## 0. Size it
 
-**Codes carry names.** Wherever a person reads it (the PRD, the PR, comments, messages to the user), every plan, scenario, step or finding code carries its short name: "P92 (reusable rockets) S3 (retractable landing legs)", never "P92 S3".
+Read the *Routing* file and the docs it names for the area, the ticket if there is one, and enough code to size it. Take the full workflow when the request and docs leave behaviour open, there's more than one approach the user would care about, it touches auth, data, migrations, infrastructure or CI, or it spans components or about 150 lines. Otherwise take the short path. When unsure, ask in one question, your recommendation first.
 
-**Progress notes.** At each change of stage, tell the user in one line what finished and what's next, with no question attached.
+**The short path:** a worktree `<Worktrees>/<slug>` on `fix/<slug>` or `chore/<slug>`, *Install*, and `.build/` in `$(git rev-parse --git-common-dir)/info/exclude`. A failing test, the fix, a commit. Update the doc it affects, run *Verify* and the *Extra checks* that apply, review once and fix as §4 says (folder `.build/review/`, the request in place of a PRD), and ship as §5 says. A blocker that needs a design decision means switching to the full workflow.
 
-**A second opinion** is Codex when `codex` is installed (`codex.sh consult`), and otherwise one fresh Claude subagent told to poke holes. Either way it's one run per question, never a loop.
+## 1. Understand and agree the PRD
 
-## 0. Size it first
+Read the *Routing* docs, the *Plans index*, other worktrees' PRDs and the ticket with its comments. Ask code questions of an `Explore` subagent. Reproduce, measure, spike when a choice turns on a fact, and compare real alternatives including the smallest. Put your understanding and draft questions in `.build/consult.md` to a second opinion (`"$S/consult.sh" "$PWD" .build/consult.md .build/consult-answer.md`, in the background), settle what it settles, then ask the user only what only they can say, in batches, recommendation first.
 
-The full workflow is for work where a wrong picture is expensive. Most changes aren't. Decide which path this is, but read first: the manifest's *Routing* file and every doc it names for the area, the ticket with its comments and linked issues if there is one, and enough of the code to size it. Something that looks like an obvious fix may be deliberate, and the docs say why.
+A technical directive from the user beats a standard: say in a sentence what the standard protects, follow the directive, and quote it in the PRD under **Your directives**.
 
-**The full workflow** (§1 onward) is required if any of these hold. They win over everything below.
+**Worktree.** Plan number: one above the highest anywhere (`git log --all --name-only --format= -- '<Plans>' | grep -ioE '(^|/)p[0-9]+'`, plus other worktrees). Create `<Worktrees>/p<n>-<slug>` on `feat/p<n>-<slug>` from the up-to-date base branch, with the ticket ID after the number when there is one. Copy `.env`, *Install*, exclude `.build/`.
 
-- It adds or changes behaviour in a way that neither the request nor what you just read settles. Placement, wording, defaults, edge cases and failure handling count only when the request, the docs and the existing code leave them open.
-- There is more than one reasonable approach, and the user would care which.
-- It touches auth, data or migrations, infrastructure, or CI.
-- It spans more than one component (backend, a UI, the worker, infra), or goes past roughly 150 changed lines.
-- The ticket's "done" needs pinning down, or the docs or ticket contradict the request.
+**The PRD**, `<Plans>p<n>-<slug>/prd.md`, follows [`prd-format.md`](prd-format.md). Its `Done when` scenarios (`P<n>-S<k> <name>`) are the goals, the test names and the proof checklist. Commit it with the index entry and get the user's sign-off as that file says. That's their one stop.
 
-**The short path** is for everything else. Typical cases: a bug fix restoring the behaviour the docs describe, a copy tweak, a change the request specifies completely, and edits to skills, docs or config.
+## 2. Map and plan
 
-**When in doubt, ask.** Put it to the user in one question, with your recommendation first and one line on why. Once they choose, that's settled. If the short path meets one of the triggers above, stop and say so, then switch.
-
-The short path:
-
-1. Work on a branch in its own worktree (`<Worktrees>/<slug>`, branch `fix/<slug>` or `chore/<slug>`), with the ticket ID after the prefix when there is one. There's no PRD or plan. Run *Install*, and add `.build/` to `$(git rev-parse --git-common-dir)/info/exclude` if it isn't already there. The review writes to `.build/`, and the scripts refuse a dirty tree.
-2. For code: a failing test that shows the problem, then the fix, then a commit. For a bug, the test is its regression test. Prose-only changes (docs, skills) have nothing to test.
-3. Update the reference or data-flow doc if the behaviour it describes changed.
-4. Run *Verify*, plus each of the *Extra checks* whose condition the change meets.
-5. Run one review round (§5, Sonnet and Codex, same brief) and handle its findings as §5 says. If a blocker needs a design decision, it wasn't a short-path change, so switch to the full workflow.
-6. Ship as in §6, with proof only when something visible changed.
-
-## 1. Understand
-
-Read before you ask: the *Routing* file and every document it names for this work, the *Plans index*, and the PRDs in other worktrees (`git worktree list`). Another plan may already own part of this. To answer a question about the code, send an `Explore` subagent rather than reading files yourself.
-
-**A ticket, if there is one.** The user may name a ticket matching the *Key pattern*, paste its link, or be on a branch whose name carries one. If so, read it (the tracker's connector or CLI, or the *Ticket URL*), including its comments and linked issues. It's part of the problem statement. If there's no ticket, don't invent one or ask for one.
-
-Get evidence, not opinions. Reproduce the problem, measure it, and find out what the code really does. When a choice turns on a fact, run a cheap spike in the scratchpad. When the right approach isn't obvious, compare real alternatives, including the smallest change that could work. If the request names a solution ("add a cache") and the context doesn't say what it's for, find out what it buys, so you solve the need.
-
-**Second opinion, then ask.** Write `.build/consult.md` (in the scratchpad until the worktree exists) with your understanding, the alternatives and your draft questions. Ask the second opinion what's wrong with the approach, whether its design holds up (depth, locality, seams, fit with the codebase, the next change), which questions the code or docs already answer, and what you missed. Run it in the background and wait for the notification.
-
-```bash
-"$S/codex.sh" consult "$PWD" .build/consult.md .build/consult-answer.md
-```
-
-Whatever it settled, you settle. What's left are the things only the user can say: a goal, a trade-off between their goals, money, taste, or a conflict with something they decided. Play your understanding back and ask those, in batches with your recommended answer first (`AskUserQuestion` in Claude Code), until what you say back is what they had in mind. If nothing is left, don't ask.
-
-A technical directive from the user ("use X") beats a standard. If it contradicts one, say in a sentence what the standard protects, then follow the directive and record it as a standards change. Every directive goes into the PRD under **Your directives**, quoted: it's settled, and reviewers don't reopen it.
-
-If the change is big, or the code it touches resists it, consider suggesting `/improve-architecture` pointed at this work ("how could the code make this change easy?") before planning.
-
-## 2. The PRD
-
-**Worktree.** Number the plan one above the highest plan number anywhere: check *Plans* on the base branch, in every worktree, and on every branch (`git log --all --name-only --format= -- '<Plans>' | grep -ioE '(^|/)p[0-9]+'`). Create `<Worktrees>/p<n>-<slug>` on branch `feat/p<n>-<slug>` from an up-to-date base branch. With a ticket, its ID goes after the number everywhere: `p19-proj-12-<slug>`, `feat/p19-PROJ-12-<slug>`. Copy the root `.env` into it if there is one, run *Install*, and add `.build/` to `$(git rev-parse --git-common-dir)/info/exclude`.
-
-**The PRD** is the what and why, for the user: `<Plans>p<n>-<slug>/prd.md`, rendered to `prd.html` beside it and published for comments, as [`prd-format.md`](prd-format.md) describes. Under the title `# P<n> <Name>`: `Ticket: [PROJ-12](<Ticket URL>)` when there's a ticket, `PRD: <artifact url>`, and the sign-off line. Then:
-
-- `## Summary`: what and why, in two or three sentences.
-- `## What you said`: the user's words, quoted verbatim with their source, each followed by `→` and your reading of them. Never put quotation marks around words they didn't write: a decision you only have secondhand is a paraphrase, labelled as one.
-- `## Where I might be wrong`: the assumptions that would change what gets built, each with **If not:** and what would change. Delete them as the user confirms them.
-- `## Done when`: the scenarios, `**P<n>-S<k> <short name>**: <observable behaviour>`, failure paths included. They're the build's goals, the test names and the proof checklist. Always write the full id, so one grep finds PRD row, test and commit.
-- `## Solution`: how it works, drawn wherever a drawing is clearer than words, with the rejected alternative in one line. Then `### Your directives`: the user's technical decisions and the ticket's constraints, quoted.
-- `## Out of scope`, and `## Open questions` when there are any.
-
-Add the index entry and commit the PRD folder as the worktree's first commit.
-
-**Sign-off.** This is the one stop for the user. Send them the PRD's link and ask: approve it, or correct it. Comments on the page are handled as `prd-format.md` says. Once they approve, write `Signed off: <date>` under the title and commit. The PRD changes after that only with the user (§3).
-
-## 3. Research and plan
-
-**The code map.** Send a documentarian subagent, with [`research.md`](research.md) as its prompt, to map the code into `.build/research.md`: where everything relevant lives, with file, line and symbol, judging nothing. You plan from the map, and every builder starts from it.
-
-**The plan** is for agents, not the user: `.build/plan.md`. Detailed enough that a builder knows its scope and its goal, but not the code itself: builders decide on the fly.
+A documentarian subagent maps the code into `.build/research.md`, with [`research.md`](research.md) as its prompt. Plan from it into `.build/plan.md`:
 
 ```markdown
 # P<n> <Name>: plan
-
 ## Decisions
 | Choice | Rejected | Why |
-Feature-local invariants, when they matter. Skip anything the standards or the code already decide.
-
 ## Standards changes
-The exact new wording for each file under *Standards*, as blockquotes. Only when there are some.
-
-## Steps
-### Step 1: <short name>
-- Depends on: none, or the steps it needs
-- Scope: the files and areas it may change
-- Serves: P<n>-S1 (<name>), P<n>-S2 (<name>)
-- Done when: what's true when it's finished
-
+Exact new wording, as blockquotes. Only when there are some.
+## Slice 1: <name>
+- Depends on: none, or slices
+- Serves: P<n>-S1 (<name>)
+- Proof: how each scenario is shown working, or why only tests can
+### Step 1: <name>
+- Scope: files and areas · Done when: what's true after
 ## Changed during implementation
-One line per departure, added as it happens.
 ```
 
-Steps that share no dependency and no scope can run in parallel. When parallel steps would share types, interfaces or a migration, make a first step that lands them, and let the others depend on it. The plan and the map stay uncommitted in `.build/`, and §6 publishes them with the proof.
+**A slice** is the smallest set of steps after which the feature branch still works. It cuts through every layer its scenarios need, serves one to three of them, and stays under about 400 changed lines. The first slice proves the riskiest part. Slices sharing no dependency run in parallel; shared types or migrations go in an earlier slice. When nothing smaller can work, it's one slice. Steps run in order and are numbered across the plan.
 
-**Feasibility.** Put the PRD, the map and the plan to a second opinion: what won't work, what the plan misses, which step is mis-scoped. Settle what it raises yourself. Stop for the user only when a `Done when` scenario would be added, removed or reworded, or a directive broken: update the PRD with them, and sign it off again. Otherwise, build.
+**Feasibility.** Put the PRD, map and plan to a second opinion and settle what it raises. Go back to the user only if a scenario or directive would change.
 
-## 4. Build
+## 3. Build and prove
 
-You orchestrate, and fresh Opus 5.5 builders write the code, as [`orchestrate.md`](orchestrate.md) says. Every builder follows the *Routing* file, the *Standards* and these rules:
+You orchestrate; a fresh Opus 5.5 builder takes each slice in its own worktree, as [`orchestrate.md`](orchestrate.md) says. Builders follow the *Routing* file, the *Standards* and these rules:
 
-1. **Red.** Write the tests for what the step serves and watch them fail for the right reason. Include the failure modes that apply (bad input, concurrency, cancellation, a dependency refusing or hanging), and for anything crossing a trust boundary, the abuse case.
-2. **Green.** Write the least code that passes, following the standards.
-3. **Commit**, naming the scenario: `P19-S3: refuse a second vote while one is in flight`.
+1. **Red.** Tests for the step's scenarios, named by scenario id, seen failing for the right reason. Include the failure modes that apply, and the abuse case at a trust boundary.
+2. **Green.** The least code that passes.
+3. **Prove it.** For a scenario its user can reach: start the *Isolated stack* (`N=<plan>_<slice>`, a free port), do it as the user would, and check where the result lands (rows, jobs, logs). Save that as a script, `.build/proof/<scenario id>-<name>.<ext>` in the feature worktree, that reads `BASE_URL` from the environment and writes its captures to `.build/proof/out/`: text for requests, responses and rows; desktop and phone screenshots for UI, and a clip where an interaction matters. Stop the stack and run its *Cleanup*.
+4. **Commit**, naming the scenario: `P19-S3: refuse a second vote while one is in flight`.
 
-**Check against the PRD as you go.** When what you're building stops making sense against the PRD's goals, say so. When reality disagrees with the plan, decide by the PRD's goals and add a line under `## Changed during implementation`. Escalate only when you're stuck, or when a `Done when` scenario or a directive would have to change.
+When reality disagrees with the plan, decide by the PRD and log it under `Changed during implementation`; escalate only when a scenario or directive would change. Every bug, from anyone, gets a failing test first. A behaviour change includes its *Reference docs* or *Data flows* update. Problems left unfixed go to the tracker's backlog (search first; what, where, evidence, proposed fix), or into the hand-off without a tracker.
 
-**Every bug gets a regression test**, wherever it turns up: a builder, QA, a reviewer, CI or the user. Write a failing test that reproduces it, then fix it, then commit naming the bug. Look for the same defect elsewhere.
+**Rerun the evidence** once the slice's steps have landed: start its stack on the slice head and rerun every proof script its code can run. One that fails, or captures something other than its scenario says, goes back to the builder. No review until it reruns.
 
-**What this change won't fix goes to the backlog.** When the manifest names a tracker (*Kind* isn't `none`), open a ticket in its backlog for each problem found and left unfixed: a P3 not fixed, a bug that predates the change, a gap QA or a reviewer found outside the PRD. Search the tracker first; if a ticket already covers it, comment there instead. Write it for someone who wasn't here: what's wrong and the evidence, where (files, routes, commands), who it hits, a proposed fix, when it's done, and the PR where it was found. Open it with the tracker's connector or CLI, and only open it: don't plan, prioritise or start it. Without a tracker, these go in your hand-off to the user instead.
+## 4. Review once, fix once, fold in
 
-**Docs move with the code.** A behaviour change isn't finished until its doc under *Reference docs* or *Data flows* agrees with it, in present tense. Apply the plan's standards changes in the commit that first relies on them.
-
-## 5. Review
-
-Each stage runs on a commit, and the scripts refuse a dirty tree. The prompts live in this skill, so change them there, not in a brief: [`review-rules.md`](review-rules.md) for the read-only passes, [`review-cuts.md`](review-cuts.md) for the simplifier, [`review-qa.md`](review-qa.md) and [`review-ux.md`](review-ux.md) for the running change, and [`review-code.md`](review-code.md) for the code review. Each script adds the target itself: the whole diff from the merge base to the commit it reads. Every brief holds what the change does, the PRD's and plan's paths, the user's directives and other deliberate choices, and from round 2, every earlier blocker with what changed for it (and in which commit) or your reason for dismissing it.
-
-**1. Simplify.** Claude Sonnet 5.5 assumes the change is bloated and reports cuts and cleanups. Write `.build/review/brief-cuts.md` and run it in the background:
+Write `.build/review/<slice>/brief.md`: what the slice does, the paths of the PRD, the plan and `.build/proof/`, its scenarios, and the user's deliberate choices. The prompt is [`review.md`](review.md); change it there, not in a brief. Sonnet and Codex review it in parallel; run it in the background (`$SW` the slice worktree, `$WT` the feature worktree; the last argument makes the diff only this slice's):
 
 ```bash
-"$S/pass.sh" cuts "$WT" "$WT/.build/review/brief-cuts.md" "$WT/.build/review"
+"$S/review.sh" "$SW" "$WT/.build/review/<slice>/brief.md" "$WT/.build/review/<slice>" feat/p<n>-<slug>
 ```
 
-Take every cut and cleanup. Skip one only when it would remove behaviour the PRD asks for, contradict a directive, or make the design worse, and say why in your hand-off. A subagent applies them; run the tests and commit.
+One subagent then handles every finding once:
 
-**2. QA, and UI/UX after its first round.** Start the worktree's own stack, with its own database, so it can't touch the user's processes, data or job queue: run the manifest's *Isolated stack* recipe with `N=<plan number>` and `PORT=<a free port>`. It records every PID it starts in `.build/pids`. Wait until *Ready when* succeeds. If the change is in a path the stack can't exercise (real third-party sign-in, say), that path's tests plus the matching *Extra checks* stand in.
+- **P1, P2:** confirmed ones get a regression test, the fix, and a commit naming the finding, with everything that refers to the change updated. Otherwise cite what disproves it, the PRD or standard that decided it, or the finding it duplicates. Weak evidence gets better evidence.
+- **P3s and cuts:** take the small ones in files the slice touches; backlog the rest.
+- A fix that would change agreed behaviour goes to the user.
 
-The QA agent, Claude Opus 5.5, tests the running stack like a professional QA: each scenario's happy path, then everything that could break it, permissions included, through the UI and the API, reading the logs and the database as it goes. It leaves a proof script per scenario. Its brief adds how to reach the stack (its URL, the database and how to query it, the logs, `.build/pids`, the manifest's *QA notes*; credentials by where they live, never their value) and the round's scope: `full` in round 1, `fixes` after. QA passes when a `full` round has no blockers: round 1, or one last `full` round run after a `fixes` round comes back clean.
+Run *Verify*, rerun the evidence, then **fold in**: merge the slice into the feature branch and run *Verify* there. No second review, and no waiting for the user between slices. Dependent slices start from the feature branch.
+
+When every slice is in, start the stack (`N=<plan>`) on the feature head and rerun every proof script. Its captures are the PR's evidence.
+
+## 5. Ship
+
+With *Landing* `local merge`, run "Nothing ships red", then follow [local-merge.md](local-merge.md) instead of the rest.
+
+**Nothing ships red.** Merge the up-to-date base branch in (never rebase a pushed branch), run *Verify* and the *Extra checks* that apply. A failure is a bug, not a retry.
+
+**The record.** `.build/proof/README.md` lists each capture under its scenario with one line on what it shows, at the commit it was taken. `.build/proof/review.md` lists each slice's findings and what happened to them. Turn clips into GIFs with the manifest's *ffmpeg* (`-vf "fps=10,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse"`), then publish:
 
 ```bash
-"$S/qa.sh" "$WT" "$WT/.build/qa/brief-<n>.md" "$WT/.build/qa" <n>
+"$S/publish-media.sh" p<n>-<slug> .build/proof/README.md .build/proof/review.md .build/plan.md .build/research.md <each capture>
 ```
 
-When the change touches UI, run the UI/UX pass once QA round 1 has returned and before its findings are triaged, on the same brief, so QA's interruption tests can't disturb it: Claude Opus 5.5 walks each scenario on desktop and phone and checks the flow, every state, the PRD's promise, consistency with the product and its design system, and access. Its blockers join round 1.
+**The PR**, readable in a minute. Title in the repo's commit style with the ticket ID. Body: **What** (two lines), **Why** (two lines, ticket and PRD links), **Evidence** (two to four embedded captures, each under its scenario, then anything the user must decide, then the proof page link), and the *PR footer*. Every link absolute; images are `https://github.com/<repo>/blob/<Proof media branch>/p<n>-<slug>/<file>?raw=true`. Edit the body with `gh api -X PATCH repos/<repo>/pulls/<n> -F body=@<file>`.
 
-```bash
-"$S/qa.sh" "$WT" "$WT/.build/qa/brief-1.md" "$WT/.build/qa" 1 ux
-```
+**Babysit to merge-ready:** checks green at the head, threads settled, the current base branch merged in. Agents never merge. Watch in the background; fixes go to subagents.
 
-**3. Code review.** Claude Sonnet 5.5 and Codex `gpt-6.1-sol`, both at `high` effort, review the whole diff in parallel, on the same prompt and brief: bugs, security, and departures from the architecture and the design standards. Each round is fresh sessions on one commit. Without `codex`, Sonnet reviews alone.
+- A failing or flaky check is a bug.
+- A review comment: if right, regression test, fix, reply with the commit; if wrong, reply with the evidence; if it changes agreed behaviour, ask the user. Resolve a bot's thread once settled; leave a person's for them.
+- A requested bot review missing after 30 minutes: carry on and say so.
+- After any code change, rerun the evidence and update the PR and proof page.
 
-```bash
-"$S/codex.sh" review "$WT" "$WT/.build/review/brief-<n>.md" "$WT/.build/review" <n>
-"$S/pass.sh" review "$WT" "$WT/.build/review/brief-<n>.md" "$WT/.build/review" <n>
-```
+**Hand it over:** the link, what needs the user first, one line on what it does and what the proof showed. Stop the stack (`.build/pids`). Suggest `/retro` if the build was harder than it should have been.
 
-Run both in the background and wait for both; whichever finishes last prints the round's blocker count. The review passes when a round has no blockers.
-
-**Handle every finding**, in QA and review. A subagent triages each round from its files (`round-<n>.json`, plus `round-<n>.sonnet.json` or `round-1.ux.json`):
-
-- **Blockers (P1, P2)**: a confirmed one gets a regression test, then the fix, then a commit naming the finding id. A misread one: cite the line that disproves it. One that's by design: cite the PRD, plan or standard that decided it. A duplicate: name the finding it repeats. One that shouldn't block the merge: say why. Each dismissal goes in the next round's brief, where the reviewers accept it or hold it open.
-- **P3s**: fix them when the fix is small and in a file the change already touches. Each of the rest goes to the backlog (§4), and a design P3 that proposes a standard goes in your hand-off.
-- If a fix would change agreed behaviour (not restore it), stop and ask the user.
-
-Restart whatever the fixes need, so the stack runs the commit under test, then run the next round. QA and review each stop at six rounds, and early when the ledger reports a blocker as `stuck` (marked not fixed twice): bring what's open to the user.
-
-**4. Proof on the final commit.** Once review passes, restart the stack on the head commit and rerun QA's proof scripts from `.build/qa/proof/` against it. It's the last smoke test, and its screenshots and clips are the PR's evidence. A scenario that no longer behaves as the PRD says is a bug (§4). Convert each clip with the manifest's *ffmpeg* in place of `ffmpeg` when it has one:
-
-```bash
-ffmpeg -y -i in.webm -vf "fps=10,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse" out.gif
-```
-
-For backend-only behaviour, the proof is the real request and response, or the log lines, as text. Rerun it after any later code change (CI fixes, the merge from the base branch), so the evidence always shows the head.
-
-## 6. Ship
-
-If the manifest's *Landing* is `local merge`, run "Nothing ships red" below, then land it as [local-merge.md](local-merge.md) says, in place of everything from **The record** on.
-
-**Nothing ships red.** Merge the up-to-date base branch into this one (don't rebase a pushed branch). Then, on the combined result, run *Verify* and each of the *Extra checks* whose condition the change meets, with the stack up for any that need it, and check the PRD page is current: `node "$S/render-prd.mjs" --tokens <Tokens> --check <Plans>`. Every PR check must be green too. A failure is a bug (§4), not a retry.
-
-**The record.** Write `.build/proof/README.md`, the proof page: where and at which commit it was captured, then each screenshot or GIF under the scenario it proves (id and name), with one line on what it shows, linked by bare file name. Beside it, `qa.md` and `review.md`: the rounds run, the findings with what happened to each, and what was skipped and why. The page links each of them, and `plan.md` and `research.md`, by bare file name. Publish them all with the media to the *Proof media branch*, so they never reach the base branch. It prints the page's URL.
-
-```bash
-"$S/publish-media.sh" p<n>-<slug> .build/proof/README.md .build/proof/qa.md .build/proof/review.md .build/plan.md .build/research.md <each captured file>
-```
-
-**The PR**, for a busy CPTO who reads it in under a minute. Push and open it with `gh`. The title follows the repository's commit style, with the ticket ID when there is one: `feat(PROJ-12): export answers as Markdown`. The body has three parts and nothing about how it was built:
-
-- **What**: two lines.
-- **Why**: two lines, with the ticket link and the PRD's artifact link.
-- **Evidence**: two to four key screenshots or clips, embedded, each under one line naming the scenario (id and name) and what it shows. Then anything the user must decide or do (a deliberate limitation, a risk, a trust boundary, a manual step), and one line linking the proof page, where the plan, the code map and the QA and review reports are.
-- The last line: the *PR footer*, when the manifest has one.
-
-Links and images in a PR body resolve against the PR, so make every one absolute: an image is `https://github.com/<repo>/blob/<Proof media branch>/p<n>-<slug>/<file>?raw=true`. Check them with `gh api repos/<repo>/pulls/<n> -H "Accept: application/vnd.github.full+json" -q .body_html`. In a private repo, embedded images load only in a signed-in browser, so the proof page link stays for readers in the GitHub app. To edit the body later, `gh api -X PATCH repos/<repo>/pulls/<n> -F body=@<file>` works where `gh pr edit` can fail.
-
-**Babysit it until it's ready to merge.** Opening the PR isn't the end. Stay with it until it's **merge-ready**. Agents never merge: the user reviews and merges every PR. Merge-ready means:
-
-- every PR check is green at the head,
-- every review thread is settled: a person's thread is answered, and a bot's is resolved (see below),
-- the branch contains the current base branch and has no conflicts.
-
-Run the watches in the background and act on each notification. Don't poll in a loop. Fixes go to subagents (`orchestrate.md`).
-
-- **A check fails.** It's a bug (§4): reproduce it, write a regression test, fix it. Don't re-run it and hope. A check that fails and then passes with no change is flaky, and that's a bug too.
-- **A review comment arrives**, from a person or a bot such as Copilot. Check it against the code before you act.
-  - If it's right, write a regression test, fix it, commit naming the comment, and reply with the commit.
-  - If it's wrong, reply with the line, the PRD or the standard that shows why.
-  - If the fix would change agreed behaviour, ask the user first.
-  - Resolve a bot's thread only once it's settled: the fix is committed and the checks are green on it, or your dismissal cites the evidence. A thread you've only acknowledged, or one waiting on the user's decision, stays open. Leave a person's thread for them to resolve.
-- **An automatic bot review hasn't arrived.** If the repo requests one (Copilot, say), give it about 30 minutes, handling whatever else comes in meanwhile. Then carry on without it, and say so in your hand-off. Silence is neither approval nor a reason to wait longer.
-- **The base branch moves on, or the branch conflicts.** Merge it in (don't rebase a pushed branch) and rerun the checks from "Nothing ships red".
-- **After any code change**, rerun the proof (§5) and update the PR body and the proof page so they show the final commit. Code changed after the last review round goes in the review report.
-
-**Hand it to the user** once it's merge-ready: the link, then what needs them first (decisions, open blockers, proposed standards), then one line each on what it does and what the proof showed, then a link to the proof page for the rest. Then stop watching. If the build was harder than it should have been (a long search, a mistake a check could have caught, a step of this skill that didn't fit), suggest `/retro` in one line.
-
-Babysitting ends at merge-ready, not at the merge. Pick the PR up again when the user reviews it, comments or asks, and babysit it back to merge-ready. The base branch moving on while it waits doesn't count, unless the user asks you to bring it up to date.
-
-**Stop the stack.** Kill the PIDs in `.build/pids`. Leave the rest (the cleanup) until the PR merges, in case a fix needs new proof.
-
-**After the user merges it**, if they ask you to clean up: check with `gh pr view <n> --json state,headRefOid` that it's `MERGED` at the head you pushed. Then:
-
-- Kill anything left in `.build/pids`, and run the *Isolated stack*'s *Cleanup* with the same `N`.
-- Fast-forward the base branch, and `git worktree remove` the worktree and any builder worktrees left.
-- Delete the local branches. `-D` is fine for these exact verified branches, since squash merges don't keep ancestry. Delete the remote branch too if GitHub didn't.
+**After the merge**, if asked to clean up: confirm `gh pr view <n> --json state,headRefOid` is `MERGED` at your head, kill `.build/pids`, run *Cleanup* for each `N`, fast-forward the base branch, remove the worktrees, and delete the feature and slice branches (`-D` is safe for these verified branches).

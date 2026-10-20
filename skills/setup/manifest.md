@@ -42,7 +42,7 @@ Read by the pedrotypes skills. See the setup skill's manifest.md for what each l
 
 - Ready when: <a command that succeeds once the stack is up>
 - Cleanup: <commands that remove what the stack created, such as its database>
-- QA notes: <a file telling a QA agent how to drive this stack: the browser, signing in, test credentials by where they live, restarting processes>
+- QA notes: <a file telling an agent how to drive this stack: the browser, signing in, test credentials by where they live, restarting processes>
 - ffmpeg: <the command that runs ffmpeg, when it isn't `ffmpeg` on the PATH>
 
 ## Workflow
@@ -62,7 +62,7 @@ Read by the pedrotypes skills. See the setup skill's manifest.md for what each l
 ## What each line means
 
 **Paths**
-- **Plans**: where `build` keeps a folder per plan, `p<n>-<slug>/`, holding the PRD (`prd.md`, rendered to `prd.html`) and its mockups. A plan number is one above the highest on any branch.
+- **Plans**: where `build` keeps a folder per plan, `p<n>-<slug>/`, holding the PRD, `prd.md`. A plan number is one above the highest on any branch.
 - **Plans index**: the list `build` adds each new plan to.
 - **Standards**: team decisions that code must follow. `build` follows them and reviewers enforce them. `retro` adds reviewer rules here.
 - **Reference docs**: describe the code as it is now. `build` keeps them true. `improve-architecture` records rejected candidates in a `Considered and rejected` list at the end of the doc for that area.
@@ -76,7 +76,7 @@ Read by the pedrotypes skills. See the setup skill's manifest.md for what each l
 - **Verify**: the whole local suite. Nothing ships unless it's green.
 - **Extra checks**: suites that run only when certain areas change, each with its condition.
 
-**Isolated stack**: how `build` runs the change for proof without touching the user's own processes, data or queues. `$N` is the plan number and `$PORT` a free port, both set by the skill. The skill kills everything in `.build/pids` when it's done, then runs the cleanup after the PR merges. *QA notes* go into every QA brief, so the QA agent doesn't rediscover how to drive the stack. *ffmpeg* turns proof videos into GIFs.
+**Isolated stack**: how `build` runs the change for proof without touching the user's own processes, data or queues. `$N` names the stack and `$PORT` is a free port, both set by the skill: `$N` is the plan number, or `<plan number>_<slice number>` for a slice's stack, so it holds only digits and `_`. The skill kills everything in `.build/pids` when it's done, then runs the cleanup after the PR merges. *QA notes* go into every builder's brief, so builders don't rediscover how to drive the stack. *ffmpeg* turns proof videos into GIFs.
 
 **Workflow**
 - **Base branch**: what features branch from and land on.
@@ -88,5 +88,5 @@ Read by the pedrotypes skills. See the setup skill's manifest.md for what each l
 - **Proof media branch**: the orphan branch that `build` publishes screenshots and GIFs to. Pull requests only.
 
 **Design**
-- **Tokens**: the PRD page takes its colours from this file, so it looks like the product. Without it, the page uses its own neutral palette.
-- **Standard**: the doc that UI work and mockups follow.
+- **Tokens**: the architecture report takes its colours from this file, so it looks like the product. Without it, the report uses its own neutral palette.
+- **Standard**: the doc that UI work follows.
