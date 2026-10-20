@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
@@ -138,6 +138,18 @@ test('review.sh: Codex host reviews without calling installed Claude', () => {
   assert.match(r.stdout, /^blockers=1$/m)
 })
 
+test('review.sh: Codex host works when Claude is absent', () => {
+  const s = setup()
+  rmSync(join(s.bin, 'claude'))
+  const r = run(s, '', 'codex')
+  assert.equal(r.status, 0, r.stderr + r.stdout)
+  assert.ok(!existsSync(join(s.dir, 'claude-args.txt')))
+  assert.ok(!existsSync(join(s.out, 'sonnet.json')))
+  assert.equal(JSON.parse(readFileSync(join(s.out, 'codex.json'), 'utf8')).findings[0].id, 'C-1')
+  assert.equal(readFileSync(join(s.out, 'review.sha'), 'utf8').trim(), git(s.wt, 'rev-parse', 'HEAD'))
+  assert.equal(readFileSync(join(s.out, 'review.base'), 'utf8').trim(), git(s.wt, 'rev-parse', 'main'))
+})
+
 test('review.sh: Codex host requires Codex without falling back to Claude', () => {
   const s = setup({ codex: null })
   const r = run(s, '', 'codex')
@@ -193,7 +205,6 @@ test('review.sh: Codex mutation does not publish evidence', () => {
   assert.match(r.stderr, /worktree changed/)
   assert.ok(!existsSync(join(s.out, 'review.sha')))
 })
-
 
 test('review.sh: Claude findings must satisfy the schema', () => {
   const s = setup()

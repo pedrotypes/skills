@@ -17,8 +17,7 @@
 - Install: true
 - Verify: node --test 'skills/**/*.test.mts' 'hooks/*.test.mts'
 - Extra checks:
-  - when shell scripts change: bash -n scripts/*.sh skills/build/*.sh hooks/*.sh
-  - when Codex packaging changes: install and discover the plugin with an isolated Codex home
+  - when shell scripts change: for script in scripts/*.sh skills/build/*.sh hooks/*.sh; do bash -n "$script" || exit; done
 
 ## Workflow
 
