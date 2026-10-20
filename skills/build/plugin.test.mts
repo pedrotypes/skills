@@ -24,3 +24,16 @@ test('P1-S1 Install: Codex marketplace packages the shared skills and helpers', 
 test('P1-S1 Install: Codex disables inherited Claude update hooks', () => {
   assert.deepEqual(json('.codex-plugin/plugin.json').hooks, { hooks: {} })
 })
+
+test('Published plugins share a semantic release version', () => {
+  const claude = json('.claude-plugin/plugin.json')
+  const codex = json('.codex-plugin/plugin.json')
+  const marketplace = json('.claude-plugin/marketplace.json')
+  assert.match(claude.version ?? '', /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/)
+  assert.equal(codex.version, claude.version)
+  assert.equal(marketplace.plugins.find((p: {name: string}) => p.name === 'skills').version, claude.version)
+})
+
+test('Host installations do not use a shared skill linker', () => {
+  assert.equal(existsSync(resolve(root, 'scripts/link.sh')), false)
+})

@@ -8,6 +8,7 @@
   "plugins": [
     {
       "name": "skills",
+      "version": "3.0.0",
       "source": "./",
       "description": "Build features from idea to merge-ready PR, survey architecture, run retros.",
       "category": "engineering",

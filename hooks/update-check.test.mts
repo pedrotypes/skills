@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, utimesSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, utimesSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
@@ -13,7 +13,7 @@ function check({ answer = latest, version = installed, fails = false } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'update-check-'))
   const bin = join(dir, 'bin')
   mkdirSync(bin)
-  writeFileSync(join(bin, 'curl'), `#!/bin/sh\necho call >> "${dir}/calls"\n${fails ? 'exit 7' : `printf %s '${answer}'`}\n`)
+  writeFileSync(join(bin, 'curl'), `#!/bin/sh\nprintf '%s\\n' "$*" >> "${dir}/calls"\n${fails ? 'exit 7' : `printf %s '${answer}'`}\n`)
   chmodSync(join(bin, 'curl'), 0o755)
   const root = join(dir, 'cache', 'pedrotypes', 'skills', version)
   const data = join(dir, 'data')
@@ -62,3 +62,50 @@ test('a failed request is silent and never blocks the session', () => {
   assert.equal(result.status, 0)
   assert.equal(result.stdout, '')
 })
+
+test('a semantic install compares the published manifest version', () => {
+  const c = check({ version: '3.0.0', answer: JSON.stringify({ version: '3.1.0' }) })
+  const result = c.run()
+  assert.equal(result.status, 0)
+  assert.match(result.stdout, /installed 3\.0\.0, latest 3\.1\.0/)
+  assert.match(result.stdout, /compare\/v3\.0\.0\.\.\.v3\.1\.0/)
+  assert.match(readFileSync(join(c.dir, 'calls'), 'utf8'), /raw\.githubusercontent\.com\/pedrotypes\/skills\/main\/\.claude-plugin\/plugin\.json/)
+  assert.equal(c.run().stdout, '')
+})
+
+for (const version of ['3.0.0', '2.9.9']) {
+  test(`a semantic install is silent for published version ${version}`, () => {
+    const result = check({ version: '3.0.0', answer: JSON.stringify({ version }) }).run()
+    assert.equal(result.status, 0)
+    assert.equal(result.stdout, '')
+  })
+}
+
+for (const [installed, published] of [['3.9.0', '3.10.0'], ['3.0.9', '3.0.10'], ['9.0.0', '10.0.0']]) {
+  test(`semantic versions compare numerically: ${installed} to ${published}`, () => {
+    assert.match(check({ version: installed, answer: JSON.stringify({ version: published }) }).run().stdout, /update/)
+    assert.equal(check({ version: published, answer: JSON.stringify({ version: installed }) }).run().stdout, '')
+  })
+}
+
+for (const answer of ['invalid json', '{}', 'null', '{"version":3}', '{"version":"03.1.0"}', '{"version":"3.1.0-beta"}', '{"version":"v3.1.0"}']) {
+  test(`a malformed published manifest is silent: ${answer}`, () => {
+    const result = check({ version: '3.0.0', answer }).run()
+    assert.equal(result.status, 0)
+    assert.equal(result.stdout, '')
+  })
+}
+
+test('a failed semantic manifest request is silent', () => {
+  const result = check({ version: '3.0.0', fails: true }).run()
+  assert.equal(result.status, 0)
+  assert.equal(result.stdout, '')
+})
+
+for (const version of ['03.0.0', '3.0', '3.0.0-beta']) {
+  test(`an unsupported installed version is never checked: ${version}`, () => {
+    const c = check({ version })
+    assert.equal(c.run().stdout, '')
+    assert.equal(c.calls(), false)
+  })
+}

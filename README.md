@@ -20,7 +20,7 @@ claude plugin install skills@pedrotypes
 
 Skills appear as `/pedrotypes-skills:<name>`.
 
-**Updates.** Every push to `main` is a new version. At most once a day, a SessionStart hook checks GitHub. When there's a newer commit than the one installed, Claude offers to update and links to what changed. To update by hand:
+**Updates.** At most once a day, a SessionStart hook checks GitHub. When the published plugin version is newer than the installed version, Claude offers to update and links to what changed. Legacy commit-based installs compare commits. To update by hand:
 
 ```bash
 claude plugin marketplace update pedrotypes && claude plugin update skills@pedrotypes
@@ -77,18 +77,17 @@ For a team, put these installation instructions in the repo's onboarding docs. E
 
 Codex installation follows the [official plugin packaging guide](https://developers.openai.com/plugins/build/plugins). Conversational selection and explicit invocation follow the [official skills guide](https://learn.chatgpt.com/docs/build-skills).
 
-## Install (opencode and other harnesses)
+## Releases
 
-```bash
-git clone https://github.com/pedrotypes/skills ~/src/skills
-~/src/skills/scripts/link.sh
-```
+The current plugin version is `3.0.0` for both Claude Code and Codex. Install each host's plugin separately; each host manages its own files and updates.
 
-That symlinks each skill into `~/.agents/skills/<name>`. Afterwards, `git pull` updates them. Re-run `link.sh` when a skill is added or renamed. The update hook is Claude Code only.
+Use semantic versions: MAJOR for incompatible workflow changes, MINOR for compatible features, and PATCH for fixes. Bump both plugin manifests and the Claude marketplace entry together for every published change. Codex reads its version from `.codex-plugin/plugin.json`.
+
+Tag each release `vX.Y.Z`, matching the plugin version. Release tags are immutable.
 
 ## Develop
 
-`scripts/dev-link.sh` loads the working tree as a live plugin under the same name, so edits are picked up in new sessions. Uninstall the marketplace copy first. Run the tests with:
+`scripts/dev-link.sh` loads the working tree in Claude Code as a live plugin under the same name, so edits are picked up in new sessions. Uninstall the marketplace copy first. Run the tests with:
 
 ```bash
 node --test 'skills/**/*.test.mts' 'hooks/*.test.mts'

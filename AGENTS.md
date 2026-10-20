@@ -19,3 +19,10 @@ You:
 - `skills/build/merge-base.sh` finds the base the review diffs from, with or without a remote.
 - `hooks/` holds the plugin's update check.
 - Tests: `node --test 'skills/**/*.test.mts' 'hooks/*.test.mts'`. A script change starts with a failing test.
+
+## Releases
+
+- Use MAJOR for incompatible workflow changes, MINOR for compatible features, and PATCH for fixes.
+- Bump the version for every published change. Keep `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, and the Claude marketplace plugin entry at the same version. Codex reads its version from its plugin manifest.
+- Tag releases `vX.Y.Z`, matching the plugin version. Never move release tags.
+- Keep Claude Code and Codex installations independent. Use each host's plugin manager.
