@@ -56,7 +56,7 @@ Read first: the manifest's *Routing* file and every doc it names for the area, t
 1. Work in its own worktree (`<Worktrees>/<slug>`, branch `fix/<slug>` or `chore/<slug>`, with the ticket ID after the prefix when there is one). Run *Install*, and add `.build/` to `$(git rev-parse --git-common-dir)/info/exclude`.
 2. For code: a failing test that shows the problem, then the fix, then a commit. Prose-only changes have nothing to test.
 3. Update the reference or data-flow doc if the behaviour it describes changed, and run *Verify* plus each *Extra check* whose condition the change meets.
-4. Review it once and fix as §5 says. If a blocker needs a design decision, it wasn't a short-path change: say so and switch.
+4. Review it once and fix as §5 says, with `.build/review/` as the review folder and the request in place of a PRD in the brief. If a blocker needs a design decision, it wasn't a short-path change: say so and switch.
 5. Ship as in §6, with proof only when something visible changed.
 
 ## 1. Understand
@@ -124,7 +124,7 @@ One line per departure, added as it happens.
 
 **Slices.** A slice is the smallest set of steps after which the base branch still works and could ship. It cuts through every layer its scenarios need (data, API, UI, tests), serves one to three scenarios, and fits one builder's fresh context. Split one that grows past three scenarios or about 400 changed lines. Order them so the first proves the riskiest part. A wide mechanical change (a rename across the codebase) goes expand, migrate in batches, contract, each its own slice. When nothing short of the whole feature can ship, it's one slice, and the plan says why.
 
-Steps within a slice that share no dependency and no scope can run in parallel. When they'd share types, interfaces or a migration, a first step lands those.
+Step numbers run across the whole plan, so each is unique. Steps within a slice that share no dependency and no scope can run in parallel. When they'd share types, interfaces or a migration, a first step lands those.
 
 **Feasibility.** Put the PRD, the map and the plan to a second opinion: what won't work, what the plan misses, which slice is mis-cut. Settle what it raises yourself. Stop for the user only when a `Done when` scenario would be added, removed or reworded, or a directive broken: update the PRD with them and sign it off again.
 
@@ -160,11 +160,11 @@ Without `codex`, Sonnet reviews alone. Each prints its findings and its blocker 
 
 **One round of fixes.** One subagent handles every finding from `codex.json` and `sonnet.json`:
 
-- **Blockers (P1, P2)**: a confirmed one gets a regression test, then the fix, then a commit naming the finding. A fix is finished when everything that names or relies on what it changed agrees. A misread one: cite the line that disproves it. One that's by design: cite the PRD, plan or standard. Evidence that doesn't prove its scenario gets better evidence, not a dismissal.
+- **Blockers (P1, P2)**: a confirmed one gets a regression test, then the fix, then a commit naming the finding. A fix is finished when everything that names or relies on what it changed agrees. A misread one: cite the line that disproves it. One that's by design: cite the PRD, plan or standard. A duplicate: name the finding it repeats. Evidence that doesn't prove its scenario gets better evidence, not a dismissal.
 - **P3s and cuts**: take them when small and in a file the slice touches. The rest go to the backlog (§4).
 - A fix that would change agreed behaviour (not restore it) goes to the user.
 
-Then run *Verify*, rerun the evidence, and ship. No second review runs: fixes are small, each has its own test, and the evidence reran on them.
+Then run *Verify*, rerun the evidence, and ship. No second review runs.
 
 ## 6. Ship
 
@@ -201,6 +201,6 @@ Make every link and image absolute: an image is `https://github.com/<repo>/blob/
 - **The base branch moves on**: merge it in and rerun "Nothing ships red".
 - **After any code change**: rerun the evidence, and update the PR body and the proof page to show the head.
 
-**Hand it to the user** once it's merge-ready: the link, then what needs them first, then one line each on what it does and what the proof showed. Stop the stack (the PIDs in `.build/pids`). Pick the PR up again when the user comments or asks. When it merges, start the next slice: `git switch -c feat/p<n>-<slug>-<next> <base branch>` in the feature worktree after updating the base branch, and go back to §4. If the build was harder than it should have been, suggest `/retro` in one line.
+**Hand it to the user** once it's merge-ready: the link, then what needs them first, then one line each on what it does and what the proof showed. Stop the stack (the PIDs in `.build/pids`). Pick the PR up again when the user comments or asks. When it merges, start the next slice in the feature worktree: `git fetch`, then `git switch -c feat/p<n>-<slug>-<next> origin/<base branch>`, and go back to §4. If the build was harder than it should have been, suggest `/retro` in one line.
 
 **After the last slice merges**, if the user asks you to clean up: check each PR is `MERGED` at the head you pushed (`gh pr view <n> --json state,headRefOid`). Kill anything left in `.build/pids` and run the *Isolated stack*'s *Cleanup* with each `N` used. Fast-forward the base branch, `git worktree remove` the worktree and any builder worktrees, and delete the local branches (`-D` is fine for these exact verified branches, since squash merges don't keep ancestry) and any remote branch GitHub left.
