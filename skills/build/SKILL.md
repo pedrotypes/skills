@@ -84,7 +84,7 @@ Write `.build/review/<slice>/brief.md`: what the slice does, the paths of the PR
 
 A slice gets one review, of one commit. With the slice worktree clean, note its head and save, from there, the slice's diff `git diff $(git merge-base feat/p<n>-<slug> HEAD) HEAD`, as `.build/review/<slice>/review.diff`. Then start the reviewers the host mapping names, in parallel. Each gets `review.md`, the brief, its id prefix (`C` for Codex, `S` for Sonnet) and the diff's path, and answers in the shape of [`findings.schema.json`](findings.schema.json):
 
-- **Codex**, in the background: `codex exec -m gpt-6.1-sol -c model_reasoning_effort=medium -s read-only -C <slice worktree> --output-schema "$S/findings.schema.json" -o <feature worktree>/.build/review/<slice>/codex.json - < <prompt file>`.
+- **Codex** (gpt-6.1-sol, medium effort), in the background and read-only, in the slice worktree. It writes `.build/review/<slice>/codex.json` in the feature worktree.
 - **Sonnet**, under Claude Code: a subagent (`general-purpose`, `model: "sonnet"`) that changes nothing, writes its findings to `.build/review/<slice>/sonnet.json` in the feature worktree, and replies with one line per finding.
 
 If the head moved or the worktree changed during the review, discard it and review again. Otherwise write the head to `.build/review/<slice>/review.sha`. A reviewer that couldn't read its diff, brief or files hasn't reviewed: run it again with access, never count it.
@@ -105,11 +105,7 @@ With *Landing* `local merge`, run "Nothing ships red", then follow [local-merge.
 
 **Nothing ships red.** Merge the up-to-date base branch in (never rebase a pushed branch), run *Verify* and the *Extra checks* that apply. A failure is a bug, not a retry.
 
-**The record.** `.build/proof/README.md` lists each capture under its scenario with one line on what it shows, at the commit it was taken. `.build/proof/review.md` lists each slice's findings and what happened to them. Turn clips into GIFs with the manifest's *ffmpeg* (`-vf "fps=10,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse"`), then publish:
-
-```bash
-"$S/publish-media.sh" p<n>-<slug> .build/proof/README.md .build/proof/review.md .build/plan.md .build/research.md <each capture>
-```
+**The record.** `.build/proof/README.md` lists each capture under its scenario with one line on what it shows, at the commit it was taken. `.build/proof/review.md` lists each slice's findings and what happened to them. Turn clips into GIFs with the manifest's *ffmpeg* (`-vf "fps=10,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse"`), then push the two pages, `.build/plan.md`, `.build/research.md` and every capture to `p<n>-<slug>/` on the *Proof media branch*, an orphan branch, so media never reaches the base branch. The README links each file by its bare name, and its page on GitHub is the proof page.
 
 **The PR**, readable in a minute. Title in the repo's commit style with the ticket ID. Body: **What** (two lines), **Why** (two lines, ticket and PRD links), **Evidence** (two to four embedded captures, each under its scenario, then anything the user must decide, then the proof page link), and the *PR footer*. Every link absolute; images are `https://github.com/<repo>/blob/<Proof media branch>/p<n>-<slug>/<file>?raw=true`. Edit the body with `gh api -X PATCH repos/<repo>/pulls/<n> -F body=@<file>`.
 

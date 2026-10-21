@@ -12,7 +12,7 @@ Use the host running this skill, regardless of which CLIs are installed:
 | Skill directory (`S`) | `${CLAUDE_SKILL_DIR}` | The directory containing the active skill's `SKILL.md`, from its installed location; resolve symlinks |
 | `Explore`, `general-purpose`, `Agent`, `SendMessage` | Named Claude tools and agent types | Available delegation and messaging tools; fresh context, read-only for exploration and review |
 | Opus/Sonnet roles | Named Claude models | Codex agents; use gpt-6.1-sol at medium effort for coding, or the host's available model |
-| Second opinion | `codex exec -m gpt-6-astra -c model_reasoning_effort=medium -s read-only -o .build/consult-answer.md - < .build/consult.md` in the background, or a fresh subagent without Codex | Deliberately critique the brief, alternatives and draft questions yourself; write `.build/consult-answer.md` and identify it as a current-session critique |
+| Second opinion | Codex (gpt-6-astra, medium effort, read-only) in the background, or a fresh subagent without Codex | Deliberately critique the brief, alternatives and draft questions yourself; write `.build/consult-answer.md` and identify it as a current-session critique |
 | Reviewers (§4) | Codex and a Sonnet subagent | Codex |
 
 Set `S` to the active skill's absolute directory before using its bundled files. Resolve sibling skills from that directory. In Codex, `${CLAUDE_SKILL_DIR}` in a brief means this resolved path; replace it with the absolute path before delegating. Never depend on that environment variable in Codex. Read a referenced skill's `SKILL.md` before invoking it.
