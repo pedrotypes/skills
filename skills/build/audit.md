@@ -11,13 +11,13 @@ Every slice of a feature has folded in, the base branch is merged, and *Verify* 
 
 ## Rules
 
-- Change no code and no existing evidence. Your own runs go in `.build/proof/out/<scenario id>/`, replacing the builders' captures there.
+- Change no code. Your own runs write their captures to `.build/proof/out/<scenario id>/`, replacing the builders' there: yours are the PR's evidence.
 - Check each scenario against its exact words and its Proof in the PRD, never against the ledger's description of it.
 - Note the feature head before you start. If it moves while you work, start again.
 - For each scenario:
-  - **Red.** Check out its main-test commit in a throwaway worktree and run its main tests. They must fail for the reason the Proof expects. For preserved behaviour, they pass there and fail when you break that behaviour on purpose. Remove the worktree after.
+  - **Red.** Check out its main-test commit in a throwaway worktree, run *Install* there, and run its main tests. They must fail for the reason the Proof expects. For preserved behaviour, they pass there and fail when you break that behaviour on purpose. Remove the worktree after.
   - **Green.** Run its main tests on the feature head: they pass.
-  - **Proof.** Rerun its ledger proof on the feature head yourself, starting the stack only if it needs one. It must exit 0, and its captures must show the scenario's outcome, including where the result lands (rows, jobs, logs), not just a response. Look at every screenshot.
+  - **Proof.** Where its Proof names a command or browser spec, rerun it on the feature head yourself, starting the stack only if it needs one. It must exit 0, and its captures must show the scenario's outcome, including where the result lands (rows, jobs, logs), not just a response. Look at every screenshot.
   - **Fit.** The proof is the kind the Proof column agreed, and covers the scenario's failure paths, not only the happy path.
 - Evidence that passes without proving the words is not proof: a test that recomputes the code's own answer, a screenshot of the wrong state, a proof that never checks where the result lands.
 - Stop every stack you start and run its *Cleanup*. Kill only processes you started.

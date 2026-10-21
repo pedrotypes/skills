@@ -62,7 +62,7 @@ Exact new wording, as blockquotes. Only when there are some.
 
 **Feasibility.** Put the PRD, map and plan to a second opinion and settle what it raises. Go back to the user only if a scenario, a seam or a directive would change.
 
-**The main tests.** You write them yourself: for each scenario, the tests at its agreed seam, named by scenario id, including its failure paths. They are the main tests, not all of them; builders add the unit tests their code needs. When a slice's worktree is created, write its main tests there, run them, and see each do what its Proof says: fail for the right reason where the behaviour is new (it's missing, not a typo), or pass now and fail when you break the behaviour on purpose where it must not change. Commit them before the builder starts, `P19: main tests for S3 and S4`, and note that commit in the plan. Before the first slice starts, commit the ledger, `<Plans>p<n>-<slug>/ledger.md`, on the feature branch with one heading per scenario, so slices fill in different parts of it.
+**The main tests.** You write them yourself: for each scenario, the tests at its agreed seam, named by scenario id, including its failure paths. They are the main tests, not all of them; builders add the unit tests their code needs. When a slice's worktree is created, write its main tests there, run them, and see each do what its Proof says: fail for the right reason where the behaviour is new (it's missing, not a typo), or pass now and fail when you break the behaviour on purpose where it must not change. Commit them before the builder starts, `P19: main tests for S3 and S4`, and note that commit in the plan. Every commit that touches a main test file has a subject starting `P<n>: main tests`. Before the first slice starts, commit the ledger, `<Plans>p<n>-<slug>/ledger.md`, on the feature branch with one heading per scenario, so slices fill in different parts of it.
 
 ## 3. Build and prove
 
@@ -90,7 +90,7 @@ When reality disagrees with the plan, decide by the PRD and log it under `Change
 
 ## 4. Review once, fix once, fold in
 
-Before the review, check the main tests are as you wrote them: `git log <main-test commit>..HEAD -- <main test files>` lists only your own commits. A builder who finds one wrong reports it, and you change it yourself, in its own commit.
+Before the review, check the main tests are as you wrote them: every commit in `git log <main-test commit>..HEAD -- <main test files>` has a subject starting `P<n>: main tests`. Any other is a finding. A builder who finds a main test wrong reports it, and you change it yourself, in such a commit.
 
 Write `.build/review/<slice>/brief.md`: what the slice does, the paths of the PRD, the plan, the ledger and `.build/proof/out/`, its scenarios, and the user's deliberate choices. The prompt is [`review.md`](review.md); change it there, not in a brief.
 
@@ -111,19 +111,19 @@ If the fixes changed code, rerun the evidence. Make *Verify* green at the slice 
 
 When every slice is in, merge the up-to-date base branch into the feature branch (never rebase a pushed branch), and make *Verify* and the *Extra checks* that apply green there.
 
-**The audit.** A fresh subagent that built and planned none of it (Opus in Claude Code, Codex under Codex), with [`audit.md`](audit.md) as its prompt. It reruns every ledger proof on the feature head itself (`N=<plan>`), checks each scenario against its Proof in the PRD, and writes its verdicts in the ledger and on the proof page. Its captures are the PR's evidence. A scenario it doesn't call **Proven** goes back to a builder for a failing test or better evidence; then the whole audit runs again on the new head. Its verdict is what the user reads, so don't ship around it.
+**The audit.** A fresh subagent that built and planned none of it (Opus in Claude Code, Codex under Codex), with [`audit.md`](audit.md) as its prompt. It reruns every ledger proof on the feature head itself (`N=<plan>`), checks each scenario against its Proof in the PRD, and writes its verdicts in the ledger and on the proof page; you commit its ledger writes as `P<n>: audit`. Its captures are the PR's evidence. A scenario it doesn't call **Proven** goes back to a builder for a failing test or better evidence; then the whole audit runs again on the new head. Its verdict is what the user reads, so don't ship around it.
 
 ## 5. Ship
 
 With *Landing* `local merge`, run "Nothing ships red", then follow [local-merge.md](local-merge.md) instead of the rest.
 
-**Nothing ships red.** The head the audit judged is the head that ships. After any later change to it (a base-branch merge, a CI fix, a review comment), make *Verify* and the *Extra checks* that apply green, then run the whole audit again. A failure is a bug, not a retry.
+**Nothing ships red.** The head the audit judged is the head that ships, up to commits that touch only the ledger. After any other change to it (a base-branch merge, a CI fix, a review comment), make *Verify* and the *Extra checks* that apply green, then run the whole audit again. A failure is a bug, not a retry.
 
 **The record.** `.build/proof/README.md` is the audit's proof page. `.build/proof/review.md` lists each slice's findings and what happened to them. Turn clips into GIFs with the manifest's *ffmpeg* (`-vf "fps=10,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse"`), then push the two pages, `.build/plan.md`, `.build/research.md` and every capture to `p<n>-<slug>/` on the *Proof media branch*, an orphan branch, so media never reaches the base branch. Keep each capture's `out/<scenario id>/` path; the README links captures by those paths, and its page on GitHub is the proof page.
 
 **The PR**, readable in a minute. Title in the repo's commit style with the ticket ID. Body: **What** (two lines), **Why** (two lines, ticket and PRD links), **Evidence** (the audit's summary, with the commit it judged and who audited, two to four embedded captures, each under its scenario, then anything the user must decide, then the proof page link), and the *PR footer*. Every link absolute; images are `https://github.com/<repo>/blob/<Proof media branch>/p<n>-<slug>/out/<scenario id>/<file>?raw=true`. Edit the body with `gh api -X PATCH repos/<repo>/pulls/<n> -F body=@<file>`.
 
-**Babysit to merge-ready:** checks green at the head, the audit at the head, threads settled, the current base branch merged in. Agents never merge. Watch in the background; fixes go to subagents.
+**Babysit to merge-ready:** checks green at the head, the audit at the head (up to ledger-only commits), threads settled, the current base branch merged in. Agents never merge. Watch in the background; fixes go to subagents.
 
 - A failing or flaky check is a bug.
 - A review comment: if right, regression test, fix, reply with the commit; if wrong, reply with the evidence; if it changes agreed behaviour, ask the user. Resolve a bot's thread once settled; leave a person's for them.
