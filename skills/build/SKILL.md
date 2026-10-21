@@ -15,7 +15,7 @@ flowchart LR
     T[Main tests, red] --> B[Build and prove] --> V[One review] --> FX[One round of fixes] --> FI[Fold in]
   end
   R --> T
-  FI --> A[Rerun all evidence] --> L[One PR, babysit to merge-ready] --> H[Hand to the user]
+  FI --> A[Rerun all evidence] --> AU[Independent audit] --> L[One PR, babysit to merge-ready] --> H[Hand to the user]
 ```
 
 **Before anything:** read `.agents/project.md`, the manifest ([manifest.md](../setup/manifest.md)); run `/setup` if it's missing. *Plans*, *Verify* and the like below mean its lines. Read [Host compatibility](orchestrate.md#host-compatibility) for skill paths, invocation, agent roles and reviewers. If a `.worktrees/p<n>-*` worktree holds a PRD for this, resume at the first step not done.
@@ -73,12 +73,20 @@ You orchestrate; a fresh builder (Opus 5.5 in Claude Code, Codex under Codex) ta
 2. **Green.** The least code that passes.
 3. **Prove it.** For a scenario its user can reach: start the *Isolated stack* (`N=<plan>_<slice>`, a free port), do it as the user would, and check where the result lands (rows, jobs, logs). Save that as a script, `.build/proof/<scenario id>-<name>.<ext>` in the feature worktree, that reads `BASE_URL` from the environment and writes its captures to `.build/proof/out/`: text for requests, responses and rows; desktop and phone screenshots for UI, and a clip where an interaction matters. Stop the stack and run its *Cleanup*.
 4. **Commit**, naming the scenario: `P19-S3: refuse a second vote while one is in flight`.
+5. **Ledger.** Add or update the scenario's entry in `.build/proof/ledger.md` in the feature worktree:
+
+   ```markdown
+   ## P19-S3 refuse a second vote while one is in flight
+   - Tests: `<file>` › `<name>`, first failed with `<failure line>`; at `<commit>`
+   - Proof: `<script>` → `out/<capture>`, …: <what each shows>
+   - Reran: `<commit>` <pass or fail>
+   ```
 
 Builders run only the tests for the units of code they change, plus the type check. Never a package's suite or the whole suite: it takes minutes, and *Verify* catches what a narrow run misses. You run *Verify* once per slice, just before it folds in (§4); a failure goes back to the builder as a failing test.
 
 When reality disagrees with the plan, decide by the PRD and log it under `Changed during implementation`; escalate only when a scenario or directive would change. Every bug, from anyone, gets a failing test first. A behaviour change includes its *Reference docs* or *Data flows* update. Problems left unfixed go to the tracker's backlog (search first; what, where, evidence, proposed fix), or into the hand-off without a tracker.
 
-**Rerun the evidence** once the slice's steps have landed: start its stack on the slice head and rerun every proof script its code can run. One that fails, or captures something other than its scenario says, goes back to the builder. No review until it reruns.
+**Rerun the evidence** once the slice's steps have landed: start its stack on the slice head and rerun every proof script its code can run. One that fails, or captures something other than its scenario says, goes back to the builder. No review until it reruns. Each rerun adds a `Reran` line to the ledger.
 
 ## 4. Review once, fix once, fold in
 
@@ -101,23 +109,25 @@ Rerun the evidence and run *Verify*, the slice's one run, then **fold in**: merg
 
 When every slice is in, start the stack (`N=<plan>`) on the feature head and rerun every proof script. Its captures are the PR's evidence.
 
+**The audit.** A fresh subagent that built none of it (Opus in Claude Code, Codex under Codex), with [`audit.md`](audit.md) as its prompt, checks every scenario's evidence against the PRD and writes the proof page. A scenario it doesn't call **Proven** goes back to a builder for a failing test or better evidence; then the audit checks that scenario again. Its verdict is what the user reads, so don't ship around it.
+
 ## 5. Ship
 
 With *Landing* `local merge`, run "Nothing ships red", then follow [local-merge.md](local-merge.md) instead of the rest.
 
 **Nothing ships red.** Merge the up-to-date base branch in (never rebase a pushed branch), run *Verify* and the *Extra checks* that apply. A failure is a bug, not a retry.
 
-**The record.** `.build/proof/README.md` lists each capture under its scenario with one line on what it shows, at the commit it was taken. `.build/proof/review.md` lists each slice's findings and what happened to them. Turn clips into GIFs with the manifest's *ffmpeg* (`-vf "fps=10,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse"`), then push the two pages, `.build/plan.md`, `.build/research.md` and every capture to `p<n>-<slug>/` on the *Proof media branch*, an orphan branch, so media never reaches the base branch. The README links each file by its bare name, and its page on GitHub is the proof page.
+**The record.** `.build/proof/README.md` is the audit's proof page. `.build/proof/review.md` lists each slice's findings and what happened to them. Turn clips into GIFs with the manifest's *ffmpeg* (`-vf "fps=10,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse"`), then push the two pages, the ledger, `.build/plan.md`, `.build/research.md` and every capture to `p<n>-<slug>/` on the *Proof media branch*, an orphan branch, so media never reaches the base branch. The README links each file by its bare name, and its page on GitHub is the proof page.
 
-**The PR**, readable in a minute. Title in the repo's commit style with the ticket ID. Body: **What** (two lines), **Why** (two lines, ticket and PRD links), **Evidence** (two to four embedded captures, each under its scenario, then anything the user must decide, then the proof page link), and the *PR footer*. Every link absolute; images are `https://github.com/<repo>/blob/<Proof media branch>/p<n>-<slug>/<file>?raw=true`. Edit the body with `gh api -X PATCH repos/<repo>/pulls/<n> -F body=@<file>`.
+**The PR**, readable in a minute. Title in the repo's commit style with the ticket ID. Body: **What** (two lines), **Why** (two lines, ticket and PRD links), **Evidence** (the audit's summary, two to four embedded captures, each under its scenario, then anything the user must decide, then the proof page link), and the *PR footer*. Every link absolute; images are `https://github.com/<repo>/blob/<Proof media branch>/p<n>-<slug>/<file>?raw=true`. Edit the body with `gh api -X PATCH repos/<repo>/pulls/<n> -F body=@<file>`.
 
 **Babysit to merge-ready:** checks green at the head, threads settled, the current base branch merged in. Agents never merge. Watch in the background; fixes go to subagents.
 
 - A failing or flaky check is a bug.
 - A review comment: if right, regression test, fix, reply with the commit; if wrong, reply with the evidence; if it changes agreed behaviour, ask the user. Resolve a bot's thread once settled; leave a person's for them.
 - A requested bot review missing after 30 minutes: carry on and say so.
-- After any code change, rerun the evidence and update the PR and proof page.
+- After any code change, rerun the evidence and the audit for the scenarios it touches, and update the PR and proof page.
 
-**Hand it over:** the link, what needs the user first, one line on what it does and what the proof showed. Stop the stack (`.build/pids`). Suggest `/retro` if the build was harder than it should have been.
+**Hand it over:** the link, what needs the user first, one line on what it does and the audit's verdict. Stop the stack (`.build/pids`). Suggest `/retro` if the build was harder than it should have been.
 
 **After the merge**, if asked to clean up: confirm `gh pr view <n> --json state,headRefOid` is `MERGED` at your head, kill `.build/pids`, run *Cleanup* for each `N`, fast-forward the base branch, remove the worktrees, and delete the feature and slice branches (`-D` is safe for these verified branches).

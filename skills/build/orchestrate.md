@@ -36,6 +36,7 @@ Use the host mapping above. In Claude Code, each of these goes to a subagent: `s
 - **Each slice** (§3): one builder, step after step.
 - **Rerunning the evidence** (§3): one subagent starts the stack, reruns the proof scripts and reports which pass.
 - **The round of fixes** (§4): one subagent, which returns each dismissal with its citation for the review report.
+- **The audit** (§4): one fresh subagent, Opus, with [`audit.md`](audit.md) as its prompt, once every slice is in.
 - **Each CI failure or review comment that needs a fix** (§5).
 
 Read-only work (the passes, `Explore` searches) can run in parallel with anything.
@@ -55,6 +56,7 @@ The builder saw nothing, so the brief is complete on its own:
 - Its scope: the slice and its steps, by number and name, and that it stops after each to report.
 - The rules it follows: §3 of `${CLAUDE_SKILL_DIR}/SKILL.md`.
 - Start from the code map: `.build/research.md` and the earlier builders' additions in `.build/research/`. Search beyond them only for what they don't cover, and write what you found to `.build/research/step-<k>.md` in the feature worktree, so the next builder doesn't search again.
+- The ledger, `.build/proof/ledger.md` in the feature worktree, and its entry format (§3).
 - To prove a scenario (§3): the manifest's *Isolated stack*, *Ready when* and *QA notes*, the `N` and port to use, and the feature worktree's absolute path for `.build/proof/`.
 - Run only the tests for the units of code it changes, plus the type check. Never a package's suite or the whole suite, not even before a commit: you run *Verify* before the slice folds in.
 
@@ -64,7 +66,7 @@ Ask for at most ten lines, and nothing else:
 
 - each commit, as short sha and subject
 - each test command it ran, its result and how long it took
-- per scenario: the main test's failure line from the first run, the unit tests it added and their failure lines, the proof script, and what it captured in `.build/proof/out/`
+- the scenarios whose ledger entries it added or updated, and the unit tests it added with their failure lines
 - any line added under `Changed during implementation`
 - what it found and left unfixed, for the backlog (§3)
 - whether the step still makes sense against the PRD, and any question it couldn't settle

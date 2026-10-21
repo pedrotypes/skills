@@ -7,7 +7,7 @@ For a repo whose manifest says `Landing: local merge`. There is no remote and th
 You merge it yourself only when all of these hold. Otherwise it waits for the user.
 
 - The suite (*Verify* and the *Extra checks* that apply) is green at the branch head, after merging the base branch in.
-- Every slice was reviewed (`.build/review/<slice>/review.sha` is an ancestor of `HEAD`), every blocker raised is fixed with a regression test or dismissed with a citation, and every proof script reran on `HEAD`.
+- Every slice was reviewed (`.build/review/<slice>/review.sha` is an ancestor of `HEAD`), every blocker raised is fixed with a regression test or dismissed with a citation, every proof script reran on `HEAD`, and the audit calls every scenario **Proven**.
 - The PRD says `Signed off`, or the change took the short path.
 - It touches nothing on the manifest's *Always waits for the user* list. Those changes alter the rules the next change is judged by, or the boundary that keeps the system safe.
 
@@ -19,7 +19,7 @@ From the main checkout: `git merge --no-ff <branch>`. Write the merge commit mes
 
 - the subject in the repository's commit style, with the ticket ID when there is one;
 - **what** and **why**, two lines each, from the PRD's summary;
-- **evidence**: each scenario (id and name) with what the proof showed;
+- **evidence**: the audit's summary, and each scenario (id and name) with its verdict;
 - what the user must decide or do, and anything not done, stated plainly;
 - the path of the proof page in `.build/proof/`, with the review report beside it;
 - the last line: the *PR footer*, when the manifest has one.
