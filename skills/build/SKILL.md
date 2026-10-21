@@ -18,7 +18,7 @@ flowchart LR
   FI --> A[Rerun all evidence] --> L[One PR, babysit to merge-ready] --> H[Hand to the user]
 ```
 
-**Before anything:** read `.agents/project.md`, the manifest ([manifest.md](../setup/manifest.md)); run `/setup` if it's missing. *Plans*, *Verify* and the like below mean its lines. Read [Host compatibility](orchestrate.md#host-compatibility) for skill paths, invocation, agent roles and helpers. If a `.worktrees/p<n>-*` worktree holds a PRD for this, resume at the first step not done.
+**Before anything:** read `.agents/project.md`, the manifest ([manifest.md](../setup/manifest.md)); run `/setup` if it's missing. *Plans*, *Verify* and the like below mean its lines. Read [Host compatibility](orchestrate.md#host-compatibility) for skill paths, invocation, agent roles and reviewers. If a `.worktrees/p<n>-*` worktree holds a PRD for this, resume at the first step not done.
 
 - **Codes carry names** wherever a person reads them: "P92 (reusable rockets) S3 (landing legs)", never "P92 S3".
 - **Progress notes:** at each change of stage, one line on what finished and what's next.
@@ -32,7 +32,7 @@ Read the *Routing* file and the docs it names for the area, the ticket if there 
 
 ## 1. Understand and agree the PRD
 
-Read the *Routing* docs, the *Plans index*, other worktrees' PRDs and the ticket with its comments. Ask code questions of an `Explore` subagent. Reproduce, measure, spike when a choice turns on a fact, and compare real alternatives including the smallest. Put your understanding and draft questions in `.build/consult.md` to a second opinion (Claude: `"$S/consult.sh" "$PWD" .build/consult.md .build/consult-answer.md`, in the background; Codex: critique it yourself and write `.build/consult-answer.md`), settle what it settles, then ask the user only what only they can say, in batches, recommendation first.
+Read the *Routing* docs, the *Plans index*, other worktrees' PRDs and the ticket with its comments. Ask code questions of an `Explore` subagent. Reproduce, measure, spike when a choice turns on a fact, and compare real alternatives including the smallest. Put your understanding and draft questions in `.build/consult.md` to a second opinion, which answers in `.build/consult-answer.md`. Settle what it settles, then ask the user only what only they can say, in batches, recommendation first.
 
 A technical directive from the user beats a standard: say in a sentence what the standard protects, follow the directive, and quote it in the PRD under **Your directives**.
 
@@ -72,7 +72,7 @@ You orchestrate; a fresh builder (Opus 5.5 in Claude Code, Codex under Codex) ta
 3. **Prove it.** For a scenario its user can reach: start the *Isolated stack* (`N=<plan>_<slice>`, a free port), do it as the user would, and check where the result lands (rows, jobs, logs). Save that as a script, `.build/proof/<scenario id>-<name>.<ext>` in the feature worktree, that reads `BASE_URL` from the environment and writes its captures to `.build/proof/out/`: text for requests, responses and rows; desktop and phone screenshots for UI, and a clip where an interaction matters. Stop the stack and run its *Cleanup*.
 4. **Commit**, naming the scenario: `P19-S3: refuse a second vote while one is in flight`.
 
-Between steps, check with *Test changed* (without it, the test files the step touched): seconds, not the whole suite. *Verify* runs once, after the slice's last step.
+Between steps, run the tests that cover what the step changed: the test files it touched and the tests of the code it touched, plus the type check. *Verify* runs once, after the slice's last step.
 
 When reality disagrees with the plan, decide by the PRD and log it under `Changed during implementation`; escalate only when a scenario or directive would change. Every bug, from anyone, gets a failing test first. A behaviour change includes its *Reference docs* or *Data flows* update. Problems left unfixed go to the tracker's backlog (search first; what, where, evidence, proposed fix), or into the hand-off without a tracker.
 
@@ -80,11 +80,14 @@ When reality disagrees with the plan, decide by the PRD and log it under `Change
 
 ## 4. Review once, fix once, fold in
 
-Write `.build/review/<slice>/brief.md`: what the slice does, the paths of the PRD, the plan and `.build/proof/`, its scenarios, and the user's deliberate choices. The prompt is [`review.md`](review.md); change it there, not in a brief. Use the host mapping for reviewers: Sonnet and Codex under Claude Code; Codex alone under Codex. Run in the background (`$SW` the slice worktree, `$WT` the feature worktree; the fourth argument limits the diff to this slice; `REVIEW_HOST=codex` under Codex, `claude` under Claude Code):
+Write `.build/review/<slice>/brief.md`: what the slice does, the paths of the PRD, the plan and `.build/proof/`, its scenarios, and the user's deliberate choices. The prompt is [`review.md`](review.md); change it there, not in a brief.
 
-```bash
-"$S/review.sh" "$SW" "$WT/.build/review/<slice>/brief.md" "$WT/.build/review/<slice>" feat/p<n>-<slug> "$REVIEW_HOST"
-```
+A slice gets one review, of one commit. With the slice worktree clean, note its head and save, from there, the slice's diff `git diff $(git merge-base feat/p<n>-<slug> HEAD) HEAD`, as `.build/review/<slice>/review.diff`. Then start the reviewers the host mapping names, in parallel. Each gets `review.md`, the brief, its id prefix (`C` for Codex, `S` for Sonnet) and the diff's path, and answers in the shape of [`findings.schema.json`](findings.schema.json):
+
+- **Codex**, in the background: `codex exec -m gpt-6.1-sol -c model_reasoning_effort=medium -s read-only -C <slice worktree> --output-schema "$S/findings.schema.json" -o <feature worktree>/.build/review/<slice>/codex.json - < <prompt file>`.
+- **Sonnet**, under Claude Code: a subagent (`general-purpose`, `model: "sonnet"`) that changes nothing, writes its findings to `.build/review/<slice>/sonnet.json` in the feature worktree, and replies with one line per finding.
+
+If the head moved or the worktree changed during the review, discard it and review again. Otherwise write the head to `.build/review/<slice>/review.sha`. A reviewer that couldn't read its diff, brief or files hasn't reviewed: run it again with access, never count it.
 
 One subagent then handles every finding once:
 

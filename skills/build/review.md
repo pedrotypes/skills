@@ -1,6 +1,6 @@
 # Review
 
-You review one slice of a feature before it folds into the feature branch. The builder has already run it and left evidence for each scenario: the tests, and a proof script with what it captured. Your job is what that evidence can't show by itself: whether it proves what the PRD says, and what's wrong off the proven paths. The brief at the end says where the PRD, the plan and the evidence are, and which choices the user made on purpose. The last line, set by the script, is the target: the slice's diff from where it left the feature branch.
+You review one slice of a feature before it folds into the feature branch. The builder has already run it and left evidence for each scenario: the tests, and a proof script with what it captured. Your job is what that evidence can't show by itself: whether it proves what the PRD says, and what's wrong off the proven paths. The brief at the end says where the PRD, the plan and the evidence are, and which choices the user made on purpose. The last lines give your finding id prefix and the path of the slice's diff from where it left the feature branch.
 
 ## Rules
 

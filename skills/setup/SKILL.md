@@ -15,7 +15,7 @@ Infer every line you can before asking anything:
 
 - **Paths**: `AGENTS.md` or `CLAUDE.md`, any docs index, and the directories under `docs/`. A directory of numbered plans, a standards or conventions folder, reference or architecture docs.
 - **Tracker**: ticket keys in `git log` and branch names, and links in docs and PR bodies (`gh pr list --state all --limit 20 --json body`).
-- **Commands**: `package.json` scripts, `Makefile`, `justfile`, `pyproject.toml`, and `.github/workflows/`. Verify is whatever CI runs before merge. Test changed is a command that runs only the tests affected by uncommitted and branch changes (`vitest related`, `jest --findRelatedTests`, `pytest --testmon`); leave it out if the repo has none.
+- **Commands**: `package.json` scripts, `Makefile`, `justfile`, `pyproject.toml`, and `.github/workflows/`. Verify is whatever CI runs before merge.
 - **Isolated stack**: the README, local-development docs, `docker-compose.yml`, and how the app's entrypoints take a port and a database.
 - **Workflow**: the default branch, an existing worktree directory (`git worktree list`), and recent PR bodies for a footer.
 - **Design**: a tokens or theme CSS file, and a design-language doc.

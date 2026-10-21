@@ -56,7 +56,7 @@ codex plugin marketplace add pedrotypes/skills
 codex plugin add pedrotypes-skills@pedrotypes
 ```
 
-Use a Codex release with `codex plugin add` (tested with CLI 0.163.0). Start a new session after installation. Claude Code is not required. The review helper uses Bash, Git, Python 3 and GNU `timeout` (install GNU coreutils on macOS).
+Use a Codex release with `codex plugin add` (tested with CLI 0.163.0). Start a new session after installation. Claude Code is not required.
 
 Say “let's build…” and Codex can select the build skill from its description. To select it explicitly, use `$pedrotypes-skills:build`; setup, retro and improve-architecture use the same prefix. Retro and architecture review require an explicit request.
 

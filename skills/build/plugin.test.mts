@@ -18,7 +18,7 @@ test('P1-S1 Install: Codex marketplace packages the shared skills and helpers', 
   for (const name of ['build', 'improve-architecture', 'retro', 'setup']) {
     assert.ok(existsSync(resolve(root, plugin.skills, name, 'SKILL.md')))
   }
-  assert.ok(existsSync(resolve(root, plugin.skills, 'build/review.sh')))
+  assert.ok(existsSync(resolve(root, plugin.skills, 'build/findings.schema.json')))
 })
 
 test('P1-S1 Install: Codex disables inherited Claude update hooks', () => {

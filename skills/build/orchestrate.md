@@ -12,18 +12,18 @@ Use the host running this skill, regardless of which CLIs are installed:
 | Skill directory (`S`) | `${CLAUDE_SKILL_DIR}` | The directory containing the active skill's `SKILL.md`, from its installed location; resolve symlinks |
 | `Explore`, `general-purpose`, `Agent`, `SendMessage` | Named Claude tools and agent types | Available delegation and messaging tools; fresh context, read-only for exploration and review |
 | Opus/Sonnet roles | Named Claude models | Codex agents; use gpt-6.1-sol at medium effort for coding, or the host's available model |
-| Second opinion | `consult.sh`, or a fresh subagent without Codex | Deliberately critique the brief, alternatives and draft questions yourself; write `.build/consult-answer.md` and identify it as a current-session critique |
-| Review host (`REVIEW_HOST`) | `claude` | `codex` |
+| Second opinion | `codex exec -m gpt-6-astra -c model_reasoning_effort=medium -s read-only -o .build/consult-answer.md - < .build/consult.md` in the background, or a fresh subagent without Codex | Deliberately critique the brief, alternatives and draft questions yourself; write `.build/consult-answer.md` and identify it as a current-session critique |
+| Reviewers (§4) | Codex and a Sonnet subagent | Codex |
 
-Set `S` to the active skill's absolute directory before running its helpers. Resolve sibling skills from that directory. In Codex, `${CLAUDE_SKILL_DIR}` in a brief means this resolved path; replace it with the absolute path before delegating. Never depend on that environment variable in Codex. Read a referenced skill's `SKILL.md` before invoking it.
+Set `S` to the active skill's absolute directory before using its bundled files. Resolve sibling skills from that directory. In Codex, `${CLAUDE_SKILL_DIR}` in a brief means this resolved path; replace it with the absolute path before delegating. Never depend on that environment variable in Codex. Read a referenced skill's `SKILL.md` before invoking it.
 
-Under Codex, use Codex for every role and never invoke Claude helpers. Always pass `codex` as `review.sh`'s fifth argument, even when Claude is installed; use an empty fourth argument when no base ref is supplied. Do not call `codex.sh review` to review yourself. If delegation or a required reviewer is unavailable, perform its prompt yourself and name the substitution; never claim independent review or mark unavailable evidence as passed. Keep every evidence and landing gate.
+Under Codex, use Codex for every role and never invoke Claude. If delegation or a required reviewer is unavailable, perform its prompt yourself and name the substitution; never claim independent review or mark unavailable evidence as passed. Keep every evidence and landing gate.
 
 ## What you do yourself
 
 - Talk to the user, write the PRD, the plan and the briefs, and decide.
-- Read the PRD, the plan, the code map, subagent reports, `git log --oneline` and the summaries the scripts print.
-- Run `consult.sh` (Claude host only) and `review.sh` in the background. They print short summaries; the detail stays in their files for the subagent that handles it.
+- Read the PRD, the plan, the code map, subagent reports, `git log --oneline` and the reviewers' one-line findings.
+- Start the second opinion and the reviewers in the background. Their detail stays in their files for the subagent that handles it.
 
 If you're about to read a source file, a diff or a log longer than a screen, send a subagent instead.
 
@@ -54,14 +54,14 @@ The builder saw nothing, so the brief is complete on its own:
 - The rules it follows: §3 of `${CLAUDE_SKILL_DIR}/SKILL.md`.
 - Start from the code map: `.build/research.md` and the earlier builders' additions in `.build/research/`. Search beyond them only for what they don't cover, and write what you found to `.build/research/step-<k>.md` in the feature worktree, so the next builder doesn't search again.
 - To prove a scenario (§3): the manifest's *Isolated stack*, *Ready when* and *QA notes*, the `N` and port to use, and the feature worktree's absolute path for `.build/proof/`.
-- While working, and before reporting a step, run *Test changed* (without it, the test files the step touched). After the slice's last step, run *Verify* over the whole suite, once.
+- While working, and before reporting a step, run the tests that cover what the step changed: the test files it touched and the tests of the code it touched, plus the type check. After the slice's last step, run *Verify* over the whole suite, once.
 
 ## The report
 
 Ask for at most ten lines, and nothing else:
 
 - each commit, as short sha and subject
-- the *Test changed* result, and after the slice's last step the *Verify* result
+- the tests it ran and their result, and after the slice's last step the *Verify* exit code
 - per scenario: the test that failed first (and its failure line), the proof script, and what it captured in `.build/proof/out/`
 - any line added under `Changed during implementation`
 - what it found and left unfixed, for the backlog (§3)
