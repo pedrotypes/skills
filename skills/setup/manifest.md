@@ -30,6 +30,7 @@ Read by the pedrotypes skills. See the setup skill's manifest.md for what each l
 
 - Install: pnpm install
 - Verify: pnpm verify
+- Test changed: pnpm test:changed
 - Extra checks:
   - when <area> changed: <command>
 
@@ -74,6 +75,7 @@ Read by the pedrotypes skills. See the setup skill's manifest.md for what each l
 **Commands**
 - **Install**: run once in each new worktree.
 - **Verify**: the whole local suite. Nothing ships unless it's green.
+- **Test changed**: optional. Runs only the tests the working changes affect, in seconds, so builders can check each step without the whole suite.
 - **Extra checks**: suites that run only when certain areas change, each with its condition.
 
 **Isolated stack**: how `build` runs the change for proof without touching the user's own processes, data or queues. `$N` names the stack and `$PORT` is a free port, both set by the skill: `$N` is the plan number, or `<plan number>_<slice number>` for a slice's stack, so it holds only digits and `_`. The skill kills everything in `.build/pids` when it's done, then runs the cleanup after the PR merges. *QA notes* go into every builder's brief, so builders don't rediscover how to drive the stack. *ffmpeg* turns proof videos into GIFs.

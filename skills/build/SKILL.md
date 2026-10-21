@@ -72,6 +72,8 @@ You orchestrate; a fresh builder (Opus 5.5 in Claude Code, Codex under Codex) ta
 3. **Prove it.** For a scenario its user can reach: start the *Isolated stack* (`N=<plan>_<slice>`, a free port), do it as the user would, and check where the result lands (rows, jobs, logs). Save that as a script, `.build/proof/<scenario id>-<name>.<ext>` in the feature worktree, that reads `BASE_URL` from the environment and writes its captures to `.build/proof/out/`: text for requests, responses and rows; desktop and phone screenshots for UI, and a clip where an interaction matters. Stop the stack and run its *Cleanup*.
 4. **Commit**, naming the scenario: `P19-S3: refuse a second vote while one is in flight`.
 
+Between steps, check with *Test changed* (without it, the test files the step touched): seconds, not the whole suite. *Verify* runs once, after the slice's last step.
+
 When reality disagrees with the plan, decide by the PRD and log it under `Changed during implementation`; escalate only when a scenario or directive would change. Every bug, from anyone, gets a failing test first. A behaviour change includes its *Reference docs* or *Data flows* update. Problems left unfixed go to the tracker's backlog (search first; what, where, evidence, proposed fix), or into the hand-off without a tracker.
 
 **Rerun the evidence** once the slice's steps have landed: start its stack on the slice head and rerun every proof script its code can run. One that fails, or captures something other than its scenario says, goes back to the builder. No review until it reruns.
@@ -90,7 +92,7 @@ One subagent then handles every finding once:
 - **P3s and cuts:** take the small ones in files the slice touches; backlog the rest.
 - A fix that would change agreed behaviour goes to the user.
 
-Run *Verify*, rerun the evidence, then **fold in**: merge the slice into the feature branch and run *Verify* there. No second review, and no waiting for the user between slices. Dependent slices start from the feature branch.
+Run *Verify*, rerun the evidence, then **fold in**: merge the slice into the feature branch, and run *Verify* there unless the merge was a fast-forward. No second review, and no waiting for the user between slices. Dependent slices start from the feature branch.
 
 When every slice is in, start the stack (`N=<plan>`) on the feature head and rerun every proof script. Its captures are the PR's evidence.
 

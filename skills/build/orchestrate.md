@@ -54,14 +54,14 @@ The builder saw nothing, so the brief is complete on its own:
 - The rules it follows: §3 of `${CLAUDE_SKILL_DIR}/SKILL.md`.
 - Start from the code map: `.build/research.md` and the earlier builders' additions in `.build/research/`. Search beyond them only for what they don't cover, and write what you found to `.build/research/step-<k>.md` in the feature worktree, so the next builder doesn't search again.
 - To prove a scenario (§3): the manifest's *Isolated stack*, *Ready when* and *QA notes*, the `N` and port to use, and the feature worktree's absolute path for `.build/proof/`.
-- Before reporting, run *Verify* over the whole suite.
+- While working, and before reporting a step, run *Test changed* (without it, the test files the step touched). After the slice's last step, run *Verify* over the whole suite, once.
 
 ## The report
 
 Ask for at most ten lines, and nothing else:
 
 - each commit, as short sha and subject
-- the *Verify* result
+- the *Test changed* result, and after the slice's last step the *Verify* result
 - per scenario: the test that failed first (and its failure line), the proof script, and what it captured in `.build/proof/out/`
 - any line added under `Changed during implementation`
 - what it found and left unfixed, for the backlog (§3)
