@@ -1,6 +1,6 @@
 # Review
 
-You review one slice of a feature before it folds into the feature branch. The builder has already run it and left evidence for each scenario: the tests, and a proof script with what it captured. Your job is what that evidence can't show by itself: whether it proves what the PRD says, and what's wrong off the proven paths. The brief at the end says where the PRD, the plan and the evidence are, and which choices the user made on purpose. The last lines give your finding id prefix and the path of the slice's diff from where it left the feature branch.
+You review one slice of a feature before it folds into the feature branch. The builder has already run it and left evidence for each scenario: the tests, and a ledger entry with the commands or browser spec that proved it and what they captured. Your job is what that evidence can't show by itself: whether it proves what the PRD says, and what's wrong off the proven paths. The brief at the end says where the PRD, the plan and the evidence are, and which choices the user made on purpose. The last lines give your finding id prefix and the path of the slice's diff from where it left the feature branch.
 
 ## Rules
 
@@ -12,7 +12,7 @@ You review one slice of a feature before it folds into the feature branch. The b
 
 ## Checks
 
-1. **The evidence proves the words.** For each scenario the slice serves, read its test and its proof script, and compare them with the scenario's exact words. Report evidence that passes without proving them: a test that recomputes the code's own answer, a script that checks a response but not the row or job it should have produced, a happy-path screenshot for a scenario about a refusal, a scenario with no test for its refused case. Report code that's looser or stricter than the words: "under its title" isn't "anywhere in the file".
+1. **The evidence proves the words.** For each scenario the slice serves, read its test and its ledger entry, and compare them with the scenario's exact words. Report evidence that passes without proving them: a test that recomputes the code's own answer, a proof that checks a response but not the row or job it should have produced, a happy-path screenshot for a scenario about a refusal, a scenario with no test for its refused case. Report code that's looser or stricter than the words: "under its title" isn't "anywhere in the file".
 2. **Failures both ways.** Errors that make the code less safe than intended (fail open), and failures reported as success: a wrong exit code, a swallowed error, a partial write that looks complete.
 3. **Security.** What an attacker or a confused agent controls at each boundary the slice adds or touches, and who is allowed to do each new action.
 4. **Races.** What changes between a check and the action that relies on it, and who else can change it.

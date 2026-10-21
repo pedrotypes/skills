@@ -63,7 +63,7 @@ Exact new wording, as blockquotes. Only when there are some.
 
 **Feasibility.** Put the PRD, map and plan to a second opinion and settle what it raises. Go back to the user only if a scenario, a seam or a directive would change.
 
-**The main tests.** You write them yourself: for each scenario, the tests at its agreed seam, named by scenario id, including its failure paths. They are the main tests, not all of them; builders add the unit tests their code needs. When a slice's worktree is created, write its main tests there, run them, see each fail for the right reason (the behaviour is missing, not a typo), and commit them before the builder starts: `P19: failing tests for S3 and S4`.
+**The main tests.** You write them yourself: for each scenario, the tests at its agreed seam, named by scenario id, including its failure paths. They are the main tests, not all of them; builders add the unit tests their code needs. When a slice's worktree is created, write its main tests there, run them, see each fail for the right reason (the behaviour is missing, not a typo), and commit them before the builder starts: `P19: failing tests for S3 and S4`. Before the first slice starts, commit the ledger, `<Plans>p<n>-<slug>/ledger.md`, on the feature branch with one heading per scenario, so slices fill in different parts of it.
 
 ## 3. Build and prove
 
@@ -71,26 +71,27 @@ You orchestrate; a fresh builder (Opus 5.5 in Claude Code, Codex under Codex) ta
 
 1. **Red.** First run the slice's main tests for this step and see them fail. Then write the unit tests the step's code needs, with the failure modes that apply and the abuse case at a trust boundary, and see each fail before writing the code they test. Never change a main test to make it pass: if one is wrong, report it.
 2. **Green.** The least code that passes.
-3. **Prove it.** For a scenario its user can reach: start the *Isolated stack* (`N=<plan>_<slice>`, a free port), do it as the user would, and check where the result lands (rows, jobs, logs). Save that as a script, `.build/proof/<scenario id>-<name>.<ext>` in the feature worktree, that reads `BASE_URL` from the environment and writes its captures to `.build/proof/out/`: text for requests, responses and rows; desktop and phone screenshots for UI, and a clip where an interaction matters. Stop the stack and run its *Cleanup*.
-4. **Commit**, naming the scenario: `P19-S3: refuse a second vote while one is in flight`.
-5. **Ledger.** Add or update the scenario's entry in `.build/proof/ledger.md` in the feature worktree:
+3. **Prove it.** For a scenario its user can reach: start the *Isolated stack* (`N=<plan>_<slice>`, a free port), do it as the user would, and check where the result lands (rows, jobs, logs). Capture text for requests, responses and rows, desktop and phone screenshots for UI, and a clip where an interaction matters, in `.build/proof/out/` in the feature worktree. A proof that clicks through the UI is a browser spec that asserts the outcome and saves its screenshots, committed with the step. Stop the stack and run its *Cleanup*.
+4. **Ledger.** Fill in the scenario's entry in the ledger, so anyone can rerun the proof from it. Record the exact commands, with `$BASE_URL` for the stack, and environment variables by name, never their values, local paths or ports:
 
    ```markdown
    ## P19-S3 refuse a second vote while one is in flight
    - Tests: `<file>` › `<name>`, first failed with `<failure line>`; at `<commit>`
-   - Proof: `<script>` → `out/<capture>`, …: <what each shows>
+   - Stack: started with `<variable names>`; <state it needs, e.g. the switch on>
+   - Proof: `<command>` → <what came back>; captures `<file>`, …
    - Reran: `<commit>` <pass or fail>
    ```
+5. **Commit** the step and its ledger entry, naming the scenario: `P19-S3: refuse a second vote while one is in flight`.
 
 Builders run only the tests for the units of code they change, plus the type check. Never a package's suite or the whole suite: it takes minutes, and *Verify* catches what a narrow run misses. You run *Verify* once per slice, just before it folds in (§4); a failure goes back to the builder as a failing test.
 
 When reality disagrees with the plan, decide by the PRD and log it under `Changed during implementation`; escalate only when a scenario or directive would change. Every bug, from anyone, gets a failing test first. A behaviour change includes its *Reference docs* or *Data flows* update. Problems left unfixed go to the tracker's backlog (search first; what, where, evidence, proposed fix), or into the hand-off without a tracker.
 
-**Rerun the evidence** once the slice's steps have landed: start its stack on the slice head and rerun every proof script its code can run. One that fails, or captures something other than its scenario says, goes back to the builder. No review until it reruns. Each rerun adds a `Reran` line to the ledger.
+**Rerun the evidence** once the slice's steps have landed: start its stack on the slice head and rerun every ledger proof its code can run, commands and browser specs. One that fails, or captures something other than its scenario says, goes back to the builder. No review until it reruns. Each rerun adds a `Reran` line to the ledger, committed.
 
 ## 4. Review once, fix once, fold in
 
-Write `.build/review/<slice>/brief.md`: what the slice does, the paths of the PRD, the plan and `.build/proof/`, its scenarios, and the user's deliberate choices. The prompt is [`review.md`](review.md); change it there, not in a brief.
+Write `.build/review/<slice>/brief.md`: what the slice does, the paths of the PRD, the plan, the ledger and `.build/proof/out/`, its scenarios, and the user's deliberate choices. The prompt is [`review.md`](review.md); change it there, not in a brief.
 
 A slice gets one review, of one commit. With the slice worktree clean, note its head and save, from there, the slice's diff `git diff $(git merge-base feat/p<n>-<slug> HEAD) HEAD`, as `.build/review/<slice>/review.diff`. Then start the reviewers the host mapping names, in parallel. Each gets `review.md`, the brief, its id prefix (`C` for Codex, `S` for Sonnet) and the diff's path, and answers in the shape of [`findings.schema.json`](findings.schema.json):
 
@@ -107,7 +108,7 @@ One subagent then handles every finding once:
 
 Rerun the evidence and run *Verify*, the slice's one run, then **fold in**: merge the slice into the feature branch. A merge that isn't a fast-forward makes code no run has checked, so run *Verify* on the merge too. No second review, and no waiting for the user between slices. Dependent slices start from the feature branch.
 
-When every slice is in, start the stack (`N=<plan>`) on the feature head and rerun every proof script. Its captures are the PR's evidence.
+When every slice is in, start the stack (`N=<plan>`) on the feature head and rerun every ledger proof. Its captures are the PR's evidence.
 
 **The audit.** A fresh subagent that built none of it (Opus in Claude Code, Codex under Codex), with [`audit.md`](audit.md) as its prompt, checks every scenario's evidence against the PRD and writes the proof page. A scenario it doesn't call **Proven** goes back to a builder for a failing test or better evidence; then the audit checks that scenario again. Its verdict is what the user reads, so don't ship around it.
 
@@ -117,7 +118,7 @@ With *Landing* `local merge`, run "Nothing ships red", then follow [local-merge.
 
 **Nothing ships red.** Merge the up-to-date base branch in (never rebase a pushed branch), run *Verify* and the *Extra checks* that apply. A failure is a bug, not a retry.
 
-**The record.** `.build/proof/README.md` is the audit's proof page. `.build/proof/review.md` lists each slice's findings and what happened to them. Turn clips into GIFs with the manifest's *ffmpeg* (`-vf "fps=10,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse"`), then push the two pages, the ledger, `.build/plan.md`, `.build/research.md` and every capture to `p<n>-<slug>/` on the *Proof media branch*, an orphan branch, so media never reaches the base branch. The README links each file by its bare name, and its page on GitHub is the proof page.
+**The record.** `.build/proof/README.md` is the audit's proof page. `.build/proof/review.md` lists each slice's findings and what happened to them. Turn clips into GIFs with the manifest's *ffmpeg* (`-vf "fps=10,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse"`), then push the two pages, `.build/plan.md`, `.build/research.md` and every capture to `p<n>-<slug>/` on the *Proof media branch*, an orphan branch, so media never reaches the base branch. The README links each file by its bare name, and its page on GitHub is the proof page.
 
 **The PR**, readable in a minute. Title in the repo's commit style with the ticket ID. Body: **What** (two lines), **Why** (two lines, ticket and PRD links), **Evidence** (the audit's summary, two to four embedded captures, each under its scenario, then anything the user must decide, then the proof page link), and the *PR footer*. Every link absolute; images are `https://github.com/<repo>/blob/<Proof media branch>/p<n>-<slug>/<file>?raw=true`. Edit the body with `gh api -X PATCH repos/<repo>/pulls/<n> -F body=@<file>`.
 

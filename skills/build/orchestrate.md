@@ -34,7 +34,7 @@ Use the host mapping above. In Claude Code, each of these goes to a subagent: `s
 
 - **The code map** (§2): one subagent, with [`research.md`](research.md) as its prompt.
 - **Each slice** (§3): one builder, step after step.
-- **Rerunning the evidence** (§3): one subagent starts the stack, reruns the proof scripts and reports which pass.
+- **Rerunning the evidence** (§3): one subagent starts the stack, reruns each ledger proof (its commands and browser specs), adds its `Reran` lines and reports which pass.
 - **The round of fixes** (§4): one subagent, which returns each dismissal with its citation for the review report.
 - **The audit** (§4): one fresh subagent, Opus, with [`audit.md`](audit.md) as its prompt, once every slice is in.
 - **Each CI failure or review comment that needs a fix** (§5).
@@ -56,8 +56,8 @@ The builder saw nothing, so the brief is complete on its own:
 - Its scope: the slice and its steps, by number and name, and that it stops after each to report.
 - The rules it follows: §3 of `${CLAUDE_SKILL_DIR}/SKILL.md`.
 - Start from the code map: `.build/research.md` and the earlier builders' additions in `.build/research/`. Search beyond them only for what they don't cover, and write what you found to `.build/research/step-<k>.md` in the feature worktree, so the next builder doesn't search again.
-- The ledger, `.build/proof/ledger.md` in the feature worktree, and its entry format (§3).
-- To prove a scenario (§3): the manifest's *Isolated stack*, *Ready when* and *QA notes*, the `N` and port to use, and the feature worktree's absolute path for `.build/proof/`.
+- The ledger, `<Plans>p<n>-<slug>/ledger.md`, and its entry format (§3).
+- To prove a scenario (§3): the manifest's *Isolated stack*, *Ready when* and *QA notes*, the `N` and port to use, and the feature worktree's absolute path for `.build/proof/out/`.
 - Run only the tests for the units of code it changes, plus the type check. Never a package's suite or the whole suite, not even before a commit: you run *Verify* before the slice folds in.
 
 ## The report
