@@ -56,7 +56,7 @@ The builder saw nothing, so the brief is complete on its own:
 - The rules it follows: §3 of `${CLAUDE_SKILL_DIR}/SKILL.md`.
 - Start from the code map: `.build/research.md` and the earlier builders' additions in `.build/research/`. Search beyond them only for what they don't cover, and write what you found to `.build/research/step-<k>.md` in the feature worktree, so the next builder doesn't search again.
 - To prove a scenario (§3): the manifest's *Isolated stack*, *Ready when* and *QA notes*, the `N` and port to use, and the feature worktree's absolute path for `.build/proof/`.
-- Run only the tests for the units of code it changes, plus the type check. Never a package's suite or the whole suite, not even before a commit: you run *Verify* after the slice.
+- Run only the tests for the units of code it changes, plus the type check. Never a package's suite or the whole suite, not even before a commit: you run *Verify* before the slice folds in.
 
 ## The report
 
