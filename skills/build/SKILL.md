@@ -12,9 +12,9 @@ flowchart LR
   Z{Small and clear?} -->|yes| SP[Short path] --> L
   Z -->|no| U[Understand] --> D[PRD: user signs off] --> R[Map and plan slices]
   subgraph each slice, in parallel where it can
-    B[Build and prove] --> V[One review] --> FX[One round of fixes] --> FI[Fold in]
+    T[Main tests, red] --> B[Build and prove] --> V[One review] --> FX[One round of fixes] --> FI[Fold in]
   end
-  R --> B
+  R --> T
   FI --> A[Rerun all evidence] --> L[One PR, babysit to merge-ready] --> H[Hand to the user]
 ```
 
@@ -32,13 +32,13 @@ Read the *Routing* file and the docs it names for the area, the ticket if there 
 
 ## 1. Understand and agree the PRD
 
-Read the *Routing* docs, the *Plans index*, other worktrees' PRDs and the ticket with its comments. Ask code questions of an `Explore` subagent. Reproduce, measure, spike when a choice turns on a fact, and compare real alternatives including the smallest. Put your understanding and draft questions in `.build/consult.md` to a second opinion, which answers in `.build/consult-answer.md`. Settle what it settles, then ask the user only what only they can say, in batches, recommendation first.
+Read the *Routing* docs, the *Plans index*, other worktrees' PRDs and the ticket with its comments. Ask code questions of an `Explore` subagent. Reproduce, measure, spike when a choice turns on a fact, and compare real alternatives including the smallest. Put your understanding and draft questions in `.build/consult.md` to a second opinion, which answers in `.build/consult-answer.md`. Settle what it settles. Then interview the user about what only they can say, in batches, recommendation first, until you share one understanding: they recognise their own thinking in your summary, and no open question would change what gets built. Stop short of that and the build proves the wrong thing.
 
 A technical directive from the user beats a standard: say in a sentence what the standard protects, follow the directive, and quote it in the PRD under **Your directives**.
 
 **Worktree.** Plan number: one above the highest anywhere (`git log --all --name-only --format= -- '<Plans>' | grep -ioE '(^|/)p[0-9]+'`, plus other worktrees). Create `<Worktrees>/p<n>-<slug>` on `feat/p<n>-<slug>` from the up-to-date base branch, with the ticket ID after the number when there is one. Copy `.env`, *Install*, exclude `.build/`.
 
-**The PRD**, `<Plans>p<n>-<slug>/prd.md`, follows [`prd-format.md`](prd-format.md). Its `Done when` scenarios (`P<n>-S<k> <name>`) are the goals, the test names and the proof checklist. Commit it with the index entry and get the user's sign-off as that file says. That's their one stop.
+**The PRD**, `<Plans>p<n>-<slug>/prd.md`, follows [`prd-format.md`](prd-format.md). Its `Done when` scenarios (`P<n>-S<k> <name>`) are the goals, the test names and the proof checklist. Its **Test seams** say, for each scenario, where the test drives the code and what it checks. Propose them, and change them with the user until you both agree they prove the scenarios. Commit it with the index entry and get the user's sign-off as that file says. That's their one stop.
 
 ## 2. Map and plan
 
@@ -61,18 +61,20 @@ Exact new wording, as blockquotes. Only when there are some.
 
 **A slice** is the smallest set of steps after which the feature branch still works. It cuts through every layer its scenarios need, serves one to three of them, and stays under about 400 changed lines. The first slice proves the riskiest part. Slices sharing no dependency run in parallel; shared types or migrations go in an earlier slice. When nothing smaller can work, it's one slice. Steps run in order and are numbered across the plan.
 
-**Feasibility.** Put the PRD, map and plan to a second opinion and settle what it raises. Go back to the user only if a scenario or directive would change.
+**Feasibility.** Put the PRD, map and plan to a second opinion and settle what it raises. Go back to the user only if a scenario, a seam or a directive would change.
+
+**The main tests.** You write them yourself: for each scenario, the tests at its agreed seam, named by scenario id, including its failure paths. They are the main tests, not all of them; builders add the unit tests their code needs. When a slice's worktree is created, write its main tests there, run them, see each fail for the right reason (the behaviour is missing, not a typo), and commit them before the builder starts: `P19: failing tests for S3 and S4`.
 
 ## 3. Build and prove
 
 You orchestrate; a fresh builder (Opus 5.5 in Claude Code, Codex under Codex) takes each slice in its own worktree, as [`orchestrate.md`](orchestrate.md) says. Builders follow the *Routing* file, the *Standards* and these rules:
 
-1. **Red.** Tests for the step's scenarios, named by scenario id, seen failing for the right reason. Include the failure modes that apply, and the abuse case at a trust boundary.
+1. **Red.** First run the slice's main tests for this step and see them fail. Then write the unit tests the step's code needs, with the failure modes that apply and the abuse case at a trust boundary, and see each fail before writing the code they test. Never change a main test to make it pass: if one is wrong, report it.
 2. **Green.** The least code that passes.
 3. **Prove it.** For a scenario its user can reach: start the *Isolated stack* (`N=<plan>_<slice>`, a free port), do it as the user would, and check where the result lands (rows, jobs, logs). Save that as a script, `.build/proof/<scenario id>-<name>.<ext>` in the feature worktree, that reads `BASE_URL` from the environment and writes its captures to `.build/proof/out/`: text for requests, responses and rows; desktop and phone screenshots for UI, and a clip where an interaction matters. Stop the stack and run its *Cleanup*.
 4. **Commit**, naming the scenario: `P19-S3: refuse a second vote while one is in flight`.
 
-Between steps, run the tests that cover what the step changed: the test files it touched and the tests of the code it touched, plus the type check. *Verify* runs once, after the slice's last step.
+Builders run only the tests for the units of code they change, plus the type check. Never a package's suite or the whole suite: it takes minutes, and *Verify* catches what a narrow run misses. You run *Verify* once, after the slice's last step; a failure goes back to the builder as a failing test.
 
 When reality disagrees with the plan, decide by the PRD and log it under `Changed during implementation`; escalate only when a scenario or directive would change. Every bug, from anyone, gets a failing test first. A behaviour change includes its *Reference docs* or *Data flows* update. Problems left unfixed go to the tracker's backlog (search first; what, where, evidence, proposed fix), or into the hand-off without a tracker.
 

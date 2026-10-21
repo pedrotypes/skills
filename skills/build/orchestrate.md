@@ -22,6 +22,7 @@ Under Codex, use Codex for every role and never invoke Claude. If delegation or 
 ## What you do yourself
 
 - Talk to the user, write the PRD, the plan and the briefs, and decide.
+- Write each slice's main tests (§2), reading only the code they drive.
 - Read the PRD, the plan, the code map, subagent reports, `git log --oneline` and the reviewers' one-line findings.
 - Start the second opinion and the reviewers in the background. Their detail stays in their files for the subagent that handles it.
 
@@ -50,19 +51,20 @@ Read-only work (the passes, `Explore` searches) can run in parallel with anythin
 The builder saw nothing, so the brief is complete on its own:
 
 - Its worktree and branch head, and the paths of the PRD, the plan and the code map (`.build/` in the feature worktree).
+- The slice's main tests: their files and the command that runs them. They fail now; the builder runs them first and never edits them to pass.
 - Its scope: the slice and its steps, by number and name, and that it stops after each to report.
 - The rules it follows: §3 of `${CLAUDE_SKILL_DIR}/SKILL.md`.
 - Start from the code map: `.build/research.md` and the earlier builders' additions in `.build/research/`. Search beyond them only for what they don't cover, and write what you found to `.build/research/step-<k>.md` in the feature worktree, so the next builder doesn't search again.
 - To prove a scenario (§3): the manifest's *Isolated stack*, *Ready when* and *QA notes*, the `N` and port to use, and the feature worktree's absolute path for `.build/proof/`.
-- While working, and before reporting a step, run the tests that cover what the step changed: the test files it touched and the tests of the code it touched, plus the type check. After the slice's last step, run *Verify* over the whole suite, once.
+- Run only the tests for the units of code it changes, plus the type check. Never a package's suite or the whole suite, not even before a commit: you run *Verify* after the slice.
 
 ## The report
 
 Ask for at most ten lines, and nothing else:
 
 - each commit, as short sha and subject
-- the tests it ran and their result, and after the slice's last step the *Verify* exit code
-- per scenario: the test that failed first (and its failure line), the proof script, and what it captured in `.build/proof/out/`
+- each test command it ran, its result and how long it took
+- per scenario: the main test's failure line from the first run, the unit tests it added and their failure lines, the proof script, and what it captured in `.build/proof/out/`
 - any line added under `Changed during implementation`
 - what it found and left unfixed, for the backlog (§3)
 - whether the step still makes sense against the PRD, and any question it couldn't settle
