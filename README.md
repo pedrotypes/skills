@@ -10,6 +10,7 @@ Pedro's skills for coding agents. They take a feature from idea to a merge-ready
 | `improve-architecture` | Periodic survey of the most-changed code for deepening opportunities: shallow modules whose complexity could sit behind a smaller interface. Writes a visual report and never changes code. User-invoked. |
 | `retro` | After a hard session, propose changes to the environment (a check, a reviewer rule, a pointer, a deletion) so the next session doesn't repeat it. User-invoked. |
 | `setup` | Write the repo's project manifest, which the other skills read. |
+| `show-markdown` | Show a Markdown file rendered by [glow](https://github.com/charmbracelet/glow) in a Herdr pane to the right of the agent's. |
 
 ## Install (Claude Code)
 
