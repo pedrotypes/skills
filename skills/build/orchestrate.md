@@ -13,7 +13,7 @@ Use the host running this skill, regardless of which CLIs are installed:
 | `Explore`, `general-purpose`, `Agent`, `SendMessage` | Named Claude tools and agent types | Available delegation and messaging tools; fresh context, read-only for exploration and review |
 | Opus/Sonnet roles | Named Claude models | Codex agents; use gpt-6.1-sol at medium effort for coding, or the host's available model |
 | Second opinion | Codex gpt-6-astra at medium effort, read-only; a fresh subagent without Codex | A fresh read-only agent |
-| Reviewers | Sonnet 5.5 and Codex gpt-6.1-sol, both at medium effort | Codex gpt-6.1-sol at medium effort |
+| Reviewers | Opus 5.5 and Codex gpt-6.1-sol, both at medium effort | Codex gpt-6.1-sol at medium effort |
 
 Set `S` to the active skill's absolute directory. Resolve sibling skills from that directory. In Codex, `${CLAUDE_SKILL_DIR}` in a brief means this resolved path; replace it with the absolute path before delegating. Never depend on that environment variable in Codex. Read a referenced skill's `SKILL.md` before invoking it.
 
