@@ -22,6 +22,7 @@ flowchart LR
 
 - **Codes carry names** wherever a person reads them: "P92 (reusable rockets) S3 (landing legs)", never "P92 S3".
 - **Progress notes:** at each change of stage, one line on what finished and what's next.
+- **Tickets:** while you work on a ticket, whether someone else filed it or you did, assign it to the user and move it through the tracker's workflow as the work moves.
 - **A second opinion** follows the host mapping in [orchestrate.md](orchestrate.md#host-compatibility).
 
 ## 0. Size it
