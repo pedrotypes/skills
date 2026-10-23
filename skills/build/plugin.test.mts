@@ -14,8 +14,8 @@ test('P1-S1 Install: Codex marketplace packages the shared skills and helpers', 
   assert.deepEqual(entry.source, { source: 'local', path: './' })
   assert.equal(entry.policy.installation, 'AVAILABLE')
   assert.equal(plugin.skills, './skills/')
-  assert.deepEqual(readdirSync(resolve(root, plugin.skills)).sort(), ['build', 'improve-architecture', 'retro', 'setup'])
-  for (const name of ['build', 'improve-architecture', 'retro', 'setup']) {
+  assert.deepEqual(readdirSync(resolve(root, plugin.skills)).sort(), ['build', 'improve-architecture', 'retro', 'setup', 'show-markdown'])
+  for (const name of ['build', 'improve-architecture', 'retro', 'setup', 'show-markdown']) {
     assert.ok(existsSync(resolve(root, plugin.skills, name, 'SKILL.md')))
   }
   assert.ok(existsSync(resolve(root, plugin.skills, 'build/review.sh')))
