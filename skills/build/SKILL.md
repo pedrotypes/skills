@@ -28,15 +28,15 @@ flowchart LR
 
 Read the *Routing* file and the docs it names for the area, the ticket if there is one, and enough code to size it. Take the full workflow when the request and docs leave behaviour open, there's more than one approach the user would care about, it touches auth, data, migrations, infrastructure or CI, or it spans components or about 150 lines. Otherwise take the short path. When unsure, ask in one question, your recommendation first.
 
-**The short path:** a worktree `<Worktrees>/<slug>` on `fix/<slug>` or `chore/<slug>`, *Install*, and `.build/` in `$(git rev-parse --git-common-dir)/info/exclude`. A failing test, the fix, a commit. Update the doc it affects, run *Verify* and the *Extra checks* that apply, review once and fix as §4 says (folder `.build/review/`, the request in place of a PRD), and ship as §5 says. A blocker that needs a design decision means switching to the full workflow.
+**The short path:** a worktree `<Worktrees>/<slug>` on `fix/<slug>` or `chore/<slug>`, *Install*, and `.build/` kept out of git. A failing test, the fix, a commit. Update the doc it affects, run *Verify* and the *Extra checks* that apply, review once and fix as §4 says (folder `.build/review/`, the request in place of a PRD), and ship as §5 says. A blocker that needs a design decision means switching to the full workflow.
 
 ## 1. Understand and agree the PRD
 
-Read the *Routing* docs, the *Plans index*, other worktrees' PRDs and the ticket with its comments. Ask code questions of an `Explore` subagent. Reproduce, measure, spike when a choice turns on a fact, and compare real alternatives including the smallest. Put your understanding and draft questions in `.build/consult.md` to a second opinion (Claude: `"$S/consult.sh" "$PWD" .build/consult.md .build/consult-answer.md`, in the background; Codex: critique it yourself and write `.build/consult-answer.md`), settle what it settles, then ask the user only what only they can say, in batches, recommendation first.
+Read the *Routing* docs, the *Plans index*, other worktrees' PRDs and the ticket with its comments. Ask code questions of an `Explore` subagent. Reproduce, measure, spike when a choice turns on a fact, and compare real alternatives including the smallest. Put your understanding and draft questions to a second opinion, settle what it settles, then ask the user only what only they can say, in batches, recommendation first.
 
 A technical directive from the user beats a standard: say in a sentence what the standard protects, follow the directive, and quote it in the PRD under **Your directives**.
 
-**Worktree.** Plan number: one above the highest anywhere (`git log --all --name-only --format= -- '<Plans>' | grep -ioE '(^|/)p[0-9]+'`, plus other worktrees). Create `<Worktrees>/p<n>-<slug>` on `feat/p<n>-<slug>` from the up-to-date base branch, with the ticket ID after the number when there is one. Copy `.env`, *Install*, exclude `.build/`.
+**Worktree.** Plan number: one above the highest anywhere, in any branch's *Plans* history or another worktree. Create `<Worktrees>/p<n>-<slug>` on `feat/p<n>-<slug>` from the up-to-date base branch, with the ticket ID after the number when there is one. Copy `.env`, *Install*, exclude `.build/`.
 
 **The PRD**, `<Plans>p<n>-<slug>/prd.md`, follows [`prd-format.md`](prd-format.md). Its `Done when` scenarios (`P<n>-S<k> <name>`) are the goals, the test names and the proof checklist. Commit it with the index entry and get the user's sign-off as that file says. That's their one stop.
 
@@ -78,11 +78,7 @@ When reality disagrees with the plan, decide by the PRD and log it under `Change
 
 ## 4. Review once, fix once, fold in
 
-Write `.build/review/<slice>/brief.md`: what the slice does, the paths of the PRD, the plan and `.build/proof/`, its scenarios, and the user's deliberate choices. The prompt is [`review.md`](review.md); change it there, not in a brief. Use the host mapping for reviewers: Sonnet and Codex under Claude Code; Codex alone under Codex. Run in the background (`$SW` the slice worktree, `$WT` the feature worktree; the fourth argument limits the diff to this slice; `REVIEW_HOST=codex` under Codex, `claude` under Claude Code):
-
-```bash
-"$S/review.sh" "$SW" "$WT/.build/review/<slice>/brief.md" "$WT/.build/review/<slice>" feat/p<n>-<slug> "$REVIEW_HOST"
-```
+Write `.build/review/<slice>/brief.md`: what the slice does, the paths of the PRD, the plan and `.build/proof/`, its scenarios, and the user's deliberate choices. The prompt is [`review.md`](review.md); change it there, not in a brief. Commit first: a review reads a commit in a clean worktree. Start the reviewers the host mapping names, in parallel and fresh, each read-only with `review.md`, the brief, its finding-id prefix and the slice's diff from where it left the feature branch. Findings follow [`findings.schema.json`](findings.schema.json). A reviewer still running after an hour has failed; say so. Record the commit they read in `.build/review/<slice>/review.sha`. If the slice's worktree changed during the review, it didn't read that commit: review again. Otherwise a slice gets one review.
 
 One subagent then handles every finding once:
 
@@ -100,13 +96,9 @@ With *Landing* `local merge`, run "Nothing ships red", then follow [local-merge.
 
 **Nothing ships red.** Merge the up-to-date base branch in (never rebase a pushed branch), run *Verify* and the *Extra checks* that apply. A failure is a bug, not a retry.
 
-**The record.** `.build/proof/README.md` lists each capture under its scenario with one line on what it shows, at the commit it was taken. `.build/proof/review.md` lists each slice's findings and what happened to them. Turn clips into GIFs with the manifest's *ffmpeg* (`-vf "fps=10,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen[p];[b][p]paletteuse"`), then publish:
+**The record.** `.build/proof/README.md` lists each capture under its scenario with one line on what it shows, at the commit it was taken. `.build/proof/review.md` lists each slice's findings and what happened to them. Turn clips into GIFs with the manifest's *ffmpeg*, small and sharp enough to read in a PR. Publish the proof page (`README.md`), the review report, the plan, the code map and every capture to `p<n>-<slug>/` on the *Proof media branch*, never the base branch. The PR links that proof page.
 
-```bash
-"$S/publish-media.sh" p<n>-<slug> .build/proof/README.md .build/proof/review.md .build/plan.md .build/research.md <each capture>
-```
-
-**The PR**, readable in a minute. Title in the repo's commit style with the ticket ID. Body: **What** (two lines), **Why** (two lines, ticket and PRD links), **Evidence** (two to four embedded captures, each under its scenario, then anything the user must decide, then the proof page link), and the *PR footer*. Every link absolute; images are `https://github.com/<repo>/blob/<Proof media branch>/p<n>-<slug>/<file>?raw=true`. Edit the body with `gh api -X PATCH repos/<repo>/pulls/<n> -F body=@<file>`.
+**The PR**, readable in a minute. Title in the repo's commit style with the ticket ID. Body: **What** (two lines), **Why** (two lines, ticket and PRD links), **Evidence** (two to four embedded captures, each under its scenario, then anything the user must decide, then the proof page link), and the *PR footer*. Every link absolute; images are `https://github.com/<repo>/blob/<Proof media branch>/p<n>-<slug>/<file>?raw=true`.
 
 **Babysit to merge-ready:** checks green at the head, threads settled, the current base branch merged in. Agents never merge. Watch in the background; fixes go to subagents.
 
@@ -117,4 +109,4 @@ With *Landing* `local merge`, run "Nothing ships red", then follow [local-merge.
 
 **Hand it over:** the link, what needs the user first, one line on what it does and what the proof showed. Stop the stack (`.build/pids`). Suggest `/retro` if the build was harder than it should have been.
 
-**After the merge**, if asked to clean up: confirm `gh pr view <n> --json state,headRefOid` is `MERGED` at your head, kill `.build/pids`, run *Cleanup* for each `N`, fast-forward the base branch, remove the worktrees, and delete the feature and slice branches (`-D` is safe for these verified branches).
+**After the merge**, if asked to clean up: confirm the PR merged at your head, kill `.build/pids`, run *Cleanup* for each `N`, fast-forward the base branch, remove the worktrees, and delete the feature and slice branches.

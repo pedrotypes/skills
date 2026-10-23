@@ -6,7 +6,7 @@ import { test } from 'node:test'
 const root = resolve(import.meta.dirname, '../..')
 const json = (path: string) => JSON.parse(readFileSync(resolve(root, path), 'utf8'))
 
-test('P1-S1 Install: Codex marketplace packages the shared skills and helpers', () => {
+test('P1-S1 Install: Codex marketplace packages the shared skills', () => {
   const marketplace = json('.agents/plugins/marketplace.json')
   const plugin = json('.codex-plugin/plugin.json')
   assert.equal(marketplace.name, 'pedrotypes')
@@ -18,7 +18,7 @@ test('P1-S1 Install: Codex marketplace packages the shared skills and helpers', 
   for (const name of ['build', 'improve-architecture', 'retro', 'setup', 'show-markdown']) {
     assert.ok(existsSync(resolve(root, plugin.skills, name, 'SKILL.md')))
   }
-  assert.ok(existsSync(resolve(root, plugin.skills, 'build/review.sh')))
+  assert.ok(existsSync(resolve(root, plugin.skills, 'build/review.md')))
 })
 
 test('P1-S1 Install: Codex disables inherited Claude update hooks', () => {

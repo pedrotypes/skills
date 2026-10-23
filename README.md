@@ -6,7 +6,7 @@ Pedro's skills for coding agents. They take a feature from idea to a merge-ready
 
 | Skill | Purpose |
 | --- | --- |
-| `build` | Idea to one merge-ready PR, built in thin slices. Size the change, agree on a short Markdown PRD the user signs off, map the code and cut the plan into vertical slices. Per slice, in parallel where it can: fresh builders build it test-first and prove each scenario on a running stack, the evidence is rerun, Sonnet and Codex review it once, one round of fixes, then it folds into the feature branch. Then one short what-why-evidence PR, babysat until it's ready to merge. |
+| `build` | Idea to one merge-ready PR, built in thin slices. Size the change, agree on a short Markdown PRD the user signs off, map the code and cut the plan into vertical slices. Per slice, in parallel where it can: fresh builders build it test-first and prove each scenario on a running stack, the evidence is rerun, Opus and Codex review it once, one round of fixes, then it folds into the feature branch. Then one short what-why-evidence PR, babysat until it's ready to merge. |
 | `improve-architecture` | Periodic survey of the most-changed code for deepening opportunities: shallow modules whose complexity could sit behind a smaller interface. Writes a visual report and never changes code. User-invoked. |
 | `retro` | After a hard session, propose changes to the environment (a check, a reviewer rule, a pointer, a deletion) so the next session doesn't repeat it. User-invoked. |
 | `setup` | Write the repo's project manifest, which the other skills read. |
@@ -57,7 +57,7 @@ codex plugin marketplace add pedrotypes/skills
 codex plugin add pedrotypes-skills@pedrotypes
 ```
 
-Use a Codex release with `codex plugin add` (tested with CLI 0.163.0). Start a new session after installation. Claude Code is not required. The review helper uses Bash, Git, Python 3 and GNU `timeout` (install GNU coreutils on macOS).
+Use a Codex release with `codex plugin add` (tested with CLI 0.163.0). Start a new session after installation. Claude Code is not required.
 
 Say “let's build…” and Codex can select the build skill from its description. To select it explicitly, use `$pedrotypes-skills:build`; setup, retro and improve-architecture use the same prefix. Retro and architecture review require an explicit request.
 
