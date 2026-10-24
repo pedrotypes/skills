@@ -58,7 +58,8 @@ The builder saw nothing, so the brief is complete on its own:
 - Start from the code map: `.build/research.md` and the earlier builders' additions in `.build/research/`. Search beyond them only for what they don't cover, and write what you found to `.build/research/step-<k>.md` in the feature worktree, so the next builder doesn't search again.
 - The ledger, `<Plans>p<n>-<slug>/ledger.md`, and its entry format (§3).
 - To prove a scenario whose Proof needs the running system (§3): the manifest's *Isolated stack*, *Ready when* and *QA notes*, the `N` and port to use, and the feature worktree's absolute path for `.build/proof/out/`.
-- Run only the tests for the units of code it changes, plus the type check. Never a package's suite or the whole suite, not even before a commit: you run *Verify* before the slice folds in.
+- The manifest's *Unit tests* and *Integration tests* commands. Run the *Unit tests* for the code it changes after every step, plus the type check, and the *Integration tests* for a boundary only when a step changes it. Never *Verify* or a whole suite, not even before a commit: you run *Verify* before the slice folds in.
+- Test each behaviour once, at the lowest tier that sees it whole (§3, Red).
 
 ## The report
 
@@ -66,7 +67,7 @@ Ask for at most ten lines, and nothing else:
 
 - each commit, as short sha and subject
 - each test command it ran, its result and how long it took
-- the scenarios whose ledger entries it added or updated, and the unit tests it added with their failure lines
+- the scenarios whose ledger entries it added or updated, and the tests it added with their failure lines
 - any line added under `Changed during implementation`
 - what it found and left unfixed, for the backlog (§3)
 - whether the step still makes sense against the PRD, and any question it couldn't settle
