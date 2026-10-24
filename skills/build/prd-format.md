@@ -19,6 +19,11 @@ What and why, in two or three sentences.
 ## Done when
 - **P<n>-S<k> <short name>**: <observable behaviour>
 
+## Test seams
+| Scenario | Seam | Checks | Proof |
+|---|---|---|---|
+| P<n>-S<k> | <where the test drives the code: a route, a component, the browser on the stack> | <what it asserts, failure paths included> | <what will convince the user it holds> |
+
 ## Solution
 How it works, and the rejected alternative in one line.
 
@@ -31,7 +36,13 @@ How it works, and the rejected alternative in one line.
 
 - **What you said**: quote only what they actually wrote or said. A decision you have secondhand is a paraphrase, labelled as one, without quotation marks.
 - **Where I might be wrong**: two to four assumptions, only ones that would change what gets built.
-- **Done when**: failure paths included. Always the full id, so one grep finds the PRD row, the test, the proof script and the commit.
+- **Done when**: failure paths included. Always the full id, so one grep finds the PRD row, the test, the ledger entry and the commit.
+- **Test seams**: the highest seam that still runs fast and fails for one reason. These become the main tests you write before the builders start. **Proof** fits the kind of work and is something a stranger could check, for example:
+  - new behaviour: the main test, seen failing without the code, then passing
+  - behaviour that must not change, as in a refactor: a test green before and after, seen failing when the behaviour is broken on purpose
+  - a running system: a command or browser spec on the *Isolated stack* that exits non-zero when the scenario doesn't hold, with its captures
+  - performance: a benchmark against a stated threshold, with the baseline
+  - docs only: the review, against the code the docs describe
 - **Solution**: draw a flow, state or sequence with a `mermaid` fence when a drawing is clearer than words. For UI, show each state that matters, the failure included, as an ASCII mockup in a plain fence, with example data labelled as examples. For backend work, show the request and response instead.
 
 ```text

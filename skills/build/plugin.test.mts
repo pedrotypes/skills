@@ -18,6 +18,7 @@ test('P1-S1 Install: Codex marketplace packages the shared skills', () => {
   for (const name of ['build', 'improve-architecture', 'retro', 'setup', 'show-markdown']) {
     assert.ok(existsSync(resolve(root, plugin.skills, name, 'SKILL.md')))
   }
+  assert.ok(existsSync(resolve(root, plugin.skills, 'build/findings.schema.json')))
   assert.ok(existsSync(resolve(root, plugin.skills, 'build/review.md')))
 })
 
