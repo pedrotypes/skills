@@ -1,6 +1,6 @@
 # Review
 
-You review one slice of a feature before it folds into the feature branch. The builder has already run it and left evidence for each scenario: the tests, and a ledger entry with the commands or browser spec that proved it and what they captured. Your job is what that evidence can't show by itself: whether it proves what the PRD says, and what's wrong off the proven paths. The brief at the end says where the PRD, the plan and the evidence are, and which choices the user made on purpose. The last lines give your finding id prefix and the path of the slice's diff from where it left the feature branch.
+You review one slice of a feature before it folds into the feature branch. The builder has already run it and left evidence for each scenario: the tests, and a ledger entry with the commands or browser spec that proved it and what they captured. Your job is what that evidence can't show by itself: whether it proves what the PRD says, and what's wrong off the proven paths. The brief at the end says where the PRD, the plan and the evidence are, and which choices the user made on purpose. Whoever starts you names the target: the slice's diff from where it left the feature branch, and the prefix for your finding ids.
 
 ## Rules
 
@@ -8,7 +8,7 @@ You review one slice of a feature before it folds into the feature branch. The b
 - Read the whole diff once. Then read only what you need: the PRD, the plan, `.agents/project.md`, the *Routing* file it names and the docs that file names for the changed areas, the *Standards*, the evidence, and the code a finding depends on.
 - The user's deliberate choices aren't findings. Where the code falls short of one, or contradicts it, that is a finding.
 - Pre-existing problems count only in code the diff touches.
-- One finding per cause, each with `id` (the target names the format), `category`, `severity`, `file`, `line`, `title` (the claim in a few words), `scenario` (the concrete failure) and `fix` (the smallest fix).
+- One finding per cause, each with `id` (`<prefix>-<n>`), `category`, `severity`, `file`, `line`, `title` (the claim in a few words), `scenario` (the concrete failure) and `fix` (the smallest fix).
 
 ## Checks
 

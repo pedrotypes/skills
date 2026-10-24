@@ -15,7 +15,7 @@ If in doubt, it waits for the user. Your judgement can only send a branch to the
 
 ## Merging it
 
-From the main checkout: `git merge --no-ff <branch>`. Write the merge commit message for someone who didn't watch:
+From the main checkout, merge the branch with a merge commit. Write the merge commit message for someone who didn't watch:
 
 - the subject in the repository's commit style, with the ticket ID when there is one;
 - **what** and **why**, two lines each, from the PRD's summary;
@@ -33,5 +33,5 @@ When the rules say the user must look, stop and send them, in the session (and a
 ## After the merge
 
 - Kill everything in `.build/pids`, and run the *Isolated stack*'s *Cleanup*.
-- `git worktree remove` the worktree, then delete the branch with `git branch -d` (it's merged, so `-d` succeeds).
+- Remove the worktree and delete the merged branch.
 - Keep proof media out of git. If the user asked to keep it, move it under the manifest's *Proof archive*.
