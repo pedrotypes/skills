@@ -117,7 +117,9 @@ With *Landing* `local merge`, run "Nothing ships red", then follow [local-merge.
 
 **The PR**, readable in a minute. Title in the repo's commit style with the ticket ID. Body: **What** (two lines), **Why** (two lines, ticket and PRD links), **Evidence** (the audit's summary, with the commit it judged and who audited, two to four embedded captures, each under its scenario, then anything the user must decide, then the proof page link), and the *PR footer*. Every link absolute; images are `https://github.com/<repo>/blob/<Proof media branch>/p<n>-<slug>/out/<scenario id>/<file>?raw=true`.
 
-**Babysit to merge-ready:** checks green at the head, the audit at the head (up to ledger-only commits), threads settled, the current base branch merged in. Agents never merge. Watch in the background; fixes go to subagents.
+**Babysit to merge-ready:** checks green at the head, the audit at the head (up to ledger-only commits), threads settled, the current base branch merged in. Agents never merge. Fixes go to subagents.
+
+**Waiting on something outside the session** (CI, a deploy, a bot review, a merge): don't build a watcher that reports back. Schedule a check every 10 minutes. At each one, look with a plain status command, act on what you see, and keep the schedule until nothing is pending. After any merge, the base branch's own checks are pending too.
 
 - A failing or flaky check is a bug.
 - A review comment: if right, regression test, fix, reply with the commit; if wrong, reply with the evidence; if it changes agreed behaviour, ask the user. Resolve a bot's thread once settled; leave a person's for them.
