@@ -41,11 +41,17 @@ Use the host mapping above. In Claude Code, each of these goes to an Opus subage
 
 Read-only work (the passes, `Explore` searches) can run in parallel with anything.
 
+**You are the only orchestrator.** A subagent does one task and reports; it never starts agents of its own or coordinates others. Wait for subagents with the host's tool for waiting on agents, with the longest timeout it allows, never with sleep loops. When a report arrives, send the next task at once: a finished agent waiting on you holds up everything after it.
+
+## Several features at once
+
+Each feature is its own PR from the base branch, and runs §1 to §5 of `SKILL.md` on its own. Branch a feature from another only when it needs that one's code; it then waits only for the features it needs. If the user asks to stack features that don't depend on each other, say once that each PR then waits for the one below it and a change low in the stack reruns the checks above it, and follow their choice.
+
 ## Builders
 
 **A worktree per slice.** Start a slice once every slice it depends on has folded in: `<Worktrees>/p<n>-<slug>-<k>` on `feat/p<n>-<slug>-<k>`, branched from the feature branch, then *Install* there. Slices with no dependency between them run at the same time, each with its own builder. Don't use the Agent tool's worktree isolation: it branches from your checkout and cleans up on its own.
 
-**One report per step.** A builder stops after each step and reports. Use its reported token count when available; otherwise start fresh when context becomes crowded. Under about 350k tokens, continue it with the host's messaging tool and its next step. Past that, start a fresh builder for the rest of the slice, briefed in full. Before a handover, the worktree is clean at a commit: a half-done merge finished or aborted, uncommitted work saved as a patch in `.build/`.
+**One report per slice.** A builder runs every step of its slice, committing each, and reports once: when the slice is done, when it's blocked on a question it can't settle, or when its context passes about 350k tokens. Then start a fresh builder for the rest of the slice, briefed in full. Before a handover, the worktree is clean at a commit: a half-done merge finished or aborted, uncommitted work saved as a patch in `.build/`.
 
 ## The brief
 
@@ -53,7 +59,7 @@ The builder saw nothing, so the brief is complete on its own:
 
 - Its worktree and branch head, and the paths of the PRD, the plan and the code map (`.build/` in the feature worktree).
 - The slice's main tests: their files, their commit and the command that runs them, and each scenario's Proof from the PRD. The builder runs them first and never edits them to pass.
-- Its scope: the slice and its steps, by number and name, and that it stops after each to report.
+- Its scope: the slice and its steps, by number and name, and that it reports once, when the slice is done or it's blocked.
 - The rules it follows: §3 of `${CLAUDE_SKILL_DIR}/SKILL.md`.
 - Start from the code map: `.build/research.md` and the earlier builders' additions in `.build/research/`. Search beyond them only for what they don't cover, and write what you found to `.build/research/step-<k>.md` in the feature worktree, so the next builder doesn't search again.
 - The ledger, `<Plans>p<n>-<slug>/ledger.md`, and its entry format (§3).
@@ -70,6 +76,6 @@ Ask for at most ten lines, and nothing else:
 - the scenarios whose ledger entries it added or updated, and the tests it added with their failure lines
 - any line added under `Changed during implementation`
 - what it found and left unfixed, for the backlog (§3)
-- whether the step still makes sense against the PRD, and any question it couldn't settle
+- whether the slice still makes sense against the PRD, and any question it couldn't settle
 
-Don't ask for the diff or test output. When a report says a `Done when` scenario or a directive would have to change, bring it to the user. Otherwise decide, and send the next step.
+Don't ask for the diff or test output. When a report says a `Done when` scenario or a directive would have to change, bring it to the user. Otherwise decide, and send the next task at once.
