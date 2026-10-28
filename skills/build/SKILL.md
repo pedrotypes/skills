@@ -83,7 +83,7 @@ You orchestrate; a fresh builder (Opus 5.5 in Claude Code, Codex under Codex) ta
    ```
 5. **Commit** the step and its ledger entry, naming the scenario: `P19-S3: refuse a second vote while one is in flight`.
 
-Builders run the *Unit tests* for the code they change after every step, plus the type check, and the *Integration tests* for a boundary only when a step changes it. Never *Verify*, a package's suite or the whole suite: those are for integrating work, and *Verify* catches what a narrow run misses. You make *Verify* green at the slice head before it folds in (§4), normally in one run; a failure goes back to the builder as a failing test.
+Builders run the *Unit tests* for the code they change after every step, plus the type check, and the *Integration tests* for a boundary only when a step changes it. Never *Verify*, a package's suite or the whole suite: those are for integrating work, and *Verify* catches what a narrow run misses. *Verify* runs once per slice, before it folds in (§4), and once on the feature head before the audit. A failure goes back to the builder as a failing test; rerun what failed until it passes, then *Verify* once more.
 
 When reality disagrees with the plan, decide by the PRD and log it under `Changed during implementation`; escalate only when a scenario or directive would change. Every bug, from anyone, gets a failing test first. A behaviour change includes its *Reference docs* or *Data flows* update. Problems left unfixed go to the tracker's backlog (search first; what, where, evidence, proposed fix), or into the hand-off without a tracker.
 
@@ -101,7 +101,7 @@ One subagent then handles every finding once:
 - **P3s and cuts:** take the small ones in files the slice touches; backlog the rest.
 - A fix that would change agreed behaviour goes to the user.
 
-If the fixes changed code, rerun the evidence. Make *Verify* green at the slice head, then **fold in**: merge the slice into the feature branch. A merge that isn't a fast-forward makes code no run has checked, so run *Verify* on the merge too. No second review, and no waiting for the user between slices. Dependent slices start from the feature branch.
+If the fixes changed code, rerun the evidence. If the feature branch moved since the slice left it, merge it into the slice, so the fold-in fast-forwards. Make *Verify* green at the slice head, then **fold in**: fast-forward the feature branch to the slice. No second review, and no waiting for the user between slices. Dependent slices start from the feature branch.
 
 When every slice is in, merge the up-to-date base branch into the feature branch (never rebase a pushed branch), and make *Verify* and the *Extra checks* that apply green there.
 
@@ -111,20 +111,20 @@ When every slice is in, merge the up-to-date base branch into the feature branch
 
 With *Landing* `local merge`, run "Nothing ships red", then follow [local-merge.md](local-merge.md) instead of the rest.
 
-**Nothing ships red.** The head the audit judged is the head that ships, up to commits that touch only the ledger. After any other change to it (a base-branch merge, a CI fix, a review comment), make *Verify* and the *Extra checks* that apply green, then run the whole audit again. A failure is a bug, not a retry.
+**Nothing ships red.** The head the audit judged is the head that ships, up to commits that touch only the ledger and clean base-branch merges. After a change to the feature's own code (a CI fix, a review comment), make *Verify* and the *Extra checks* that apply green, then run the whole audit again. A base-branch merge is clean when it needs no conflict resolution and the base's new commits touch none of the files the feature changes; it needs only the PR's checks green at the new head (*Verify* with *Landing* `local merge`), and the PR names the head the audit judged. Any other base-branch merge counts as a change to the feature's code. A failure is a bug, not a retry.
 
 **The record.** `.build/proof/README.md` is the audit's proof page. `.build/proof/review.md` lists each slice's findings and what happened to them. Turn clips into GIFs with the manifest's *ffmpeg*, small and sharp enough to read in a PR. Publish the proof page, the review report, the plan, the code map and every capture to `p<n>-<slug>/` on the *Proof media branch*, never the base branch, keeping each capture's `out/<scenario id>/` path: the proof page links captures by it. The PR links that proof page.
 
 **The PR**, readable in a minute. Title in the repo's commit style with the ticket ID. Body: **What** (two lines), **Why** (two lines, ticket and PRD links), **Evidence** (the audit's summary, with the commit it judged and who audited, two to four embedded captures, each under its scenario, then anything the user must decide, then the proof page link), and the *PR footer*. Every link absolute; images are `https://github.com/<repo>/blob/<Proof media branch>/p<n>-<slug>/out/<scenario id>/<file>?raw=true`.
 
-**Babysit to merge-ready:** checks green at the head, the audit at the head (up to ledger-only commits), threads settled, the current base branch merged in. Agents never merge. Fixes go to subagents.
+**Babysit to merge-ready:** checks green at the head, the audit at the head (up to ledger-only commits), threads settled, and no conflict with the base branch. Merge the base branch in only when the PR conflicts with it or the host requires an up-to-date branch: each merge restarts the checks. Agents never merge. Fixes go to subagents.
 
 **Waiting on something outside the session** (CI, a deploy, a bot review, a merge): don't build a watcher that reports back. Schedule a check every 10 minutes. At each one, look with a plain status command, act on what you see, and keep the schedule until nothing is pending. After any merge, the base branch's own checks are pending too.
 
 - A failing or flaky check is a bug.
 - A review comment: if right, regression test, fix, reply with the commit; if wrong, reply with the evidence; if it changes agreed behaviour, ask the user. Resolve a bot's thread once settled; leave a person's for them.
 - A requested bot review missing after 30 minutes: carry on and say so.
-- After any change to the head, follow "Nothing ships red", then update the PR and the proof page.
+- After any change to the head, follow "Nothing ships red", then update the PR, and the proof page when the audit ran again.
 
 **Hand it over:** the link, what needs the user first, one line on what it does and the audit's verdict. Stop the stack (`.build/pids`). Suggest `/retro` if the build was harder than it should have been.
 
