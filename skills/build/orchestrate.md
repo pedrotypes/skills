@@ -30,7 +30,7 @@ If you're about to read a source file, a diff or a log longer than a screen, sen
 
 ## What you hand off
 
-Use the host mapping above. In Claude Code, each of these goes to an Opus subagent, except the code map, which goes to Sonnet. Never a fork, since a fork inherits your whole context.
+Use the host mapping above. In Claude Code, each of these goes to an Opus subagent at medium effort, except the code map, which goes to Sonnet. Never a fork, since a fork inherits your whole context.
 
 - **The code map** (§2): one subagent, with [`research.md`](research.md) as its prompt.
 - **Each slice** (§3): one builder, step after step.
@@ -64,7 +64,7 @@ The builder saw nothing, so the brief is complete on its own:
 - Start from the code map: `.build/research.md` and the earlier builders' additions in `.build/research/`. Search beyond them only for what they don't cover, and write what you found to `.build/research/step-<k>.md` in the feature worktree, so the next builder doesn't search again.
 - The ledger, `<Plans>p<n>-<slug>/ledger.md`, and its entry format (§3).
 - To prove a scenario whose Proof needs the running system (§3): the manifest's *Isolated stack*, *Ready when* and *QA notes*, the `N` and port to use, and the feature worktree's absolute path for `.build/proof/out/`.
-- The manifest's *Unit tests* and *Integration tests* commands. Run the *Unit tests* for the code it changes after every step, plus the type check, and the *Integration tests* for a boundary only when a step changes it. Never *Verify* or a whole suite, not even before a commit: you run *Verify* before the slice folds in.
+- The manifest's *Unit tests* and *Integration tests* commands. Run the *Unit tests* for the code it changes after every step, plus the type check, and the *Integration tests* for a boundary only when a step changes it. Never *Verify* or a whole suite, not even before a commit: you run *Verify* on the feature branch.
 - Test each behaviour once, at the lowest tier that sees it whole (§3, Red).
 
 ## The report
@@ -78,4 +78,4 @@ Ask for at most ten lines, and nothing else:
 - what it found and left unfixed, for the backlog (§3)
 - whether the slice still makes sense against the PRD, and any question it couldn't settle
 
-Don't ask for the diff or test output. When a report says a `Done when` scenario or a directive would have to change, bring it to the user. Otherwise decide, and send the next task at once.
+Don't ask for the diff or test output. When a report says a `Done when` scenario or a directive would have to change, bring it to the user. When it names something a later step needs and doesn't have, such as stale or missing test data, a credential or a broken stack, settle it now: fix it, or ask the user at once, with independent work already started. Otherwise decide, and send the next task at once.

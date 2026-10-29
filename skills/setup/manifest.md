@@ -77,7 +77,7 @@ Read by the pedrotypes skills. See the setup skill's manifest.md for what each l
 - **Install**: run once in each new worktree.
 - **Unit tests**: the fast tier: tests that touch nothing outside the process, seconds for all of them. Builders run it after every step, narrowed to the files they change when the command takes paths.
 - **Integration tests**: tests that need a real database, browser DOM or other dependency. Builders run the ones covering a boundary only when a step changes it.
-- **Verify**: the whole local suite, for when work is integrated: before a slice folds in, and before shipping. Nothing ships unless it's green.
+- **Verify**: the whole local suite, for when work is integrated: on the feature branch before a dependent slice starts from it, and before shipping. Nothing ships unless it's green.
 - **Extra checks**: suites that run only when certain areas change, each with its condition.
 
 **Isolated stack**: how `build` runs the change for proof without touching the user's own processes, data or queues. `$N` names the stack and `$PORT` is a free port, both set by the skill: `$N` is the plan number, or `<plan number>_<slice number>` for a slice's stack, so it holds only digits and `_`. The skill kills everything in `.build/pids` when it's done, then runs the cleanup after the PR merges. *QA notes* go into every builder's brief, so builders don't rediscover how to drive the stack. *ffmpeg* turns proof videos into GIFs.

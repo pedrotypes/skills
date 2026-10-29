@@ -9,6 +9,10 @@ Every slice of a feature has folded in, the base branch is merged, and *Verify* 
 - The plan, `.build/plan.md` in the feature worktree, which notes each slice's main-test commit.
 - The manifest's *Isolated stack*, *Ready when* and *QA notes*, with your `N` and port.
 
+## Scope
+
+Audit every scenario, unless you're given an earlier audited head and the scenarios a change since then adds or could affect. Then audit those, read the diff since that head, and keep each other scenario's verdict only if the diff can't change what its tests and proof show; otherwise audit it too.
+
 ## Rules
 
 - Change no code. Your own runs write their captures to `.build/proof/out/<scenario id>/`, replacing the builders' there: yours are the PR's evidence.
@@ -26,7 +30,7 @@ Every slice of a feature has folded in, the base branch is merged, and *Verify* 
 
 At the top of the ledger, write a summary of at most five lines:
 - first, who audited, and whether they built or planned any of this work
-- the feature head you judged
+- the feature head you judged, and for a scoped audit, the earlier head and which scenarios you audited and which verdicts you kept
 - how many scenarios are proven, and anything that isn't
 
 Under each scenario's ledger entry, write its verdict, **Proven**, **Weak** or **Not proven**, with one line on why and which checks you ran yourself.
