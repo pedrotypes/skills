@@ -21,7 +21,7 @@ flowchart LR
 **Before anything:** read `.agents/project.md`, the manifest ([manifest.md](../setup/manifest.md)); run `/setup` if it's missing. *Plans*, *Verify* and the like below mean its lines. Read [Host compatibility](orchestrate.md#host-compatibility) for skill paths, invocation, agent roles and reviewers. If a `.worktrees/p<n>-*` worktree holds a PRD for this, resume at the first step without its marker: the PRD's `Signed off` date, the ledger's headings, each slice's main-test commit, its `review.sha`, its `Reran` lines, its fold-in, and the audit's summary at the top of the ledger naming the head. A step without its marker isn't done.
 
 - **Codes carry names** wherever a person reads them: "P92 (reusable rockets) S3 (landing legs)", never "P92 S3".
-- **Progress notes:** at each change of stage, one line on what finished and what's next.
+- **Progress notes:** at each change of stage, one line on what finished and what's next. Write more only for a decision the user must make; the detail stays in files.
 - **Tickets:** while you work on a ticket, whether someone else filed it or you did, assign it to the user and move it through the tracker's workflow as the work moves.
 - **A second opinion** follows the host mapping in [orchestrate.md](orchestrate.md#host-compatibility).
 
@@ -83,7 +83,7 @@ You orchestrate; a fresh builder (Opus 5.5 in Claude Code, Codex under Codex) ta
    ```
 5. **Commit** the step and its ledger entry, naming the scenario: `P19-S3: refuse a second vote while one is in flight`.
 
-Builders run the *Unit tests* for the code they change after every step, plus the type check, and the *Integration tests* for a boundary only when a step changes it. Never *Verify*, a package's suite or the whole suite: those are for integrating work, and *Verify* catches what a narrow run misses. *Verify* runs once per slice, before it folds in (§4), and once on the feature head before the audit. A failure goes back to the builder as a failing test; rerun what failed until it passes, then *Verify* once more.
+Builders run the *Unit tests* for the code they change after every step, plus the type check, and the *Integration tests* for a boundary only when a step changes it. Never *Verify*, a package's suite or the whole suite: those are for integrating work, and *Verify* catches what a narrow run misses. *Verify* runs on the feature branch (§4): before a dependent slice starts from it, and on the feature head before the audit. A failure goes back to the builder of the slice it implicates as a failing test; rerun what failed until it passes, then *Verify* once more.
 
 When reality disagrees with the plan, decide by the PRD and log it under `Changed during implementation`; escalate only when a scenario or directive would change. Every bug, from anyone, gets a failing test first. A behaviour change includes its *Reference docs* or *Data flows* update. Problems left unfixed go to the tracker's backlog (search first; what, where, evidence, proposed fix), or into the hand-off without a tracker.
 
@@ -101,17 +101,17 @@ One subagent then handles every finding once:
 - **P3s and cuts:** take the small ones in files the slice touches; backlog the rest.
 - A fix that would change agreed behaviour goes to the user.
 
-If the fixes changed code, rerun the evidence. If the feature branch moved since the slice left it, merge it into the slice, so the fold-in fast-forwards. Make *Verify* green at the slice head, then **fold in**: fast-forward the feature branch to the slice. No second review, and no waiting for the user between slices. Dependent slices start from the feature branch.
+If the fixes changed code, rerun the evidence. If the feature branch moved since the slice left it, merge it into the slice, so the fold-in fast-forwards. Then **fold in**: fast-forward the feature branch to the slice. No second review, and no waiting for the user between slices. Independent slices fold in one after another with no *Verify* of their own. Dependent slices start from the feature branch once *Verify* is green there.
 
 When every slice is in, merge the up-to-date base branch into the feature branch (never rebase a pushed branch), and make *Verify* and the *Extra checks* that apply green there.
 
-**The audit.** A fresh subagent that built and planned none of it (Opus in Claude Code, Codex under Codex), with [`audit.md`](audit.md) as its prompt. It reruns every ledger proof on the feature head itself (`N=<plan>`), checks each scenario against its Proof in the PRD, and writes its verdicts in the ledger and on the proof page; you commit its ledger writes as `P<n>: audit`. Its captures are the PR's evidence. A scenario it doesn't call **Proven** goes back to a builder for a failing test or better evidence; then the whole audit runs again on the new head. Its verdict is what the user reads, so don't ship around it.
+**The audit.** A fresh subagent that built and planned none of it (Opus in Claude Code, Codex under Codex), with [`audit.md`](audit.md) as its prompt. It reruns every ledger proof on the feature head itself (`N=<plan>`), checks each scenario against its Proof in the PRD, and writes its verdicts in the ledger and on the proof page; you commit its ledger writes as `P<n>: audit`. Its captures are the PR's evidence. A scenario it doesn't call **Proven** goes back to a builder for a failing test or better evidence; then the audit runs again on the new head, scoped as "Nothing ships red" says. Its verdict is what the user reads, so don't ship around it.
 
 ## 5. Ship
 
 With *Landing* `local merge`, run "Nothing ships red", then follow [local-merge.md](local-merge.md) instead of the rest.
 
-**Nothing ships red.** The head the audit judged is the head that ships, up to commits that touch only the ledger and clean base-branch merges. After a change to the feature's own code (a CI fix, a review comment), make *Verify* and the *Extra checks* that apply green, then run the whole audit again. A base-branch merge is clean when it needs no conflict resolution and the base's new commits touch none of the files the feature changes; it needs only the PR's checks green at the new head (*Verify* with *Landing* `local merge`), and the PR names the head the audit judged. Any other base-branch merge counts as a change to the feature's code. A failure is a bug, not a retry.
+**Nothing ships red.** The head the audit judged is the head that ships, up to commits that touch only the ledger and clean base-branch merges. After a change to the feature's own code (a CI fix, a review comment), make *Verify* and the *Extra checks* that apply green, then audit again, scoped to the change: a fresh auditor audits every scenario the change adds, or could affect judging by its diff since the audited head, and keeps the other verdicts. When unsure whether a scenario is affected, include it. A base-branch merge is clean when it needs no conflict resolution and the base's new commits touch none of the files the feature changes; it needs only the PR's checks green at the new head (*Verify* with *Landing* `local merge`), and the PR names the head the audit judged. Any other base-branch merge counts as a change to the feature's code. A failure is a bug, not a retry.
 
 **The record.** `.build/proof/README.md` is the audit's proof page. `.build/proof/review.md` lists each slice's findings and what happened to them. Turn clips into GIFs with the manifest's *ffmpeg*, small and sharp enough to read in a PR. Publish the proof page, the review report, the plan, the code map and every capture to `p<n>-<slug>/` on the *Proof media branch*, never the base branch, keeping each capture's `out/<scenario id>/` path: the proof page links captures by it. The PR links that proof page.
 
